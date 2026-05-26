@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Cross } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { Reveal } from "@/components/Reveal";
+import { Reveal } from "@/components/Reveal"; 
 
 export const metadata = {
   title: "About — VOGIM Prayer Land",
