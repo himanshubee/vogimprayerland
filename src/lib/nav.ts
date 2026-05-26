@@ -28,6 +28,7 @@ export const NAV_LINKS: NavLink[] = [
     ],
   },
   { label: "Media", href: "/media" },
+  { label: "Gallery", href: "/gallery" },
   { label: "Give", href: "/give" },
   { label: "Contact", href: "/contact" },
 ];
