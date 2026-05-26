@@ -1,26 +1,212 @@
 @import "tailwindcss";
 
+@theme {
+  /* CORE PALETTE: white, red, gold */
+  --color-white: #FFFFFF;
+  --color-cream: #FAF5EA;
+  --color-cream-soft: #F2E9D4;
+
+  /* Red family (replaces former "midnight" tokens for class compatibility) */
+  --color-midnight: #7A0E1A;       /* primary deep red */
+  --color-midnight-dark: #4A0610;  /* darkest red */
+  --color-midnight-soft: #9F2030;  /* mid red */
+  --color-maroon: #3A0610;         /* near-black red accent */
+
+  /* Gold family */
+  --color-gold: #D4A437;
+  --color-gold-soft: #E5C97A;
+  --color-gold-deep: #9B7421;
+
+  /* Ivory aliases — now ivory means warm white */
+  --color-ivory: #FFFFFF;
+  --color-ivory-dark: #FAF5EA;
+
+  /* Misc */
+  --color-mist: rgba(255, 255, 255, 0.65);
+  --color-ink: #1A0608;
+
+  --font-display: var(--font-cormorant), "Cormorant Garamond", serif;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FFFFFF;
+  --foreground: #1A0608;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #7A0E1A;
+  color: #D4A437;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-feature-settings: "ss01", "ss02", "lnum";
+  letter-spacing: -0.01em;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.gold-rule {
+  display: inline-block;
+  width: 56px;
+  height: 1px;
+  background: currentColor;
+  vertical-align: middle;
+  opacity: 0.7;
+}
+
+.paper-grain {
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(122, 14, 26, 0.035) 0px, transparent 1px),
+    radial-gradient(circle at 75% 70%, rgba(122, 14, 26, 0.03) 0px, transparent 1px);
+  background-size: 6px 6px, 9px 9px;
+}
+
+.starfield {
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, rgba(212, 164, 55, 0.6), transparent 60%),
+    radial-gradient(1px 1px at 70% 80%, rgba(212, 164, 55, 0.45), transparent 60%),
+    radial-gradient(1.5px 1.5px at 40% 60%, rgba(255, 255, 255, 0.55), transparent 60%),
+    radial-gradient(1px 1px at 85% 25%, rgba(255, 255, 255, 0.45), transparent 60%),
+    radial-gradient(1.5px 1.5px at 10% 80%, rgba(212, 164, 55, 0.55), transparent 60%),
+    radial-gradient(1px 1px at 55% 15%, rgba(255, 255, 255, 0.35), transparent 60%);
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.04); }
+}
+.breathe { animation: breathe 7s ease-in-out infinite; }
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(212,164,55,0.35), transparent);
+  animation: shimmer 3.5s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+.drift { animation: drift 6s ease-in-out infinite; }
+
+.diamond-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-gold-deep);
+}
+.diamond-rule::before,
+.diamond-rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, currentColor 30%, currentColor 70%, transparent);
+  opacity: 0.5;
+}
+
+/* Form */
+.input-line {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(122,14,26,0.25);
+  padding: 0.85rem 0;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: var(--color-midnight);
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+.input-line:focus { border-bottom-color: var(--color-gold); }
+.input-line::placeholder { color: rgba(122,14,26,0.4); }
+
+/* Buttons */
+.btn-gold {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.95rem 1.6rem;
+  background: var(--color-gold);
+  color: var(--color-midnight);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+.btn-gold:hover {
+  background: var(--color-midnight);
+  color: var(--color-gold);
+}
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.95rem 1.6rem;
+  border: 1px solid currentColor;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+.btn-ghost:hover {
+  background: var(--color-gold);
+  color: var(--color-midnight);
+  border-color: var(--color-gold);
+}
+
+.u-link {
+  background-image: linear-gradient(to right, currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  padding-bottom: 2px;
+  transition: background-size 0.3s ease;
+}
+.u-link:hover { background-size: 0% 1px; }
+
+.drop-cap::first-letter {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 4.5em;
+  line-height: 0.9;
+  float: left;
+  margin: 0.05em 0.15em 0 0;
+  color: var(--color-gold-deep);
+}
+
+/* Tinted hero image overlay */
+.hero-tint {
+  background: linear-gradient(
+    135deg,
+    rgba(74, 6, 16, 0.85) 0%,
+    rgba(122, 14, 26, 0.7) 50%,
+    rgba(58, 6, 16, 0.92) 100%
+  );
 }
