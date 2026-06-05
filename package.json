@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 4830",
     "lint": "eslint",
     "import:wp": "node scripts/import-wp.mjs",
     "postinstall": "node scripts/copy-tinymce.mjs"
