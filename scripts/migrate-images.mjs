@@ -328,11 +328,139 @@ async function cmdRewriteDb() {
   console.log(`\n✓ DB rewrite: ${totalRefs} refs across ${changed} docs.`);
 }
 
+// ---- fix leftover external (old-WordPress) URLs in the DB ----
+// The original import + first migration pass missed some extensions (notably
+// .avif). Many of those images were still downloaded locally under
+// /images/wp/<rel> (and are now on the CDN), so we can map the dead
+// wp-content/uploads/<rel> URL to its CDN twin. Anything with no local twin is
+// fetched from origin as a last resort; whatever is left is reported as lost.
+async function cmdFixExternal() {
+  const manifest = loadManifest();
+  const client = await new MongoClient(URI).connect();
+  const coll = client.db(DB).collection("posts");
+  const docs = await coll.find({}).toArray();
+
+  // gather every remaining wp-content/uploads path (rel = part after uploads/)
+  const relRe =
+    /https?:\/\/(?:www\.)?vogimprayerland\.org\/wp-content\/uploads\/([^"'\s)>]+)/gi;
+  const rels = new Set();
+  for (const d of docs) {
+    const blob = (d.content || "") + " " + (d.featuredImage || "");
+    let m;
+    relRe.lastIndex = 0;
+    while ((m = relRe.exec(blob))) rels.add(m[1]);
+  }
+  console.log(`Found ${rels.size} distinct leftover wp-content paths.`);
+
+  // build rel -> CDN url, using local twins first, then fetching origin
+  const relToUrl = {};
+  const lost = [];
+  const toFetch = [];
+  for (const rel of rels) {
+    const localKey = `/images/wp/${rel}`;
+    if (manifest.local[localKey]) {
+      relToUrl[rel] = manifest.local[localKey].url;
+    } else if (manifest.external[rel]) {
+      relToUrl[rel] = manifest.external[rel].url;
+    } else {
+      toFetch.push(rel);
+    }
+  }
+  console.log(
+    `Mapped ${Object.keys(relToUrl).length} from local CDN twins; ${toFetch.length} need fetching.`
+  );
+
+  // Source host for the still-live old WordPress site (override with arg 2).
+  const ORIGIN = process.argv[3] || "https://old.vogimprayerland.org";
+  console.log(`Fetching missing images from ${ORIGIN} …`);
+  await pool(toFetch, 6, async (rel) => {
+    // Try the exact path, then progressively strip WordPress's generated
+    // suffixes: the resized "-WIDTHxHEIGHT" variant and the "-N" duplicate
+    // marker (and both together) to reach the original upload.
+    const stripWxH = (s) => s.replace(/-\d+x\d+(\.[a-z0-9]+)$/i, "$1");
+    const stripN = (s) => s.replace(/-\d+(\.[a-z0-9]+)$/i, "$1");
+    const candidates = [];
+    for (const c of [rel, stripWxH(rel), stripN(rel), stripN(stripWxH(rel))]) {
+      if (!candidates.includes(c)) candidates.push(c);
+    }
+    for (const cand of candidates) {
+      const src = `${ORIGIN}/wp-content/uploads/${cand}`;
+      try {
+        const res = await fetch(src, { headers: { "User-Agent": "Mozilla/5.0 vogim-migrate" } });
+        if (!res.ok) continue;
+        const buf = Buffer.from(await res.arrayBuffer());
+        const r = await uploadBuffer(buf, basename(new URL(src).pathname));
+        manifest.external[rel] = r;
+        relToUrl[rel] = r.url;
+        return;
+      } catch {
+        /* try next candidate */
+      }
+    }
+    lost.push(rel);
+  });
+  saveManifest(manifest);
+
+  // backup, then rewrite content + featuredImage for the mapped rels
+  const backupPath = join(__dirname, `external-fix-backup-${docs.length}.json`);
+  writeFileSync(
+    backupPath,
+    JSON.stringify(
+      docs.map((d) => ({
+        _id: String(d._id),
+        slug: d.slug,
+        content: d.content ?? "",
+        featuredImage: d.featuredImage ?? null,
+      })),
+      null,
+      2
+    )
+  );
+  console.log(`Backed up ${docs.length} docs -> ${relative(ROOT, backupPath)}`);
+
+  const urlRe =
+    /https?:\/\/(?:www\.)?vogimprayerland\.org\/wp-content\/uploads\/([^"'\s)>]+)/gi;
+  const rewrite = (str) => {
+    if (!str) return { out: str, n: 0 };
+    let n = 0;
+    const out = str.replace(urlRe, (full, rel) => {
+      if (relToUrl[rel]) {
+        n++;
+        return relToUrl[rel];
+      }
+      return full;
+    });
+    return { out, n };
+  };
+
+  let changed = 0;
+  let totalRefs = 0;
+  for (const d of docs) {
+    const c = rewrite(d.content ?? "");
+    const f = rewrite(d.featuredImage ?? "");
+    if (c.n || f.n) {
+      await coll.updateOne(
+        { _id: d._id },
+        { $set: { content: c.out, featuredImage: f.out || d.featuredImage } }
+      );
+      changed++;
+      totalRefs += c.n + f.n;
+    }
+  }
+  await client.close();
+  console.log(`\n✓ External fix: ${totalRefs} refs rewritten across ${changed} docs.`);
+  if (lost.length) {
+    console.log(`\n⚠ ${lost.length} images are unrecoverable (origin gone, no local copy):`);
+    lost.sort().forEach((r) => console.log(`    ${r}`));
+  }
+}
+
 const cmd = process.argv[2];
 const run = {
   upload: cmdUpload,
   "rewrite-code": async () => cmdRewriteCode(),
   "rewrite-db": cmdRewriteDb,
+  "fix-external": cmdFixExternal,
 }[cmd];
 
 if (!run) {
