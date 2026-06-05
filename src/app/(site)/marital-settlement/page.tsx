@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 
 export const metadata = {
+  alternates: { canonical: "/marital-settlement/" },
   title: "Prayer for Marital Settlement — VOGIM",
   description:
     "A guide to finding divine guidance and peace in your marital journey. Through prayer and spiritual counsel, VOGIM helps individuals navigate the complexities of marriage.",

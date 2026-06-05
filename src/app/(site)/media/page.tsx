@@ -5,6 +5,7 @@ import { Reveal } from "@/components/Reveal";
 import { Play, Headphones, ImageIcon, ArrowUpRight } from "lucide-react";
 
 export const metadata = {
+  alternates: { canonical: "/media/" },
   title: "Media — VOGIM Prayer Land",
   description:
     "Sermons, prophetic words, worship moments and gallery from VOGIM Deliverance Ministries.",

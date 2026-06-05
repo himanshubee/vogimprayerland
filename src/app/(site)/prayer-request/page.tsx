@@ -3,6 +3,7 @@ import { RequestForm } from "@/components/RequestForm";
 import { Reveal } from "@/components/Reveal";
 
 export const metadata = {
+  alternates: { canonical: "/prayer-request/" },
   title: "Prayer Request — VOGIM",
   description:
     "Send your prayer request to VOGIM. Our intercessors will stand with you.",

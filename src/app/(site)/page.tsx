@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -11,6 +12,10 @@ import {
   Clock,
 } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const MINISTRIES = [
   {

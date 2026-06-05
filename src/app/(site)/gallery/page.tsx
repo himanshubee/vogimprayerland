@@ -5,6 +5,7 @@ import { Reveal } from "@/components/Reveal";
 import { GalleryClient, type Photo } from "./GalleryClient";
 
 export const metadata = {
+  alternates: { canonical: "/gallery/" },
   title: "Gallery — VOGIM Prayer Land",
   description:
     "Photographs from VOGIM Deliverance Ministries — prophetic services, worship nights, deliverance encounters, and moments of restoration.",

@@ -7,6 +7,10 @@ import { getPostBySlug } from "@/lib/posts";
 export const dynamicParams = true; // generate posts on-demand, then cache (ISR)
 export const revalidate = 300;
 
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.vogimprayerland.org"
+).replace(/\/$/, "");
+
 // Posts are rendered on-demand and cached rather than all prebuilt at deploy
 // time — with 500+ posts that keeps builds fast and avoids hammering the DB.
 export async function generateStaticParams() {
@@ -26,11 +30,12 @@ export async function generateMetadata({
   const metaTitle = seo.title || `${post.title} — VOGIM Prayer Land`;
   const metaDescription = seo.description || post.excerpt || undefined;
   const ogImage = seo.ogImage || post.featuredImage;
+  const canonical = seo.canonical || `${SITE_URL}/${post.slug}/`;
 
   return {
     title: metaTitle,
     description: metaDescription,
-    ...(seo.canonical ? { alternates: { canonical: seo.canonical } } : {}),
+    alternates: { canonical },
     robots: {
       index: !seo.noindex,
       follow: !seo.nofollow,
@@ -39,6 +44,10 @@ export async function generateMetadata({
       title: seo.ogTitle || seo.title || post.title,
       description: seo.ogDescription || metaDescription,
       type: "article",
+      url: canonical,
+      siteName: "VOGIM Prayer Land",
+      publishedTime: post.date,
+      modifiedTime: post.modified,
       images: ogImage ? [{ url: ogImage }] : undefined,
     },
     twitter: {
@@ -67,22 +76,48 @@ export default async function PostPage({
   const post = await getPostBySlug(slug);
   if (!post) notFound();
 
-  const SITE = "https://www.vogimprayerland.org";
+  const canonical = post.seo.canonical || `${SITE_URL}/${post.slug}/`;
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Article",
-    headline: post.seo.title || post.title,
-    description: post.seo.description || post.excerpt || undefined,
-    image: post.seo.ogImage || post.featuredImage || undefined,
-    datePublished: post.date,
-    dateModified: post.modified,
-    mainEntityOfPage: post.seo.canonical || `${SITE}/${post.slug}/`,
-    author: { "@type": "Organization", name: "VOGIM Prayer Land" },
-    publisher: {
-      "@type": "Organization",
-      name: "VOGIM Prayer Land",
-      url: SITE,
-    },
+    "@graph": [
+      {
+        "@type": "Article",
+        headline: post.seo.title || post.title,
+        description: post.seo.description || post.excerpt || undefined,
+        image: post.seo.ogImage || post.featuredImage || undefined,
+        datePublished: post.date,
+        dateModified: post.modified,
+        url: canonical,
+        mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+        articleSection: post.categories.length ? post.categories : undefined,
+        author: { "@id": `${SITE_URL}/#organization` },
+        publisher: { "@id": `${SITE_URL}/#organization` },
+        inLanguage: "en-US",
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: `${SITE_URL}/`,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Blog",
+            item: `${SITE_URL}/blog/`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: post.title,
+            item: canonical,
+          },
+        ],
+      },
+    ],
   };
 
   return (

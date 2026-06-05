@@ -4,6 +4,7 @@ import { Reveal } from "@/components/Reveal";
 import { MapPin, Mail, Phone, Clock } from "lucide-react";
 
 export const metadata = {
+  alternates: { canonical: "/contact/" },
   title: "Contact — VOGIM Prayer Land",
   description:
     "Reach VOGIM Deliverance Ministries — Lagos, Nigeria. Online and in person.",

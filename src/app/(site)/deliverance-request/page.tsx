@@ -4,6 +4,7 @@ import { Reveal } from "@/components/Reveal";
 import { ShieldCheck, Lock, Clock } from "lucide-react";
 
 export const metadata = {
+  alternates: { canonical: "/deliverance-request/" },
   title: "Deliverance Request — VOGIM",
   description:
     "Submit your deliverance request to VOGIM. Schedule a one-on-one online session with Prophet Olaofe Emmanuel.",

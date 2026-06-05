@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 
 export const metadata = {
+  alternates: { canonical: "/online-deliverance/" },
   title: "Online Deliverance Ministry — VOGIM",
   description:
     "Embracing freedom through Christ at VOGIM. Online deliverance sessions with Prophet Olaofe Emmanuel — wherever you are.",

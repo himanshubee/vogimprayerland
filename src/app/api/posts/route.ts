@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
 import { getAllPostsAdmin, createPost, type PostInput } from "@/lib/posts";
+import { revalidatePostCaches } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
   }
   try {
     const post = await createPost(body);
+    revalidatePostCaches(post.status === "publish" ? post.slug : undefined);
     return NextResponse.json({ post }, { status: 201 });
   } catch (err) {
     console.error("[posts] create error:", err);

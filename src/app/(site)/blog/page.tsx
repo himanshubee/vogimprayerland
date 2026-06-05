@@ -7,6 +7,7 @@ import { getPublishedPosts, countPublishedPosts } from "@/lib/posts";
 
 export const revalidate = 300;
 export const metadata = {
+  alternates: { canonical: "/blog/" },
   title: "Articles & Prayer Points — VOGIM Prayer Land",
   description:
     "Deliverance prayer points, teachings, and faith articles from VOGIM Deliverance Ministries.",

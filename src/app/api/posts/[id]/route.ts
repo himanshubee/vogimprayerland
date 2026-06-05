@@ -6,6 +6,7 @@ import {
   deletePost,
   type PostInput,
 } from "@/lib/posts";
+import { revalidatePostCaches } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export async function PUT(
   }
   const post = await updatePost(id, body);
   if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  revalidatePostCaches(post.slug);
   return NextResponse.json({ post });
 }
 
@@ -52,7 +54,9 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await ctx.params;
+  const existing = await getPostById(id);
   const ok = await deletePost(id);
   if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  revalidatePostCaches(existing?.slug);
   return NextResponse.json({ ok: true });
 }

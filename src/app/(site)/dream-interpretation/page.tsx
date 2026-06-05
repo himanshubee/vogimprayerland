@@ -3,6 +3,7 @@ import { RequestForm } from "@/components/RequestForm";
 import { Reveal } from "@/components/Reveal";
 
 export const metadata = {
+  alternates: { canonical: "/dream-interpretation/" },
   title: "Dream Interpretation — VOGIM",
   description:
     "Submit your dream for Spirit-led interpretation by Prophet Olaofe and the VOGIM team.",

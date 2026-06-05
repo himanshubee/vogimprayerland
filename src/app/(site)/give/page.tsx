@@ -4,6 +4,7 @@ import { Reveal } from "@/components/Reveal";
 import { ArrowUpRight, HandHeart, Sprout, HomeIcon } from "lucide-react";
 
 export const metadata = {
+  alternates: { canonical: "/give/" },
   title: "Give — VOGIM Prayer Land",
   description:
     "Partner with VOGIM. Give to support the work of deliverance, healing, and care for widows and orphans.",
