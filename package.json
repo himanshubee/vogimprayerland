@@ -8,6 +8,7 @@
     "start": "next start -p 4830",
     "lint": "eslint",
     "import:wp": "node scripts/import-wp.mjs",
+    "test:email": "node scripts/test-email.mjs",
     "postinstall": "node scripts/copy-tinymce.mjs"
   },
   "dependencies": {

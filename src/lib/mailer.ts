@@ -2,14 +2,17 @@ import nodemailer from "nodemailer";
 
 const TO = process.env.SUBMISSIONS_EMAIL || "vogimdeliveranceministry@gmail.com";
 
+// ── Optional SMTP (Brevo/Gmail/etc.) ─────────────────────────────────────
+// If SMTP_* creds are present we use them (most reliable). If they're blank,
+// we fall back to FormSubmit.co below, which needs NO account and NO signup.
 const host = process.env.SMTP_HOST;
-const port = Number(process.env.SMTP_PORT || 465);
+const port = Number(process.env.SMTP_PORT || 587);
 const user = process.env.SMTP_USER;
 const pass = process.env.SMTP_PASS;
 
-const enabled = Boolean(host && user && pass);
+const smtpEnabled = Boolean(host && user && pass);
 
-const transporter = enabled
+const transporter = smtpEnabled
   ? nodemailer.createTransport({
       host,
       port,
@@ -26,22 +29,10 @@ function escapeHtml(value: string) {
     .replace(/"/g, "&quot;");
 }
 
-/**
- * Email a new submission to the ministry inbox.
- * Best-effort: if SMTP isn't configured, it logs a warning and resolves false
- * instead of throwing, so a missing mail setup never blocks the DB write.
- */
-export async function sendSubmissionEmail(submission: {
+function buildHtml(submission: {
   intent: string;
   fields: Record<string, string>;
-}): Promise<boolean> {
-  if (!transporter) {
-    console.warn(
-      "[mailer] SMTP not configured (SMTP_HOST/SMTP_USER/SMTP_PASS) — skipping email."
-    );
-    return false;
-  }
-
+}) {
   const rows = Object.entries(submission.fields)
     .map(
       ([k, v]) =>
@@ -56,7 +47,7 @@ export async function sendSubmissionEmail(submission: {
     )
     .join("");
 
-  const html = `
+  return `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
       <div style="background:#7A0E1A;color:#D4A437;padding:20px 24px;">
         <h2 style="margin:0;font-size:20px;">New ${escapeHtml(
@@ -72,20 +63,93 @@ export async function sendSubmissionEmail(submission: {
       </p>
     </div>
   `;
+}
+
+// ── FormSubmit.co — zero-signup email delivery ───────────────────────────
+// No account, no API key. We POST the submission to their AJAX endpoint and
+// they email it to TO. The FIRST time a new address is used, FormSubmit sends
+// a one-time "Activate" email to that inbox — click it once and every future
+// submission is delivered automatically.
+async function sendViaFormSubmit(submission: {
+  intent: string;
+  fields: Record<string, string>;
+}): Promise<boolean> {
+  const endpoint = `https://formsubmit.co/ajax/${encodeURIComponent(TO)}`;
+
+  const payload: Record<string, string> = {
+    _subject: `New ${submission.intent} — ${
+      submission.fields.name || "Anonymous"
+    }`,
+    _template: "table",
+    _captcha: "false",
+    intent: submission.intent,
+    ...submission.fields,
+  };
+  // Let replies go straight to the person who submitted, when we have it.
+  if (submission.fields.email) payload._replyto = submission.fields.email;
 
   try {
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || `VOGIM Prayer Land <${user}>`,
-      to: TO,
-      replyTo: submission.fields.email || undefined,
-      subject: `New ${submission.intent} — ${
-        submission.fields.name || "Anonymous"
-      }`,
-      html,
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
     });
-    return true;
+
+    if (!res.ok) {
+      console.error(`[mailer] FormSubmit HTTP ${res.status}`);
+      return false;
+    }
+    const data = (await res.json().catch(() => ({}))) as {
+      success?: string | boolean;
+      message?: string;
+    };
+    const ok = String(data.success) === "true";
+    if (!ok) {
+      // Most commonly this is the one-time "please activate" response.
+      console.warn(
+        `[mailer] FormSubmit not yet active: ${
+          data.message || "confirm the activation email sent to " + TO
+        }`
+      );
+    }
+    return ok;
   } catch (err) {
-    console.error("[mailer] Failed to send submission email:", err);
+    console.error("[mailer] FormSubmit request failed:", err);
     return false;
   }
+}
+
+/**
+ * Email a new submission to the ministry inbox.
+ * Best-effort: uses SMTP if configured, otherwise FormSubmit.co (no signup).
+ * Never throws — a mail failure must never block the DB write.
+ */
+export async function sendSubmissionEmail(submission: {
+  intent: string;
+  fields: Record<string, string>;
+}): Promise<boolean> {
+  // Preferred path: SMTP, if credentials are configured.
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || `VOGIM Prayer Land <${user}>`,
+        to: TO,
+        replyTo: submission.fields.email || undefined,
+        subject: `New ${submission.intent} — ${
+          submission.fields.name || "Anonymous"
+        }`,
+        html: buildHtml(submission),
+      });
+      return true;
+    } catch (err) {
+      console.error("[mailer] SMTP send failed, falling back to FormSubmit:", err);
+      // fall through to FormSubmit
+    }
+  }
+
+  // Zero-signup path: FormSubmit.co.
+  return sendViaFormSubmit(submission);
 }
