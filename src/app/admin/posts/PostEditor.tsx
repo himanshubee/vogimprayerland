@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,6 +13,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { TinyEditor } from "@/components/admin/TinyEditor";
+import { SeoPanel } from "@/components/admin/SeoPanel";
+import { analyzeSeo, EMPTY_SEO, type PostSeo } from "@/lib/seo-analysis";
 import type { Post } from "@/lib/posts";
 
 function slugify(input: string): string {
@@ -39,6 +41,24 @@ export function PostEditor({ post }: { post?: Post }) {
   );
   const [featuredImage, setFeaturedImage] = useState<string | null>(
     post?.featuredImage ?? null
+  );
+  const [seo, setSeo] = useState<PostSeo>({ ...EMPTY_SEO, ...(post?.seo ?? {}) });
+
+  const updateSeo = (patch: Partial<PostSeo>) =>
+    setSeo((prev) => ({ ...prev, ...patch }));
+
+  // Live score, recomputed as the post and SEO fields change.
+  const seoScore = useMemo(
+    () =>
+      analyzeSeo({
+        focusKeyword: seo.focusKeyword,
+        seoTitle: seo.title || title,
+        metaDescription: seo.description || excerpt,
+        slug,
+        contentHtml: content,
+        hasImage: Boolean(featuredImage),
+      }).score,
+    [seo.focusKeyword, seo.title, seo.description, title, excerpt, slug, content, featuredImage]
   );
 
   const [saving, setSaving] = useState(false);
@@ -88,6 +108,7 @@ export function PostEditor({ post }: { post?: Post }) {
         .map((c) => c.trim())
         .filter(Boolean),
       featuredImage,
+      seo: { ...seo, score: seoScore },
       type: post?.type ?? "post",
     };
     try {
@@ -208,6 +229,16 @@ export function PostEditor({ post }: { post?: Post }) {
           </div>
 
           <TinyEditor value={content} onChange={setContent} />
+
+          <SeoPanel
+            seo={seo}
+            onChange={updateSeo}
+            title={title}
+            slug={slug}
+            excerpt={excerpt}
+            content={content}
+            featuredImage={featuredImage}
+          />
         </div>
 
         {/* SIDEBAR */}

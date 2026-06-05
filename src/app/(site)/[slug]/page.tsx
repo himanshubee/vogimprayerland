@@ -21,14 +21,31 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return { title: "Not found — VOGIM Prayer Land" };
+
+  const seo = post.seo;
+  const metaTitle = seo.title || `${post.title} — VOGIM Prayer Land`;
+  const metaDescription = seo.description || post.excerpt || undefined;
+  const ogImage = seo.ogImage || post.featuredImage;
+
   return {
-    title: `${post.title} — VOGIM Prayer Land`,
-    description: post.excerpt || undefined,
+    title: metaTitle,
+    description: metaDescription,
+    ...(seo.canonical ? { alternates: { canonical: seo.canonical } } : {}),
+    robots: {
+      index: !seo.noindex,
+      follow: !seo.nofollow,
+    },
     openGraph: {
-      title: post.title,
-      description: post.excerpt || undefined,
+      title: seo.ogTitle || seo.title || post.title,
+      description: seo.ogDescription || metaDescription,
       type: "article",
-      images: post.featuredImage ? [{ url: post.featuredImage }] : undefined,
+      images: ogImage ? [{ url: ogImage }] : undefined,
+    },
+    twitter: {
+      card: ogImage ? "summary_large_image" : "summary",
+      title: seo.ogTitle || seo.title || post.title,
+      description: seo.ogDescription || metaDescription,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
@@ -50,8 +67,30 @@ export default async function PostPage({
   const post = await getPostBySlug(slug);
   if (!post) notFound();
 
+  const SITE = "https://www.vogimprayerland.org";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.seo.title || post.title,
+    description: post.seo.description || post.excerpt || undefined,
+    image: post.seo.ogImage || post.featuredImage || undefined,
+    datePublished: post.date,
+    dateModified: post.modified,
+    mainEntityOfPage: post.seo.canonical || `${SITE}/${post.slug}/`,
+    author: { "@type": "Organization", name: "VOGIM Prayer Land" },
+    publisher: {
+      "@type": "Organization",
+      name: "VOGIM Prayer Land",
+      url: SITE,
+    },
+  };
+
   return (
     <article className="bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* HERO */}
       <header className="relative bg-midnight text-white overflow-hidden">
         {post.featuredImage && (

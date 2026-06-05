@@ -1,5 +1,9 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
+import { EMPTY_SEO, type PostSeo } from "@/lib/seo-analysis";
+
+export type { PostSeo } from "@/lib/seo-analysis";
+export { EMPTY_SEO } from "@/lib/seo-analysis";
 
 export type PostStatus = "publish" | "draft";
 export type PostType = "post" | "page";
@@ -15,6 +19,7 @@ export type Post = {
   status: PostStatus;
   categories: string[];
   featuredImage: string | null;
+  seo: PostSeo;
   date: string; // ISO
   modified: string; // ISO
 };
@@ -32,9 +37,33 @@ type PostDoc = {
   status?: PostStatus;
   categories?: string[];
   featuredImage?: string | null;
+  seo?: Partial<PostSeo>;
   date?: Date | string;
   modified?: Date | string;
 };
+
+function serializeSeo(s?: Partial<PostSeo>): PostSeo {
+  return { ...EMPTY_SEO, ...(s ?? {}) };
+}
+
+/** Normalize an incoming SEO payload into a complete, typed object. */
+function cleanSeo(s?: Partial<PostSeo> | null): PostSeo {
+  if (!s) return { ...EMPTY_SEO };
+  const str = (v: unknown, max = 300) =>
+    String(v ?? "").slice(0, max).trim();
+  return {
+    focusKeyword: str(s.focusKeyword, 120),
+    title: str(s.title, 160),
+    description: str(s.description, 320),
+    canonical: str(s.canonical, 500),
+    noindex: Boolean(s.noindex),
+    nofollow: Boolean(s.nofollow),
+    ogTitle: str(s.ogTitle, 160),
+    ogDescription: str(s.ogDescription, 320),
+    ogImage: s.ogImage ? str(s.ogImage, 500) : null,
+    score: Math.max(0, Math.min(100, Math.round(Number(s.score) || 0))),
+  };
+}
 
 function toISO(v: Date | string | undefined): string {
   if (!v) return new Date(0).toISOString();
@@ -53,6 +82,7 @@ function serialize(d: PostDoc): Post {
     status: d.status ?? "draft",
     categories: d.categories ?? [],
     featuredImage: d.featuredImage ?? null,
+    seo: serializeSeo(d.seo),
     date: toISO(d.date),
     modified: toISO(d.modified),
   };
@@ -162,6 +192,7 @@ export type PostInput = {
   status?: PostStatus;
   categories?: string[];
   featuredImage?: string | null;
+  seo?: Partial<PostSeo> | null;
   date?: string;
 };
 
@@ -195,6 +226,7 @@ export async function createPost(input: PostInput): Promise<Post> {
     status: input.status ?? "draft",
     categories: input.categories ?? [],
     featuredImage: input.featuredImage ?? null,
+    seo: cleanSeo(input.seo),
     date: input.date ? new Date(input.date) : now,
     modified: now,
   };
@@ -220,6 +252,7 @@ export async function updatePost(
     status: input.status ?? "draft",
     categories: input.categories ?? [],
     featuredImage: input.featuredImage ?? null,
+    seo: cleanSeo(input.seo),
     ...(input.date ? { date: new Date(input.date) } : {}),
     modified: new Date(),
   };
