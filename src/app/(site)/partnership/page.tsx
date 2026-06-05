@@ -248,7 +248,7 @@ export default function PartnershipPage() {
       <section id="sign-up" className="bg-ivory paper-grain scroll-mt-24">
         <div className="mx-auto max-w-3xl px-5 sm:px-6 py-20 lg:py-28">
           <RequestForm
-            intent="Partnership Sign-Up"
+            intent="Partner Form"
             fields={PARTNER_FIELDS}
             submitLabel="Become a Partner"
           />
