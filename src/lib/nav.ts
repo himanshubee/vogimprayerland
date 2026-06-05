@@ -27,6 +27,7 @@ export const NAV_LINKS: NavLink[] = [
       { label: "Deliverance Request", href: "/deliverance-request" },
     ],
   },
+  { label: "Articles", href: "/blog" },
   { label: "Media", href: "/media" },
   { label: "Gallery", href: "/gallery" },
   { label: "Give", href: "/give" },

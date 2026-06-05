@@ -38,6 +38,7 @@ export function Footer() {
             <h4 className="eyebrow text-gold mb-5">Visit</h4>
             <ul className="space-y-3 text-sm text-ivory/80">
               <li><Link href="/about" className="hover:text-gold">About Us</Link></li>
+              <li><Link href="/blog" className="hover:text-gold">Blog &amp; Articles</Link></li>
               <li><Link href="/media" className="hover:text-gold">Media Gallery</Link></li>
               <li><Link href="/give" className="hover:text-gold">Give</Link></li>
               <li><Link href="/contact" className="hover:text-gold">Contact</Link></li>

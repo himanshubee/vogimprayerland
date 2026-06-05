@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -138,11 +139,24 @@ export function AdminDashboard({ initial }: { initial: Submission[] }) {
       {/* TOP BAR */}
       <header className="sticky top-0 z-20 bg-midnight text-white">
         <div className="mx-auto max-w-6xl px-5 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="eyebrow text-gold leading-none">VOGIM Admin</p>
-            <h1 className="font-display text-xl sm:text-2xl mt-1 leading-none">
-              Submissions
-            </h1>
+          <div className="flex items-center gap-5">
+            <div>
+              <p className="eyebrow text-gold leading-none">VOGIM Admin</p>
+              <h1 className="font-display text-xl sm:text-2xl mt-1 leading-none">
+                Submissions
+              </h1>
+            </div>
+            <nav className="hidden sm:flex items-center gap-1 ml-2">
+              <span className="text-[11px] tracking-[0.18em] uppercase text-gold border-b-2 border-gold px-3 py-2">
+                Submissions
+              </span>
+              <Link
+                href="/admin/posts"
+                className="text-[11px] tracking-[0.18em] uppercase text-white/60 hover:text-gold px-3 py-2 transition-colors"
+              >
+                Posts
+              </Link>
+            </nav>
           </div>
           <div className="flex items-center gap-2">
             <button

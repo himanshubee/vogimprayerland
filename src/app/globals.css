@@ -201,6 +201,89 @@ body {
   color: var(--color-gold-deep);
 }
 
+/* Article / post body typography (renders imported WordPress HTML) */
+.post-content {
+  color: #2a1015;
+  font-size: 1.075rem;
+  line-height: 1.85;
+}
+.post-content > *:first-child { margin-top: 0; }
+.post-content p { margin: 1.15em 0; }
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4 {
+  font-family: var(--font-display);
+  color: var(--color-midnight);
+  line-height: 1.2;
+  margin: 1.6em 0 0.5em;
+  letter-spacing: -0.01em;
+}
+.post-content h2 { font-size: 1.9rem; }
+.post-content h3 { font-size: 1.5rem; }
+.post-content h4 { font-size: 1.25rem; }
+.post-content a {
+  color: var(--color-gold-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.post-content a:hover { color: var(--color-midnight); }
+.post-content strong { color: var(--color-midnight); font-weight: 600; }
+.post-content ul,
+.post-content ol { margin: 1.15em 0; padding-left: 1.4em; }
+.post-content ul { list-style: disc; }
+.post-content ol { list-style: decimal; }
+.post-content li { margin: 0.45em 0; }
+.post-content li::marker { color: var(--color-gold-deep); }
+.post-content img,
+.post-content figure {
+  max-width: 100%;
+  height: auto;
+  margin: 1.8em auto;
+  display: block;
+}
+.post-content figure img { margin: 0 auto; }
+.post-content figcaption {
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(42, 16, 21, 0.55);
+  margin-top: 0.6em;
+}
+.post-content blockquote {
+  border-left: 3px solid var(--color-gold);
+  padding: 0.4em 0 0.4em 1.4em;
+  margin: 1.6em 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.3rem;
+  color: var(--color-midnight);
+}
+.post-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.6em 0;
+  font-size: 0.95rem;
+}
+.post-content th,
+.post-content td {
+  border: 1px solid rgba(122, 14, 26, 0.18);
+  padding: 0.6em 0.85em;
+  text-align: left;
+}
+.post-content th { background: rgba(122, 14, 26, 0.06); color: var(--color-midnight); }
+.post-content hr {
+  border: 0;
+  border-top: 1px solid rgba(122, 14, 26, 0.15);
+  margin: 2.4em 0;
+}
+.post-content iframe {
+  max-width: 100%;
+  margin: 1.8em 0;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
+}
+
 /* Tinted hero image overlay */
 .hero-tint {
   background: linear-gradient(

@@ -104,16 +104,23 @@ export async function countPublishedPosts(type: PostType = "post"): Promise<numb
   return db.collection(COLLECTION).countDocuments({ status: "publish", type });
 }
 
-/** All published slugs (for generateStaticParams). */
+/** All published slugs with last-modified (for sitemap / static params). */
 export async function getAllPublishedSlugs(): Promise<
-  { slug: string; type: PostType }[]
+  { slug: string; type: PostType; modified: string }[]
 > {
   const db = await getDb();
   const docs = await db
     .collection<PostDoc>(COLLECTION)
-    .find({ status: "publish" }, { projection: { slug: 1, type: 1 } })
+    .find(
+      { status: "publish" },
+      { projection: { slug: 1, type: 1, modified: 1, date: 1 } }
+    )
     .toArray();
-  return docs.map((d) => ({ slug: d.slug, type: d.type ?? "post" }));
+  return docs.map((d) => ({
+    slug: d.slug,
+    type: d.type ?? "post",
+    modified: toISO(d.modified ?? d.date),
+  }));
 }
 
 export async function getDistinctCategories(): Promise<string[]> {
@@ -164,8 +171,7 @@ async function uniqueSlug(base: string, excludeId?: string): Promise<string> {
   const coll = db.collection<PostDoc>(COLLECTION);
   let slug = base || "post";
   let n = 1;
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  for (;;) {
     const existing = await coll.findOne({ slug });
     if (!existing || (excludeId && String(existing._id) === excludeId)) return slug;
     n += 1;
