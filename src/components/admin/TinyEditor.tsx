@@ -21,6 +21,10 @@ export function TinyEditor({ value, onChange }: Props) {
       init={{
         height: 620,
         menubar: "edit insert view format table tools",
+        // Keep image src as the absolute "/images/uploads/..." path returned by
+        // the API. Without this, TinyMCE rewrites it relative to the deep admin
+        // page URL (/admin/posts/new/), producing a broken src that won't load.
+        convert_urls: false,
         branding: false,
         promotion: false,
         skin: "oxide",
@@ -56,7 +60,9 @@ export function TinyEditor({ value, onChange }: Props) {
         }) => {
           const fd = new FormData();
           fd.append("file", blobInfo.blob(), blobInfo.filename());
-          const res = await fetch("/api/upload", { method: "POST", body: fd });
+          // Trailing slash: project sets trailingSlash:true, so POST to the
+          // canonical path to avoid a 308 redirect of the multipart body.
+          const res = await fetch("/api/upload/", { method: "POST", body: fd });
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
             throw new Error(data.error || "Image upload failed");
