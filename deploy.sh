@@ -11,8 +11,8 @@
 # (currently `next start -p 4830`) and your nginx proxy_pass target.
 
 PROJECT_DIR="/www/wwwroot/vogimprayerland.org"
-APP_NAME="tiehub-staging"
-MAINT_NAME="tiehub-staging-maintenance"
+APP_NAME="vogimprayerland.org"
+MAINT_NAME="vogimprayerland.org-maintenance"
 BACKUP_DIR=".next.backup"
 MAINT_SCRIPT="scripts/maintenance-server.js"
 PORT=4830
