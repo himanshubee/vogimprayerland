@@ -21,6 +21,7 @@ const STATIC_PATHS = [
   "media",
   "gallery",
   "give",
+  "partnership",
   "contact",
 ];
 
