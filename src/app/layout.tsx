@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { ChatwayWidget } from "@/components/ChatwayWidget";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -50,10 +47,7 @@ export default function RootLayout({
       className={`${cormorant.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white text-ink">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <ChatwayWidget />
+        {children}
       </body>
     </html>
   );

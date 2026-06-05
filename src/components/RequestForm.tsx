@@ -32,14 +32,37 @@ export function RequestForm({
 }: Props) {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    // Demo only — pretend send
-    await new Promise((r) => setTimeout(r, 700));
-    setLoading(false);
-    setSent(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const payload: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      payload[key] = String(value);
+    });
+
+    try {
+      const res = await fetch("/api/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ intent, fields: payload }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Something went wrong. Please try again.");
+      }
+      setSent(true);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (sent) {
@@ -111,6 +134,12 @@ export function RequestForm({
           );
         })}
       </div>
+
+      {error && (
+        <p className="mt-6 border-l-2 border-midnight-soft bg-midnight-soft/5 px-4 py-3 text-sm text-midnight">
+          {error}
+        </p>
+      )}
 
       <div className="mt-10 flex items-center justify-between gap-6">
         <p className="text-xs text-midnight/50 max-w-xs">
