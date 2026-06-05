@@ -66,6 +66,35 @@ export function TinyEditor({ value, onChange }: Props) {
         },
         automatic_uploads: true,
         file_picker_types: "image",
+        // Adds an "Upload" tab / browse button to the Insert-Image dialog.
+        // Without this, the image toolbar button only offers a URL field;
+        // images_upload_handler alone covers paste & drag-and-drop only.
+        file_picker_callback: (
+          callback: (url: string, meta?: { title?: string }) => void,
+        ) => {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = "image/*";
+          input.onchange = () => {
+            const file = input.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              // Hand TinyMCE a blob URI; automatic_uploads then routes it
+              // through images_upload_handler -> /api/upload.
+              const id = `blobid${new Date().getTime()}`;
+              const blobCache =
+                // @ts-expect-error - activeEditor is available at call time
+                window.tinymce.activeEditor.editorUpload.blobCache;
+              const base64 = (reader.result as string).split(",")[1];
+              const blobInfo = blobCache.create(id, file, base64);
+              blobCache.add(blobInfo);
+              callback(blobInfo.blobUri(), { title: file.name });
+            };
+            reader.readAsDataURL(file);
+          };
+          input.click();
+        },
         image_caption: true,
       }}
     />
