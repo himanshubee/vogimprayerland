@@ -21,7 +21,7 @@ export function TinyEditor({ value, onChange }: Props) {
       init={{
         height: 620,
         menubar: "edit insert view format table tools",
-        // Keep image src as the absolute "/images/uploads/..." path returned by
+        // Keep image src as the absolute img.vogimprayerland.org URL returned by
         // the API. Without this, TinyMCE rewrites it relative to the deep admin
         // page URL (/admin/posts/new/), producing a broken src that won't load.
         convert_urls: false,

@@ -64,7 +64,7 @@ export default function OnlineDeliverancePage() {
   return (
     <>
       <PageHeader
-        image="/images/slider3.jpg"
+        image="https://img.vogimprayerland.org/1780648526061-slider3.webp"
         eyebrow="Online Deliverance Ministry"
         title={
           <>
@@ -98,7 +98,7 @@ export default function OnlineDeliverancePage() {
             <div className="relative aspect-[4/5] max-w-sm mx-auto">
               <div className="absolute -inset-3 border border-gold/40" />
               <Image
-                src="/images/deliverance.png"
+                src="https://img.vogimprayerland.org/1780648546756-deliverance.webp"
                 alt="An online deliverance session — candle-lit and Spirit-led"
                 fill
                 className="object-cover relative"

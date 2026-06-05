@@ -13,7 +13,7 @@ export default function ContactPage() {
   return (
     <>
       <PageHeader
-        image="/images/slider1.jpg"
+        image="https://img.vogimprayerland.org/1780648525318-slider1.jpg"
         eyebrow="Contact Us"
         title={
           <>

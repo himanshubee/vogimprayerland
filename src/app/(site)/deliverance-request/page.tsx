@@ -13,7 +13,7 @@ export default function DeliveranceRequestPage() {
   return (
     <>
       <PageHeader
-        image="/images/deliverance.png"
+        image="https://img.vogimprayerland.org/1780648546756-deliverance.webp"
         eyebrow="Deliverance Request"
         title={
           <>

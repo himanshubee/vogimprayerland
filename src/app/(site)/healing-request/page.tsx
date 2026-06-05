@@ -12,7 +12,7 @@ export default function HealingRequestPage() {
   return (
     <>
       <PageHeader
-        image="/images/prophet.jpg"
+        image="https://img.vogimprayerland.org/1780648525156-prophet.webp"
         eyebrow="Healing Request"
         title={
           <>

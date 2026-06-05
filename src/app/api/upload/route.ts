@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
 import { isAuthenticated } from "@/lib/auth";
-import { slugify } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
 
 const ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
-const EXT: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/gif": "gif",
-  "image/webp": "webp",
-  "image/svg+xml": "svg",
-};
+
+const UPLOAD_URL = process.env.S3_UPLOAD_URL || "https://s3upload.vogimprayerland.org/upload";
+const API_KEY = process.env.S3_UPLOAD_KEY;
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!API_KEY) {
+    return NextResponse.json({ error: "Upload service not configured" }, { status: 500 });
   }
 
   const form = await req.formData().catch(() => null);
@@ -33,20 +29,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "File too large (max 8MB)" }, { status: 400 });
   }
 
-  const buf = Buffer.from(await file.arrayBuffer());
-  const now = new Date();
-  const dir = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}`;
+  // Forward to the S3-backed upload service; it compresses, makes a WebP
+  // variant, and serves everything from img.vogimprayerland.org.
+  const fd = new FormData();
+  fd.append("file", file, file.name);
 
-  const base = slugify(file.name.replace(/\.[^.]+$/, "")) || "image";
-  // unique-ish suffix from size + minutes/seconds to avoid clobbering
-  const suffix = `${file.size.toString(36)}${now.getTime().toString(36).slice(-4)}`;
-  const filename = `${base}-${suffix}.${EXT[file.type]}`;
+  let data: {
+    publicUrl?: string;
+    webpUrl?: string;
+    error?: string;
+  };
+  try {
+    const res = await fetch(UPLOAD_URL, {
+      method: "POST",
+      headers: { "x-api-key": API_KEY },
+      body: fd,
+    });
+    data = await res.json();
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: data?.error || "Upload failed" },
+        { status: 502 }
+      );
+    }
+  } catch {
+    return NextResponse.json({ error: "Upload service unreachable" }, { status: 502 });
+  }
 
-  const destDir = join(process.cwd(), "public", "images", "uploads", dir);
-  await mkdir(destDir, { recursive: true });
-  await writeFile(join(destDir, filename), buf);
+  // Prefer the smaller WebP variant; fall back to the original-format URL.
+  const url = data.webpUrl || data.publicUrl;
+  if (!url) {
+    return NextResponse.json({ error: "Upload failed" }, { status: 502 });
+  }
 
-  const location = `/images/uploads/${dir}/${filename}`;
   // TinyMCE expects { location }; we also return url for the featured-image picker.
-  return NextResponse.json({ location, url: location });
+  return NextResponse.json({ location: url, url });
 }

@@ -32,7 +32,7 @@ export default function AboutPage() {
   return (
     <>
       <PageHeader
-        image="/images/worship.jpg"
+        image="https://img.vogimprayerland.org/1780648526688-worship.jpg"
         eyebrow="About the Ministry"
         title={
           <>
@@ -83,7 +83,7 @@ export default function AboutPage() {
               <div className="absolute -inset-3 sm:-inset-4 border border-gold/50" />
               <div className="relative w-full h-full overflow-hidden">
                 <Image
-                  src="/images/prophet.jpg"
+                  src="https://img.vogimprayerland.org/1780648525156-prophet.webp"
                   alt="Prophet Olaofe Oladele"
                   fill
                   className="object-cover"

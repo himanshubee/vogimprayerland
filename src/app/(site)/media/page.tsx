@@ -38,19 +38,19 @@ const SERMONS = [
 ];
 
 const GALLERY = [
-  { id: 1, title: "Prophetic Service", src: "/images/slider3.jpg" },
-  { id: 2, title: "Worship Night", src: "/images/slider2.jpg" },
-  { id: 3, title: "Children at the Altar", src: "/images/slider1.jpg" },
-  { id: 4, title: "Believe — Sunset Vigil", src: "/images/worship.jpg" },
-  { id: 5, title: "Marital Settlement Service", src: "/images/marital-large.jpg" },
-  { id: 6, title: "Online Deliverance Session", src: "/images/deliverance.png" },
+  { id: 1, title: "Prophetic Service", src: "https://img.vogimprayerland.org/1780648526061-slider3.webp" },
+  { id: 2, title: "Worship Night", src: "https://img.vogimprayerland.org/1780648526009-slider2.webp" },
+  { id: 3, title: "Children at the Altar", src: "https://img.vogimprayerland.org/1780648525318-slider1.jpg" },
+  { id: 4, title: "Believe — Sunset Vigil", src: "https://img.vogimprayerland.org/1780648526688-worship.jpg" },
+  { id: 5, title: "Marital Settlement Service", src: "https://img.vogimprayerland.org/1780648524880-marital-large.jpg" },
+  { id: 6, title: "Online Deliverance Session", src: "https://img.vogimprayerland.org/1780648546756-deliverance.webp" },
 ];
 
 export default function MediaPage() {
   return (
     <>
       <PageHeader
-        image="/images/slider2.jpg"
+        image="https://img.vogimprayerland.org/1780648526009-slider2.webp"
         eyebrow="Media"
         title={
           <>

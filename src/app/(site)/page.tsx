@@ -65,7 +65,7 @@ export default function Home() {
         {/* Background image */}
         <div className="absolute inset-0">
           <Image
-            src="/images/slider3.jpg"
+            src="https://img.vogimprayerland.org/1780648526061-slider3.webp"
             alt=""
             fill
             priority
@@ -194,7 +194,7 @@ export default function Home() {
             <div className="mt-10 relative aspect-[4/5] max-w-sm">
               <div className="absolute -inset-3 border border-gold/40" />
               <Image
-                src="/images/worship.jpg"
+                src="https://img.vogimprayerland.org/1780648526688-worship.jpg"
                 alt="Worship at sunset — Believe"
                 fill
                 className="object-cover relative"
@@ -299,7 +299,7 @@ export default function Home() {
       <section className="relative bg-midnight text-white overflow-hidden">
         <div className="absolute inset-0">
           <Image
-            src="/images/slider1.jpg"
+            src="https://img.vogimprayerland.org/1780648525318-slider1.jpg"
             alt=""
             fill
             className="object-cover opacity-25"
@@ -358,7 +358,7 @@ export default function Home() {
               <div className="absolute -inset-4 border border-gold/50" />
               <div className="relative w-full h-full overflow-hidden">
                 <Image
-                  src="/images/prophet.jpg"
+                  src="https://img.vogimprayerland.org/1780648525156-prophet.webp"
                   alt="Prophet Olaofe Oladele — a man of God"
                   fill
                   className="object-cover"
@@ -416,7 +416,7 @@ export default function Home() {
       <section className="relative bg-midnight-dark text-white overflow-hidden">
         <div className="absolute inset-0">
           <Image
-            src="/images/slider2.jpg"
+            src="https://img.vogimprayerland.org/1780648526009-slider2.webp"
             alt=""
             fill
             className="object-cover opacity-30"

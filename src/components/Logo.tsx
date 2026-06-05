@@ -14,7 +14,7 @@ export function Logo({ light = false }: { light?: boolean }) {
         className={`relative inline-flex h-12 w-12 items-center justify-center transition-transform duration-300 group-hover:scale-105`}
       >
         <Image
-          src="/images/logo.png"
+          src="https://img.vogimprayerland.org/1780648525663-logo.webp"
           alt="VOGIM Deliverance Ministries"
           width={56}
           height={56}

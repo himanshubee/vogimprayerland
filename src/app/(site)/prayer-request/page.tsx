@@ -12,7 +12,7 @@ export default function PrayerRequestPage() {
   return (
     <>
       <PageHeader
-        image="/images/slider2.jpg"
+        image="https://img.vogimprayerland.org/1780648526009-slider2.webp"
         eyebrow="Prayer Request"
         title={
           <>

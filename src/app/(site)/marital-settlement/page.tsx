@@ -52,7 +52,7 @@ export default function MaritalSettlementPage() {
   return (
     <>
       <PageHeader
-        image="/images/marital-large.jpg"
+        image="https://img.vogimprayerland.org/1780648524880-marital-large.jpg"
         eyebrow="Prayer for Marital Settlement"
         title={
           <>
@@ -75,7 +75,7 @@ export default function MaritalSettlementPage() {
             <div className="relative aspect-[5/4] max-w-lg">
               <div className="absolute -inset-3 border border-gold/40" />
               <Image
-                src="/images/marital.png"
+                src="https://img.vogimprayerland.org/1780648527627-marital.webp"
                 alt="A couple in conversation — restored and at peace"
                 fill
                 className="object-cover relative"

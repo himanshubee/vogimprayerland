@@ -12,7 +12,7 @@ export default function DreamInterpretationPage() {
   return (
     <>
       <PageHeader
-        image="/images/main-height.jpg"
+        image="https://img.vogimprayerland.org/1780648525834-main-height.jpg"
         eyebrow="Dream Interpretation"
         title={
           <>

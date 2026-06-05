@@ -33,7 +33,7 @@ export default function GivePage() {
   return (
     <>
       <PageHeader
-        image="/images/worship.jpg"
+        image="https://img.vogimprayerland.org/1780648526688-worship.jpg"
         eyebrow="Give"
         title={
           <>
