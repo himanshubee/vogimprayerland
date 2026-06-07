@@ -18,6 +18,7 @@ const STATIC_PATHS = [
   "prayer-request",
   "deliverance-request",
   "blog",
+  "zoom",
   "media",
   "gallery",
   "give",

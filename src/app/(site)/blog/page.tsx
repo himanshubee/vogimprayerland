@@ -4,6 +4,7 @@ import { ArrowUpRight, Calendar } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 import { getPublishedPosts, countPublishedPosts } from "@/lib/posts";
+import Adsense from "@/components/Adsense";
 
 export const revalidate = 300;
 export const metadata = {
@@ -45,6 +46,7 @@ export default async function BlogIndex({
 
   return (
     <>
+      <Adsense />
       <PageHeader
         eyebrow="Articles"
         title={

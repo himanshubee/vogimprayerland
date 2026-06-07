@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -57,6 +58,16 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
       "max-video-preview": -1,
+    },
+  },
+  // Webmaster-tool site verifications carried over from the previous
+  // WordPress site (old.vogimprayerland.org).
+  verification: {
+    google: "p3zMtdgse25dnwQksgqNy3BV5w7kL4CF7xhmdJ9_fFk",
+    yandex: "4fbdd97331c78d4e",
+    other: {
+      "msvalidate.01": "EC93E391DA3A3C520BA7E94F01CEF220",
+      "p:domain_verify": "3f5c42cb99045d55aff099905b5b9999",
     },
   },
   openGraph: {
@@ -120,6 +131,7 @@ export default function RootLayout({
           }}
         />
         {children}
+        <GoogleAnalytics />
       </body>
     </html>
   );

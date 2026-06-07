@@ -363,7 +363,7 @@ export default function Home() {
               <div className="absolute -inset-4 border border-gold/50" />
               <div className="relative w-full h-full overflow-hidden">
                 <Image
-                  src="https://img.vogimprayerland.org/1780648525156-prophet.webp"
+                  src="/past.jpeg"
                   alt="Prophet Olaofe Oladele — a man of God"
                   fill
                   className="object-cover"
