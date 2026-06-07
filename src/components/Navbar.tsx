@@ -43,7 +43,7 @@ export function Navbar() {
         }`}
       >
         <nav className="mx-auto max-w-7xl flex items-center justify-between px-6 py-4 lg:py-5">
-          <Logo />
+          <Logo tagline={false} />
 
           <ul className="hidden lg:flex items-center gap-7 text-[13px] tracking-wide text-midnight/85">
             {NAV_LINKS.map((link) => {

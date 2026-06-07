@@ -1,7 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 
-export function Logo({ light = false }: { light?: boolean }) {
+export function Logo({
+  light = false,
+  tagline = true,
+}: {
+  light?: boolean;
+  tagline?: boolean;
+}) {
   const sub = light ? "text-white/70" : "text-midnight/60";
   const main = light ? "text-white" : "text-midnight";
   return (
@@ -28,9 +34,11 @@ export function Logo({ light = false }: { light?: boolean }) {
         >
           VOGIM <span className="italic font-light">Prayer Land</span>
         </span>
-        <span className={`mt-1 text-[10px] tracking-[0.3em] uppercase ${sub}`}>
-          Deliverance · Healing · Restoration
-        </span>
+        {tagline && (
+          <span className={`mt-1 text-[10px] tracking-[0.3em] uppercase ${sub}`}>
+            Deliverance · Healing · Restoration
+          </span>
+        )}
       </span>
     </Link>
   );
