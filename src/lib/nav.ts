@@ -29,8 +29,14 @@ export const NAV_LINKS: NavLink[] = [
   },
   { label: "Articles", href: "/blog" },
   { label: "Zoom", href: "/zoom" },
-  { label: "Media", href: "/media" },
-  { label: "Gallery", href: "/gallery" },
+  {
+    label: "Media",
+    href: "/media",
+    children: [
+      { label: "Media", href: "/media" },
+      { label: "Gallery", href: "/gallery" },
+    ],
+  },
   {
     label: "Give",
     href: "/give",
