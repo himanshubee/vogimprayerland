@@ -28,7 +28,7 @@ export const NAV_LINKS: NavLink[] = [
     ],
   },
   { label: "Articles", href: "/blog" },
-  { label: "Live on Zoom", href: "/zoom" },
+  { label: "Zoom", href: "/zoom" },
   { label: "Media", href: "/media" },
   { label: "Gallery", href: "/gallery" },
   {

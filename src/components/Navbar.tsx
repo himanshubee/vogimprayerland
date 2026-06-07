@@ -54,7 +54,7 @@ export function Navbar() {
                 <li key={link.href} className="relative group">
                   <Link
                     href={link.href}
-                    className={`flex items-center gap-1 py-2 transition-colors hover:text-gold-deep ${
+                    className={`flex items-center gap-1 py-2 whitespace-nowrap transition-colors hover:text-gold-deep ${
                       active ? "text-midnight font-medium" : ""
                     }`}
                   >
