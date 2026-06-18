@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 
@@ -131,6 +132,12 @@ export default function RootLayout({
           }}
         />
         {children}
+        <Script
+          id="google-adsense"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7788632056034755"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
         <GoogleAnalytics />
       </body>
     </html>
