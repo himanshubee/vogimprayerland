@@ -69,6 +69,7 @@ export const metadata: Metadata = {
     other: {
       "msvalidate.01": "EC93E391DA3A3C520BA7E94F01CEF220",
       "p:domain_verify": "3f5c42cb99045d55aff099905b5b9999",
+      "google-adsense-account": "ca-pub-7788632056034755",
     },
   },
   openGraph: {
