@@ -2,6 +2,8 @@ import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 import { ArrowUpRight, HandHeart, Sprout, HomeIcon } from "lucide-react";
+import { getPageContent } from "@/lib/page-content";
+import { RichText } from "@/components/RichText";
 
 export const metadata = {
   alternates: { canonical: "/give/" },
@@ -10,40 +12,35 @@ export const metadata = {
     "Partner with VOGIM. Give to support the work of deliverance, healing, and care for widows and orphans.",
 };
 
-const AMOUNTS = [10, 25, 50, 100, 250];
+export const revalidate = 300;
 
-const AREAS = [
-  {
-    icon: HandHeart,
-    title: "Deliverance Ministry",
-    body: "Resource the online sessions, prophetic services, and pastoral care for those reaching out from around the world.",
-  },
-  {
-    icon: Sprout,
-    title: "Widows & Orphans",
-    body: "Support our ongoing care for widows, orphans, and orphanage homes — financially, physically, and spiritually.",
-  },
-  {
-    icon: HomeIcon,
-    title: "Building the Sanctuary",
-    body: "Help us expand the Ikorodu sanctuary so more souls can be welcomed, taught, and discipled.",
-  },
-];
-
-export default function GivePage() {
+export default async function GivePage() {
+  const c = await getPageContent("give");
+  const AMOUNTS = [c.amount1, c.amount2, c.amount3, c.amount4, c.amount5];
+  const AREAS = [
+    {
+      icon: HandHeart,
+      title: c.area1Title,
+      body: c.area1Body,
+    },
+    {
+      icon: Sprout,
+      title: c.area2Title,
+      body: c.area2Body,
+    },
+    {
+      icon: HomeIcon,
+      title: c.area3Title,
+      body: c.area3Body,
+    },
+  ];
   return (
     <>
       <PageHeader
-        image="https://img.vogimprayerland.org/1780648526688-worship.jpg"
-        eyebrow="Give"
-        title={
-          <>
-            Sow into the
-            <br />
-            work of the <span className="italic text-gold">Lord.</span>
-          </>
-        }
-        intro="Every gift becomes a meal, a Bible, a deliverance session, a roof over a widow's head. Thank you for partnering with us."
+        image={c.heroImage}
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
         scripture={{
           ref: "2 Corinthians 9:7",
           text: "God loveth a cheerful giver.",
@@ -56,15 +53,13 @@ export default function GivePage() {
           <Reveal>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              Online Giving
+              {c.giveEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-4 leading-tight">
-              The only authorized giving channel for <span className="italic">VOGIM Prayer Land.</span>
+              <RichText text={c.giveTitle} accentClass="italic" />
             </h2>
             <p className="mt-6 text-midnight/75 leading-relaxed">
-              Please give securely through our official partner — your gift
-              goes directly to the work of the ministry, the support of the
-              vulnerable, and the spread of the gospel.
+              {c.giveIntro}
             </p>
 
             <div className="mt-10 flex flex-wrap gap-3 items-center">
@@ -77,26 +72,26 @@ export default function GivePage() {
                 </span>
               ))}
               <span className="px-5 py-3 border border-midnight/20 font-display text-xl italic text-midnight/70">
-                Other
+                {c.amountOther}
               </span>
             </div>
 
             <Link
-              href="https://give.vogimprayerland.org/"
+              href={c.giveButtonHref}
               className="btn-gold mt-10"
               target="_blank"
               rel="noreferrer"
             >
-              Give Now
+              {c.giveButtonLabel}
               <ArrowUpRight size={16} />
             </Link>
           </Reveal>
 
           <Reveal delay={0.1}>
             <div className="border border-midnight/15 bg-ivory p-8">
-              <p className="eyebrow text-gold-deep">Pledge</p>
+              <p className="eyebrow text-gold-deep">{c.pledgeEyebrow}</p>
               <h3 className="font-display text-3xl text-midnight mt-3 leading-tight">
-                Where every gift goes.
+                {c.pledgeTitle}
               </h3>
               <ul className="mt-6 space-y-5">
                 {AREAS.map((a) => {
@@ -124,12 +119,10 @@ export default function GivePage() {
         <div className="absolute inset-0 starfield opacity-40" />
         <div className="relative mx-auto max-w-4xl px-6 py-20 text-center">
           <p className="font-display italic text-3xl md:text-4xl leading-snug">
-            &ldquo;Bring ye all the tithes into the storehouse… and prove me
-            now herewith, saith the Lord of hosts, if I will not open you the
-            windows of heaven.&rdquo;
+            {c.thankQuote}
           </p>
           <p className="mt-4 text-[11px] tracking-[0.32em] uppercase text-gold">
-            Malachi 3:10
+            {c.thankRef}
           </p>
         </div>
       </section>

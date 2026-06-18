@@ -3,6 +3,8 @@ import Image from "next/image";
 import { ArrowUpRight, Heart, BookOpen, HandHeart, Hourglass, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
+import { getPageContent } from "@/lib/page-content";
+import { RichText } from "@/components/RichText";
 
 export const metadata = {
   alternates: { canonical: "/marital-settlement/" },
@@ -11,58 +13,56 @@ export const metadata = {
     "A guide to finding divine guidance and peace in your marital journey. Through prayer and spiritual counsel, VOGIM helps individuals navigate the complexities of marriage.",
 };
 
-const POINTS = [
-  {
-    icon: BookOpen,
-    title: "Spiritual Alignment",
-    body: "Align your intentions with God's will so His direction is unmistakable in your marital affairs.",
-  },
-  {
-    icon: HandHeart,
-    title: "Healing of Wounds",
-    body: "Pray over generational hurts, broken vows, and seasons of disappointment — and watch the Lord restore.",
-  },
-  {
-    icon: Hourglass,
-    title: "Patience & Faith",
-    body: "Cultivate trust in God's perfect timing while remaining tender, available, and prayerful.",
-  },
-  {
-    icon: Sparkles,
-    title: "Breakthrough Prayer",
-    body: "Stand on the prayers of an intercessor as you wait for divine settlement and lasting peace.",
-  },
-];
+export const revalidate = 300;
 
-const PRAYERS = [
-  {
-    title: "For the right partner",
-    body: "Father, by your Spirit, lead me to the partner ordained for me — one who fears you, loves me, and will walk in covenant with me all the days of our lives. In Jesus' name, amen.",
-  },
-  {
-    title: "For the restoration of a marriage",
-    body: "Lord, I bring my marriage before your throne. Heal what is broken, expose every hidden thing, and rebuild us in the strength of your love. In Jesus' name, amen.",
-  },
-  {
-    title: "For peace in the home",
-    body: "King of glory, let your peace rule in our home. Silence every voice that is not yours and let our home be a sanctuary of joy. In Jesus' name, amen.",
-  },
-];
+export default async function MaritalSettlementPage() {
+  const c = await getPageContent("marital-settlement");
 
-export default function MaritalSettlementPage() {
+  const POINTS = [
+    {
+      icon: BookOpen,
+      title: c.point1Title,
+      body: c.point1Body,
+    },
+    {
+      icon: HandHeart,
+      title: c.point2Title,
+      body: c.point2Body,
+    },
+    {
+      icon: Hourglass,
+      title: c.point3Title,
+      body: c.point3Body,
+    },
+    {
+      icon: Sparkles,
+      title: c.point4Title,
+      body: c.point4Body,
+    },
+  ];
+
+  const PRAYERS = [
+    {
+      title: c.prayer1Title,
+      body: c.prayer1Body,
+    },
+    {
+      title: c.prayer2Title,
+      body: c.prayer2Body,
+    },
+    {
+      title: c.prayer3Title,
+      body: c.prayer3Body,
+    },
+  ];
+
   return (
     <>
       <PageHeader
-        image="https://img.vogimprayerland.org/1780648524880-marital-large.jpg"
-        eyebrow="Prayer for Marital Settlement"
-        title={
-          <>
-            Divine guidance
-            <br />
-            for your <span className="italic text-gold">marital journey.</span>
-          </>
-        }
-        intro="Marriage is sacred — but the road can be hard. When you turn to prayer, you invite God's wisdom, patience, and love to steer your path toward happiness and fulfillment."
+        image={c.heroImage}
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
         scripture={{
           ref: "Proverbs 18:22",
           text: "Whoso findeth a wife findeth a good thing, and obtaineth favour of the Lord.",
@@ -76,7 +76,7 @@ export default function MaritalSettlementPage() {
             <div className="relative aspect-[5/4] max-w-lg">
               <div className="absolute -inset-3 border border-gold/40" />
               <Image
-                src="https://img.vogimprayerland.org/1780648527627-marital.webp"
+                src={c.introImage}
                 alt="A couple in conversation — restored and at peace"
                 fill
                 className="object-cover relative"
@@ -86,11 +86,7 @@ export default function MaritalSettlementPage() {
           </Reveal>
           <Reveal delay={0.1}>
             <p className="font-display text-2xl md:text-3xl text-midnight leading-snug">
-              When we speak of <span className="italic text-gold-deep">prayer for marital settlement</span>,
-              we mean the sacred act of seeking divine intervention to resolve
-              issues, discern the right partner, or strengthen an existing
-              relationship — inviting God to steer your marital path toward
-              happiness and fulfillment.
+              <RichText text={c.introBody} accentClass="italic text-gold-deep" />
             </p>
           </Reveal>
         </div>
@@ -102,12 +98,10 @@ export default function MaritalSettlementPage() {
           <Reveal>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              How prayer helps
+              {c.howEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-5 leading-tight max-w-3xl">
-              Four ways God moves on
-              <br />
-              <span className="italic">behalf of your marriage.</span>
+              <RichText text={c.howTitle} accentClass="italic" />
             </h2>
           </Reveal>
 
@@ -139,10 +133,10 @@ export default function MaritalSettlementPage() {
           <Reveal>
             <p className="eyebrow text-gold">
               <span className="gold-rule mr-3" />
-              Pray these words
+              {c.prayersEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl mt-5 leading-tight">
-              Detailed prayer points for <span className="italic text-gold">marital settlement.</span>
+              <RichText text={c.prayersTitle} accentClass="italic text-gold" />
             </h2>
           </Reveal>
 
@@ -170,20 +164,16 @@ export default function MaritalSettlementPage() {
           <Reveal>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              How VOGIM helps
+              {c.helpEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-5 leading-tight">
-              Walk with an intercessor who has <span className="italic">walked this path.</span>
+              <RichText text={c.helpTitle} accentClass="italic" />
             </h2>
             <p className="mt-6 text-midnight/75 leading-relaxed">
-              VOGIM specializes in spiritual guidance for individuals seeking
-              marital settlement. Through prayer, prophetic counsel, and
-              one-on-one ministry, we help you navigate the complexities of
-              your marital journey — offering support and encouragement at
-              every step.
+              {c.helpBody}
             </p>
-            <Link href="/prayer-request" className="btn-gold mt-8">
-              Request a prayer partner
+            <Link href={c.helpButtonHref} className="btn-gold mt-8">
+              {c.helpButtonLabel}
               <ArrowUpRight size={16} />
             </Link>
           </Reveal>
@@ -191,10 +181,10 @@ export default function MaritalSettlementPage() {
           <Reveal delay={0.1}>
             <ul className="space-y-5">
               {[
-                ["Personalized prayer", "Tailored to your unique situation and season."],
-                ["Spirit-led counsel", "Wisdom from the Word, applied with compassion."],
-                ["Confidential ministry", "Your story is held with reverence and care."],
-                ["Ongoing follow-up", "Aftercare so you walk out your breakthrough."],
+                [c.feature1Title, c.feature1Body],
+                [c.feature2Title, c.feature2Body],
+                [c.feature3Title, c.feature3Body],
+                [c.feature4Title, c.feature4Body],
               ].map(([title, body]) => (
                 <li
                   key={title}
@@ -227,19 +217,16 @@ export default function MaritalSettlementPage() {
         />
         <div className="relative mx-auto max-w-4xl px-6 py-24 text-center">
           <h2 className="font-display text-5xl md:text-6xl leading-[1.05]">
-            Don&apos;t walk this path
-            <br />
-            <span className="italic text-gold">alone.</span>
+            <RichText text={c.ctaTitle} accentClass="italic text-gold" />
           </h2>
           <p className="mt-6 text-ivory/70 max-w-xl mx-auto">
-            Reach out to VOGIM and begin your journey toward divine marital
-            settlement today.
+            {c.ctaBody}
           </p>
           <Link
-            href="/contact"
+            href={c.ctaButtonHref}
             className="btn-gold mt-10 inline-flex"
           >
-            Contact the ministry
+            {c.ctaButtonLabel}
             <ArrowUpRight size={16} />
           </Link>
         </div>

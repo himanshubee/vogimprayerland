@@ -12,57 +12,35 @@ import {
   Clock,
 } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
+import { RichText } from "@/components/RichText";
+import { getPageContent } from "@/lib/page-content";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const MINISTRIES = [
-  {
-    icon: Flame,
-    title: "Online Deliverance",
-    body: "Break free from spiritual oppression, generational chains, and demonic strongholds — wherever you are in the world.",
-    href: "/online-deliverance",
-  },
-  {
-    icon: HeartHandshake,
-    title: "Marital Settlement",
-    body: "Targeted prayer and prophetic counsel for singles, couples, and families seeking divine direction in marriage.",
-    href: "/marital-settlement",
-  },
-  {
-    icon: Sparkles,
-    title: "Healing Ministry",
-    body: "Receive a touch from the Healer. Jesus is still healing the sick — body, soul, and spirit.",
-    href: "/healing-request",
-  },
-  {
-    icon: MoonStar,
-    title: "Dream Interpretation",
-    body: "Discern the voice of God in your dreams. Submit your dream for Spirit-led interpretation.",
-    href: "/dream-interpretation",
-  },
-];
+export const revalidate = 300;
 
-const TESTIMONIES = [
-  {
-    name: "Karim Mouinath",
-    place: "Benin Republic",
-    text: "Received an international opening door to KUWAIT after I had an encounter with the man of God, Prophet Olaofe Oladele. Praise Master Jesus!",
-  },
-  {
-    name: "Adaeze O.",
-    place: "Port Harcourt, Nigeria",
-    text: "After years of unexplained sickness and torment, one online session brought freedom and peace to my home. Glory to Jesus.",
-  },
-  {
-    name: "Brother Samuel",
-    place: "London, UK",
-    text: "I joined the Monday service from another continent. The word came alive. My business broke open the following week.",
-  },
-];
+export default async function Home() {
+  const c = await getPageContent("home");
 
-export default function Home() {
+  const ministries = [
+    { icon: Flame, title: c.ministry1Title, body: c.ministry1Body, href: c.ministry1Href },
+    { icon: HeartHandshake, title: c.ministry2Title, body: c.ministry2Body, href: c.ministry2Href },
+    { icon: Sparkles, title: c.ministry3Title, body: c.ministry3Body, href: c.ministry3Href },
+    { icon: MoonStar, title: c.ministry4Title, body: c.ministry4Body, href: c.ministry4Href },
+  ];
+  const testimonies = [
+    { text: c.testimony1Text, name: c.testimony1Name, place: c.testimony1Place },
+    { text: c.testimony2Text, name: c.testimony2Name, place: c.testimony2Place },
+    { text: c.testimony3Text, name: c.testimony3Name, place: c.testimony3Place },
+  ];
+  const stats: [string, string][] = [
+    [c.stat1Num, c.stat1Label],
+    [c.stat2Num, c.stat2Label],
+    [c.stat3Num, c.stat3Label],
+  ];
+
   return (
     <>
       {/* HERO */}
@@ -70,7 +48,7 @@ export default function Home() {
         {/* Background image */}
         <div className="absolute inset-0">
           <Image
-            src="https://img.vogimprayerland.org/1780648526061-slider3.webp"
+            src={c.heroImage}
             alt=""
             fill
             priority
@@ -93,37 +71,30 @@ export default function Home() {
               <Reveal>
                 <p className="eyebrow text-gold">
                   <span className="gold-rule mr-3" />
-                  Voice of God International Ministry · est. 2021
+                  {c.heroEyebrow}
                 </p>
               </Reveal>
               <Reveal delay={0.1}>
                 <h1 className="font-display mt-7 text-6xl md:text-7xl lg:text-[5.5rem] leading-[0.95] tracking-tight">
-                  Where the captive
-                  <br />
-                  <span className="italic text-gold">walks free</span>
-                  <br />
-                  in Jesus&apos; name.
+                  <RichText text={c.heroTitle} />
                 </h1>
               </Reveal>
               <Reveal delay={0.2}>
                 <p className="mt-8 max-w-xl text-lg leading-relaxed text-white/85">
-                  VOGIM Prayer Land is an online deliverance ministry rooted in
-                  Lagos, Nigeria — preaching the gospel, healing the
-                  brokenhearted, and setting the captives free by the power of
-                  the Holy Ghost.
+                  {c.heroIntro}
                 </p>
               </Reveal>
               <Reveal delay={0.3}>
                 <div className="mt-10 flex flex-wrap items-center gap-5">
-                  <Link href="/deliverance-request" className="btn-gold">
-                    Submit a request
+                  <Link href={c.heroPrimaryHref} className="btn-gold">
+                    {c.heroPrimaryCta}
                     <ArrowUpRight size={16} />
                   </Link>
                   <Link
-                    href="/about"
+                    href={c.heroSecondaryHref}
                     className="text-sm tracking-widest uppercase text-white/90 u-link"
                   >
-                    Discover our story
+                    {c.heroSecondaryCta}
                   </Link>
                 </div>
               </Reveal>
@@ -135,14 +106,11 @@ export default function Home() {
                 <div className="relative border border-gold/40 bg-midnight-dark/80 backdrop-blur p-10">
                   <Cross className="text-gold mb-6" size={28} />
                   <p className="font-display italic text-2xl leading-snug text-white">
-                    The Spirit of the Lord is upon me, because he hath anointed
-                    me to preach the gospel to the poor; he hath sent me to
-                    heal the brokenhearted, to preach deliverance to the
-                    captives.
+                    {c.heroScripture}
                   </p>
                   <div className="mt-8 flex items-center justify-between">
                     <span className="text-xs tracking-[0.3em] uppercase text-gold">
-                      Luke 4:18
+                      {c.heroScriptureRef}
                     </span>
                     <span className="text-xs text-white/40 font-mono">
                       Daily Word
@@ -153,13 +121,13 @@ export default function Home() {
                 <div className="mt-6 grid grid-cols-2 gap-4">
                   <div className="border border-white/15 bg-midnight-dark/60 backdrop-blur p-5">
                     <Clock className="text-gold mb-3" size={16} />
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-white/60">Monday</p>
-                    <p className="font-display text-xl mt-1 text-white">10:00 PM <span className="text-gold text-sm">WAT</span></p>
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-white/60">{c.schedule1Day}</p>
+                    <p className="font-display text-xl mt-1 text-white">{c.schedule1Time} <span className="text-gold text-sm">{c.scheduleZone}</span></p>
                   </div>
                   <div className="border border-gold/40 bg-gold/15 backdrop-blur p-5">
                     <Clock className="text-gold mb-3" size={16} />
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-gold">Saturday</p>
-                    <p className="font-display text-xl mt-1 text-white">10:00 PM <span className="text-gold text-sm">WAT</span></p>
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-gold">{c.schedule2Day}</p>
+                    <p className="font-display text-xl mt-1 text-white">{c.schedule2Time} <span className="text-gold text-sm">{c.scheduleZone}</span></p>
                   </div>
                 </div>
               </div>
@@ -169,13 +137,15 @@ export default function Home() {
 
         <div className="relative border-t border-white/10 bg-midnight-dark/70 backdrop-blur">
           <div className="mx-auto max-w-7xl px-6 py-4 flex flex-wrap gap-x-10 gap-y-2 text-[11px] tracking-[0.3em] uppercase text-white/70">
-            <span className="text-gold">— A church for everyone</span>
-            <span>Deliverance</span>
-            <span>Healing</span>
-            <span>Restoration</span>
-            <span>Marital Settlement</span>
-            <span>Dream Interpretation</span>
-            <span className="text-gold">Prophetic Service</span>
+            <span className="text-gold">{c.keywordLead}</span>
+            {c.keywords
+              .split(",")
+              .map((k) => k.trim())
+              .filter(Boolean)
+              .map((k) => (
+                <span key={k}>{k}</span>
+              ))}
+            <span className="text-gold">{c.keywordLast}</span>
           </div>
         </div>
       </section>
@@ -186,20 +156,16 @@ export default function Home() {
           <Reveal className="lg:col-span-5">
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              The Mission
+              {c.missionEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-midnight leading-[1.03] mt-5">
-              Loving God,
-              <br />
-              <span className="italic text-gold-deep">loving others</span>,
-              <br />
-              in the world.
+              <RichText text={c.missionTitle} accentClass="italic text-gold-deep" />
             </h2>
 
             <div className="mt-10 relative aspect-[4/5] max-w-sm">
               <div className="absolute -inset-3 border border-gold/40" />
               <Image
-                src="https://img.vogimprayerland.org/1780648526688-worship.jpg"
+                src={c.missionImage}
                 alt="Worship at sunset — Believe"
                 fill
                 className="object-cover relative"
@@ -211,28 +177,17 @@ export default function Home() {
           <div className="lg:col-span-7 lg:pt-3">
             <Reveal delay={0.1}>
               <p className="text-xl text-midnight/85 leading-relaxed font-light drop-cap">
-                By the power of the Holy Ghost, VOGIM Deliverance Ministries
-                brings deliverance, healing and restoration to individuals and
-                families oppressed and tormented by the devil. Chains of bondage
-                are broken in the blood of Jesus Christ of Nazareth.
+                {c.missionPara1}
               </p>
             </Reveal>
             <Reveal delay={0.2}>
               <p className="mt-6 text-ink/70 leading-relaxed">
-                We demonstrate the power of God by breaking generational
-                poverty, ancestral curses, and generational sins — through
-                teaching, prophetic ministry, and the raw display of God&apos;s
-                love, grace, and the forgiveness found only in the Lord Jesus
-                Christ.
+                {c.missionPara2}
               </p>
             </Reveal>
             <Reveal delay={0.3}>
               <div className="mt-10 grid sm:grid-cols-3 gap-6">
-                {[
-                  ["50+", "Nations reached online"],
-                  ["1000s", "Lives restored"],
-                  ["24/7", "Intercession upheld"],
-                ].map(([num, label]) => (
+                {stats.map(([num, label]) => (
                   <div key={label} className="border-t border-midnight/15 pt-5">
                     <p className="font-display text-4xl text-midnight">{num}</p>
                     <p className="text-xs tracking-[0.2em] uppercase text-midnight/60 mt-2">
@@ -253,12 +208,10 @@ export default function Home() {
             <div>
               <p className="eyebrow text-gold-deep">
                 <span className="gold-rule mr-3" />
-                Our Ministries
+                {c.ministriesEyebrow}
               </p>
               <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-midnight mt-4 leading-tight">
-                Spirit-led pathways
-                <br />
-                <span className="italic">to your breakthrough.</span>
+                <RichText text={c.ministriesTitle} accentClass="italic" />
               </h2>
             </div>
             <Link href="/online-deliverance" className="btn-ghost text-midnight self-start md:self-end">
@@ -268,7 +221,7 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-midnight/15">
-            {MINISTRIES.map((m, i) => {
+            {ministries.map((m, i) => {
               const Icon = m.icon;
               return (
                 <Reveal key={m.title} delay={i * 0.08}>
@@ -320,17 +273,15 @@ export default function Home() {
                 Testimonies
               </p>
               <h2 className="font-display text-4xl md:text-5xl mt-4 leading-tight">
-                What the Lord
-                <br /> has done.
+                <RichText text={c.testimoniesTitle} />
               </h2>
               <p className="mt-6 text-white/75 max-w-sm">
-                Real stories from those who came seeking and left transformed
-                by the power of Jesus Christ.
+                {c.testimoniesIntro}
               </p>
             </Reveal>
 
             <div className="grid sm:grid-cols-2 gap-6">
-              {TESTIMONIES.map((t, i) => (
+              {testimonies.map((t, i) => (
                 <Reveal key={t.name} delay={0.1 + i * 0.08}>
                   <figure
                     className={`relative border border-white/15 bg-midnight-dark/60 backdrop-blur p-7 h-full flex flex-col ${
@@ -363,7 +314,7 @@ export default function Home() {
               <div className="absolute -inset-4 border border-gold/50" />
               <div className="relative w-full h-full overflow-hidden">
                 <Image
-                  src="/past.jpeg"
+                  src={c.founderImage}
                   alt="Prophet Olaofe Oladele — a man of God"
                   fill
                   className="object-cover"
@@ -372,12 +323,10 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-t from-midnight/90 via-midnight/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                   <p className="text-[10px] tracking-[0.35em] uppercase text-gold">
-                    Founder &amp; General Overseer
+                    {c.founderRole}
                   </p>
                   <p className="font-display text-4xl mt-2">
-                    Prophet Olaofe
-                    <br />
-                    <span className="italic">Oladele</span>
+                    <RichText text={c.founderName} accentClass="italic" />
                   </p>
                 </div>
               </div>
@@ -390,19 +339,13 @@ export default function Home() {
           <Reveal delay={0.1}>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              The Watchman
+              {c.founderEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-4 leading-[1.05]">
-              A man of God, a father to the nation,
-              <br />
-              <span className="italic">a giver, a philanthropist.</span>
+              <RichText text={c.founderTitle} accentClass="italic" />
             </h2>
             <p className="mt-6 text-ink/75 leading-relaxed">
-              Prophet Olaofe Oladele founded VOGIM Deliverance Ministries in
-              May 2021 as a village evangelism work in Porto Novo and the
-              surrounding communities. Today his ministry reaches across the
-              world — delivering captives, healing the sick, and restoring
-              families by the power of the name of Jesus Christ of Nazareth.
+              {c.founderBody}
             </p>
             <div className="mt-8 flex flex-wrap gap-5">
               <Link href="/about" className="btn-gold">
@@ -438,25 +381,21 @@ export default function Home() {
         <div className="relative mx-auto max-w-5xl px-6 py-24 lg:py-32 text-center">
           <p className="eyebrow text-gold">
             <span className="gold-rule mr-3" />
-            Need Prayer?
+            {c.ctaEyebrow}
             <span className="gold-rule ml-3" />
           </p>
           <h2 className="font-display text-5xl md:text-6xl lg:text-7xl mt-6 leading-[1.05]">
-            We would love to
-            <br />
-            <span className="italic text-gold">pray for you.</span>
+            <RichText text={c.ctaTitle} />
           </h2>
           <p className="mt-8 text-lg text-white/80 max-w-2xl mx-auto">
-            Wherever you are, whatever the burden — there is a place at this
-            altar for you. Send us a message and our intercessors will stand
-            with you.
+            {c.ctaIntro}
           </p>
           <div className="mt-10 flex flex-wrap gap-5 justify-center">
-            <Link href="/prayer-request" className="btn-gold">
-              Send a prayer request
+            <Link href={c.ctaPrimaryHref} className="btn-gold">
+              {c.ctaPrimary}
             </Link>
-            <Link href="/contact" className="btn-ghost text-white border-white/40 hover:text-midnight">
-              Contact the church
+            <Link href={c.ctaSecondaryHref} className="btn-ghost text-white border-white/40 hover:text-midnight">
+              {c.ctaSecondary}
             </Link>
           </div>
         </div>

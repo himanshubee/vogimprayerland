@@ -21,6 +21,38 @@ const transporter = smtpEnabled
     })
   : null;
 
+/**
+ * Send an arbitrary email (used by the CRM to reply to a contact).
+ * Requires SMTP — FormSubmit can only deliver to the ministry inbox, not to
+ * an arbitrary recipient. Returns a structured result; never throws.
+ */
+export async function sendEmail(opts: {
+  to: string;
+  subject: string;
+  text: string;
+  replyTo?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  if (!transporter) {
+    return { ok: false, error: "Email sending is not configured (SMTP)." };
+  }
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || `VOGIM Prayer Land <${user}>`,
+      to: opts.to,
+      replyTo: opts.replyTo || undefined,
+      subject: opts.subject,
+      text: opts.text,
+      html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#1A0608;white-space:pre-wrap;">${escapeHtml(
+        opts.text
+      )}</div>`,
+    });
+    return { ok: true };
+  } catch (err) {
+    console.error("[mailer] sendEmail failed:", err);
+    return { ok: false, error: "Could not send the email. Please try again." };
+  }
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")

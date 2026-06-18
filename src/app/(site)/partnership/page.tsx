@@ -16,6 +16,8 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 import { RequestForm } from "@/components/RequestForm";
+import { getPageContent } from "@/lib/page-content";
+import { RichText } from "@/components/RichText";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/partnership/" },
@@ -31,59 +33,7 @@ export const metadata: Metadata = {
   },
 };
 
-const BENEFITS = [
-  {
-    icon: Hash,
-    title: "A personal partner number",
-    body: "You are enrolled into the covenant register and assigned a partner number that identifies you with the ministry.",
-  },
-  {
-    icon: BellRing,
-    title: "News & ministry updates",
-    body: "Regular updates from the VOGIM team — what the Lord is doing, and how your seed is bearing fruit.",
-  },
-  {
-    icon: CalendarDays,
-    title: "Notice of crusades & events",
-    body: "Be the first to know about upcoming online services, prophetic nights, crusades, and special programmes.",
-  },
-  {
-    icon: PhoneCall,
-    title: "A dedicated prayer line",
-    body: "Priority access to a prayer and counselling line — our intercessors stand with you whenever you call.",
-  },
-  {
-    icon: Globe2,
-    title: "Expanding our reach",
-    body: "Your partnership widens our coverage online and on air, so more souls in more nations can be reached.",
-  },
-  {
-    icon: HeartHandshake,
-    title: "Growing humanitarian work",
-    body: "More care for widows, orphans, and the vulnerable — locally in Ikorodu and internationally.",
-  },
-];
-
-const STEPS = [
-  {
-    icon: UserPlus,
-    step: "01",
-    title: "Sign Up",
-    body: "Complete the partnership form below. We enrol you and send your partner number and welcome details.",
-  },
-  {
-    icon: CreditCard,
-    step: "02",
-    title: "Give",
-    body: "Sow your partnership seed through our official giving channel — monthly, or as the Lord leads your heart.",
-  },
-  {
-    icon: MessageCircle,
-    step: "03",
-    title: "Notify Us",
-    body: "Send us your payment notification on WhatsApp so we can confirm your seed and stand with you in prayer.",
-  },
-];
+export const revalidate = 300;
 
 const PARTNER_FIELDS = [
   { name: "name", label: "Full Name", required: true, placeholder: "How shall we address you?" },
@@ -104,20 +54,28 @@ const PARTNER_FIELDS = [
   },
 ];
 
-export default function PartnershipPage() {
+export default async function PartnershipPage() {
+  const c = await getPageContent("partnership");
+  const BENEFITS = [
+    { icon: Hash, title: c.benefit1Title, body: c.benefit1Body },
+    { icon: BellRing, title: c.benefit2Title, body: c.benefit2Body },
+    { icon: CalendarDays, title: c.benefit3Title, body: c.benefit3Body },
+    { icon: PhoneCall, title: c.benefit4Title, body: c.benefit4Body },
+    { icon: Globe2, title: c.benefit5Title, body: c.benefit5Body },
+    { icon: HeartHandshake, title: c.benefit6Title, body: c.benefit6Body },
+  ];
+  const STEPS = [
+    { icon: UserPlus, step: "01", title: c.step1Title, body: c.step1Body },
+    { icon: CreditCard, step: "02", title: c.step2Title, body: c.step2Body },
+    { icon: MessageCircle, step: "03", title: c.step3Title, body: c.step3Body },
+  ];
   return (
     <>
       <PageHeader
-        image="https://img.vogimprayerland.org/1780648526688-worship.jpg"
-        eyebrow="Partnership"
-        title={
-          <>
-            Become a covenant
-            <br />
-            <span className="italic text-gold">partner.</span>
-          </>
-        }
-        intro="Partners of VOGIM commit themselves to the cause of the gospel — reaching a generation without faith and hope with the sweet story of our Lord Jesus Christ, deliverance, and healing."
+        image={c.heroImage}
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
         scripture={{
           ref: "Philippians 4:17",
           text: "Not because I desire a gift: but I desire fruit that may abound to your account.",
@@ -130,34 +88,29 @@ export default function PartnershipPage() {
           <Reveal>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              Why become a partner?
+              {c.whyEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-4 leading-tight">
-              When you give, you <span className="italic">plant a seed</span> that is multiplied back to you.
+              <RichText text={c.whyTitle} accentClass="italic" />
             </h2>
             <p className="mt-6 text-midnight/75 leading-relaxed">
-              We always want the best from God, therefore when you give, give the
-              best seed you have. Partnership is a decision of the heart — to stand
-              with the work of God so that more captives are set free, more bodies
-              are healed, and more homes are restored.
+              {c.whyPara1}
             </p>
             <p className="mt-4 text-midnight/75 leading-relaxed">
-              As you sow into this ministry, you sow into every soul it reaches.
-              Your seed becomes a deliverance session, a meal for a widow, a Bible
-              in a seeking hand, and the gospel carried farther than before.
+              {c.whyPara2}
             </p>
 
-            <Link href="#sign-up" className="btn-gold mt-10">
-              Become a Partner
+            <Link href={c.whyButtonHref} className="btn-gold mt-10">
+              {c.whyButtonLabel}
               <ArrowUpRight size={16} />
             </Link>
           </Reveal>
 
           <Reveal delay={0.1}>
             <div className="border border-midnight/15 bg-ivory p-8">
-              <p className="eyebrow text-gold-deep">As a VOGIM Partner</p>
+              <p className="eyebrow text-gold-deep">{c.benefitsEyebrow}</p>
               <h3 className="font-display text-3xl text-midnight mt-3 leading-tight">
-                You will receive.
+                {c.benefitsTitle}
               </h3>
               <ul className="mt-6 space-y-5">
                 {BENEFITS.map((b) => {
@@ -186,11 +139,10 @@ export default function PartnershipPage() {
         <div className="relative mx-auto max-w-4xl px-6 py-20 text-center">
           <Sprout className="mx-auto text-gold" size={30} />
           <p className="font-display italic text-3xl md:text-4xl leading-snug mt-6">
-            &ldquo;Give, and it shall be given unto you; good measure, pressed
-            down, and shaken together, and running over.&rdquo;
+            {c.seedQuote}
           </p>
           <p className="mt-4 text-[11px] tracking-[0.32em] uppercase text-gold">
-            Luke 6:38
+            {c.seedRef}
           </p>
         </div>
       </section>
@@ -201,10 +153,10 @@ export default function PartnershipPage() {
           <Reveal>
             <p className="eyebrow text-gold-deep text-center justify-center flex">
               <span className="gold-rule mr-3" />
-              How partnership works
+              {c.howEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-4 text-center leading-tight">
-              Three simple steps.
+              {c.howTitle}
             </h2>
           </Reveal>
 
@@ -232,12 +184,12 @@ export default function PartnershipPage() {
 
           <div className="mt-12 text-center">
             <Link
-              href="https://give.vogimprayerland.org/"
+              href={c.howButtonHref}
               className="btn-ghost text-midnight border-midnight/30"
               target="_blank"
               rel="noreferrer"
             >
-              Give Now
+              {c.howButtonLabel}
               <ArrowUpRight size={16} />
             </Link>
           </div>
@@ -261,29 +213,29 @@ export default function PartnershipPage() {
         <div className="relative mx-auto max-w-4xl px-6 py-20 text-center">
           <p className="eyebrow text-gold justify-center flex">
             <span className="gold-rule mr-3" />
-            For questions or enquiries
+            {c.enquiriesEyebrow}
           </p>
           <h2 className="font-display text-3xl md:text-4xl mt-4">
-            We would love to hear from you.
+            {c.enquiriesTitle}
           </h2>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="https://wa.me/2348150743998"
+              href={c.enquiriesWhatsappHref}
               target="_blank"
               rel="noreferrer"
               className="btn-gold justify-center"
             >
-              WhatsApp +234 815 074 3998
+              {c.enquiriesWhatsappLabel}
             </Link>
             <a
-              href="mailto:hello@vogimprayerland.org"
+              href={c.enquiriesEmailHref}
               className="btn-ghost text-ivory border-gold/40 justify-center"
             >
-              hello@vogimprayerland.org
+              {c.enquiriesEmailLabel}
             </a>
           </div>
           <p className="mt-6 text-white/60 text-sm">
-            18 Association Avenue, Owutu-Agric, Ikorodu · Lagos, Nigeria
+            {c.enquiriesAddress}
           </p>
         </div>
       </section>

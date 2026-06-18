@@ -1,6 +1,8 @@
 import { PageHeader } from "@/components/PageHeader";
 import { RequestForm } from "@/components/RequestForm";
 import { Reveal } from "@/components/Reveal";
+import { getPageContent } from "@/lib/page-content";
+import { RichText } from "@/components/RichText";
 
 export const metadata = {
   alternates: { canonical: "/healing-request/" },
@@ -9,20 +11,17 @@ export const metadata = {
     "Submit a healing request to VOGIM. Jesus is still the Healer.",
 };
 
-export default function HealingRequestPage() {
+export const revalidate = 300;
+
+export default async function HealingRequestPage() {
+  const c = await getPageContent("healing-request");
   return (
     <>
       <PageHeader
-        image="https://img.vogimprayerland.org/1780648525156-prophet.webp"
-        eyebrow="Healing Request"
-        title={
-          <>
-            Jesus is still
-            <br />
-            <span className="italic text-gold">the Healer.</span>
-          </>
-        }
-        intro="Body, soul, or spirit — He is touched by your pain. Send your request and join an army of intercessors believing with you for total healing."
+        image={c.heroImage}
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
         scripture={{
           ref: "Isaiah 53:5",
           text: "And with his stripes we are healed.",

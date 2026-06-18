@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -15,6 +14,7 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
+import { AdminTabs } from "@/components/admin/AdminTabs";
 
 export type SubmissionStatus = "new" | "read" | "done" | "archived";
 
@@ -146,17 +146,7 @@ export function AdminDashboard({ initial }: { initial: Submission[] }) {
                 Submissions
               </h1>
             </div>
-            <nav className="hidden sm:flex items-center gap-1 ml-2">
-              <span className="text-[11px] tracking-[0.18em] uppercase text-gold border-b-2 border-gold px-3 py-2">
-                Submissions
-              </span>
-              <Link
-                href="/admin/posts"
-                className="text-[11px] tracking-[0.18em] uppercase text-white/60 hover:text-gold px-3 py-2 transition-colors"
-              >
-                Posts
-              </Link>
-            </nav>
+            <AdminTabs />
           </div>
           <div className="flex items-center gap-2">
             <button

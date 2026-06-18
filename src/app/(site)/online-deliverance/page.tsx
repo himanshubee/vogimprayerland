@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
+import { getPageContent } from "@/lib/page-content";
+import { RichText } from "@/components/RichText";
 
 export const metadata = {
   alternates: { canonical: "/online-deliverance/" },
@@ -20,61 +22,43 @@ export const metadata = {
     "Embracing freedom through Christ at VOGIM. Online deliverance sessions with Prophet Olaofe Emmanuel — wherever you are.",
 };
 
-const WHY = [
-  {
-    icon: Globe2,
-    title: "Without distance",
-    body: "Receive ministry from anywhere in the world. The Spirit is not limited by geography.",
-  },
-  {
-    icon: Shield,
-    title: "Privately, confidentially",
-    body: "Sessions held in the safety of your home, with discretion and pastoral care.",
-  },
-  {
-    icon: HeartPulse,
-    title: "Immediate help",
-    body: "Spiritual attacks don't wait. Submit a request and receive prompt intervention.",
-  },
-  {
-    icon: Flame,
-    title: "Rooted in scripture",
-    body: "Centered on the Word of God, the name of Jesus, and the leading of the Holy Spirit — nothing else.",
-  },
-];
+export const revalidate = 300;
 
-const STEPS = [
-  ["01", "Submit your request", "Fill the deliverance form with your concerns and contact details."],
-  ["02", "Confirmation & scheduling", "Our team reviews and schedules a one-on-one session."],
-  ["03", "The session", "Prophet Olaofe leads through scripture, prayer, and commands in Jesus' name."],
-  ["04", "Walk it out", "Receive aftercare scripture, prayer plan, and follow-up support."],
-];
+export default async function OnlineDeliverancePage() {
+  const c = await getPageContent("online-deliverance");
 
-const SIGNS = [
-  "Persistent, unexplained sickness or torment",
-  "Cycles of poverty, failure, or addiction",
-  "Nightmares, dream attacks, or sleep disturbances",
-  "Marital and family conflict you cannot resolve",
-  "Sudden depression, fear, or oppression",
-  "A sense of being followed, watched, or held back",
-  "Generational patterns repeating in your life",
-  "Brokenness from occult exposure or curses",
-];
+  const WHY = [
+    { icon: Globe2, title: c.why1Title, body: c.why1Body },
+    { icon: Shield, title: c.why2Title, body: c.why2Body },
+    { icon: HeartPulse, title: c.why3Title, body: c.why3Body },
+    { icon: Flame, title: c.why4Title, body: c.why4Body },
+  ];
 
-export default function OnlineDeliverancePage() {
+  const STEPS = [
+    [c.step1Num, c.step1Title, c.step1Body],
+    [c.step2Num, c.step2Title, c.step2Body],
+    [c.step3Num, c.step3Title, c.step3Body],
+    [c.step4Num, c.step4Title, c.step4Body],
+  ];
+
+  const SIGNS = [
+    c.sign1,
+    c.sign2,
+    c.sign3,
+    c.sign4,
+    c.sign5,
+    c.sign6,
+    c.sign7,
+    c.sign8,
+  ];
+
   return (
     <>
       <PageHeader
-        image="https://img.vogimprayerland.org/1780648526061-slider3.webp"
-        eyebrow="Online Deliverance Ministry"
-        title={
-          <>
-            Embrace freedom
-            <br />
-            through <span className="italic text-gold">Christ.</span>
-          </>
-        }
-        intro="In a world filled with spiritual challenges, many seek freedom from bondage and oppression. At VOGIM, we believe in the power of God to set people free from the clutches of the enemy."
+        image={c.heroImage}
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
         scripture={{
           ref: "Luke 4:18",
           text: "He hath sent me to heal the brokenhearted, to preach deliverance to the captives.",
@@ -86,20 +70,14 @@ export default function OnlineDeliverancePage() {
         <div className="mx-auto max-w-7xl px-6 py-24 grid lg:grid-cols-[1.2fr_1fr] gap-14 items-center">
           <Reveal>
             <p className="font-display text-2xl md:text-3xl text-midnight leading-snug">
-              Whether you are battling spiritual attacks, anxiety, depression,
-              or feel a dark cloud hovering over your life —{" "}
-              <span className="italic text-gold-deep">
-                online deliverance ministry can help you break those chains.
-              </span>{" "}
-              Through a deliverance request, you can connect with Prophet
-              Olaofe Emmanuel and experience the transforming power of God.
+              <RichText text={c.introParagraph} accentClass="italic text-gold-deep" />
             </p>
           </Reveal>
           <Reveal delay={0.1}>
             <div className="relative aspect-[4/5] max-w-sm mx-auto">
               <div className="absolute -inset-3 border border-gold/40" />
               <Image
-                src="https://img.vogimprayerland.org/1780648546756-deliverance.webp"
+                src={c.introImage}
                 alt="An online deliverance session — candle-lit and Spirit-led"
                 fill
                 className="object-cover relative"
@@ -116,10 +94,10 @@ export default function OnlineDeliverancePage() {
           <Reveal>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              Why VOGIM
+              {c.whyEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-5 leading-tight max-w-3xl">
-              The same power, in your home — <span className="italic">no different than in person.</span>
+              <RichText text={c.whyTitle} accentClass="italic" />
             </h2>
           </Reveal>
 
@@ -151,10 +129,10 @@ export default function OnlineDeliverancePage() {
           <Reveal>
             <p className="eyebrow text-gold">
               <span className="gold-rule mr-3" />
-              How it works
+              {c.processEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl mt-5 leading-tight max-w-3xl">
-              A simple and profound <span className="italic text-gold">process.</span>
+              <RichText text={c.processTitle} accentClass="italic text-gold" />
             </h2>
           </Reveal>
 
@@ -179,19 +157,16 @@ export default function OnlineDeliverancePage() {
           <Reveal>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              What to expect
+              {c.expectEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-5 leading-tight">
-              Every session is <span className="italic">Spirit-led.</span>
+              <RichText text={c.expectTitle} accentClass="italic" />
             </h2>
             <p className="mt-6 text-midnight/75 leading-relaxed">
-              No two sessions look the same. The Holy Spirit customizes the
-              approach to the specific needs of the individual. What stays
-              constant is the centrality of the Word, the authority of the
-              name of Jesus, and the love of the Father.
+              {c.expectBody}
             </p>
-            <Link href="/deliverance-request" className="btn-gold mt-8">
-              Submit a deliverance request
+            <Link href={c.expectButtonHref} className="btn-gold mt-8">
+              {c.expectButtonLabel}
               <ArrowUpRight size={16} />
             </Link>
           </Reveal>
@@ -200,7 +175,7 @@ export default function OnlineDeliverancePage() {
             <div className="border border-midnight/15 p-8 lg:p-10 bg-ivory">
               <p className="eyebrow text-gold-deep">
                 <Eye className="inline mr-2 -mt-1" size={14} />
-                Signs you may need deliverance
+                {c.signsLabel}
               </p>
               <ul className="mt-6 grid sm:grid-cols-2 gap-x-6 gap-y-3">
                 {SIGNS.map((s) => (
@@ -220,7 +195,7 @@ export default function OnlineDeliverancePage() {
                 <Hourglass size={14} />
               </div>
               <p className="text-midnight/70 mt-5 text-sm italic">
-                If any of these resonate, don&apos;t delay. Reach out today.
+                {c.signsFootnote}
               </p>
             </div>
           </Reveal>
@@ -238,19 +213,16 @@ export default function OnlineDeliverancePage() {
         />
         <div className="relative mx-auto max-w-4xl px-6 py-24 text-center">
           <h2 className="font-display text-5xl md:text-6xl leading-[1.05]">
-            Freedom is
-            <br />
-            <span className="italic text-gold">a click away.</span>
+            <RichText text={c.ctaTitle} accentClass="italic text-gold" />
           </h2>
           <p className="mt-6 text-ivory/70 max-w-xl mx-auto">
-            Take the first step toward healing and restoration. Your
-            deliverance is at hand.
+            {c.ctaBody}
           </p>
           <Link
-            href="/deliverance-request"
+            href={c.ctaButtonHref}
             className="btn-gold mt-10 inline-flex"
           >
-            Submit deliverance request
+            {c.ctaButtonLabel}
             <ArrowUpRight size={16} />
           </Link>
         </div>

@@ -2,7 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Cross } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { Reveal } from "@/components/Reveal"; 
+import { Reveal } from "@/components/Reveal";
+import { RichText } from "@/components/RichText";
+import { getPageContent } from "@/lib/page-content";
 
 export const metadata = {
   alternates: { canonical: "/about/" },
@@ -11,38 +13,24 @@ export const metadata = {
     "Voice of God International Ministry (VOGIM) — a deliverance ministry rooted in Lagos, Nigeria, founded May 2021 by Prophet Olaofe Oladele.",
 };
 
-const PILLARS = [
-  {
-    no: "I",
-    title: "Deliverance",
-    body: "Setting captives free from demonic oppression, generational chains, and spiritual bondage through the power of the Holy Ghost.",
-  },
-  {
-    no: "II",
-    title: "Healing",
-    body: "Jesus is the Healer. We pray for the sick, the brokenhearted, and the tormented — by the stripes of Christ they are healed.",
-  },
-  {
-    no: "III",
-    title: "Restoration",
-    body: "Marriages restored, homes rebuilt, destinies reclaimed. We labor for the full restoration of every soul that comes our way.",
-  },
-];
+export const revalidate = 300;
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const c = await getPageContent("about");
+
+  const pillars = [
+    { no: "I", title: c.pillar1Title, body: c.pillar1Body },
+    { no: "II", title: c.pillar2Title, body: c.pillar2Body },
+    { no: "III", title: c.pillar3Title, body: c.pillar3Body },
+  ];
+
   return (
     <>
       <PageHeader
-        image="https://img.vogimprayerland.org/1780648526688-worship.jpg"
-        eyebrow="About the Ministry"
-        title={
-          <>
-            A church that believes
-            <br />
-            in God. <span className="italic text-gold">Everyone is welcome.</span>
-          </>
-        }
-        intro="VOGIM Deliverance Ministries is a church that operates under the anointing of the Holy Spirit. Jesus is the Healer."
+        image={c.heroImage}
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
       />
 
       {/* INTRO + IMAGE */}
@@ -51,31 +39,15 @@ export default function AboutPage() {
           <Reveal>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              Our Story
+              {c.storyEyebrow}
             </p>
             <h2 className="font-display text-3xl sm:text-4xl md:text-5xl text-midnight mt-5 leading-[1.05]">
-              From a village in Porto Novo
-              <br />
-              <span className="italic">to the ends of the earth.</span>
+              <RichText text={c.storyTitle} accentClass="italic" />
             </h2>
             <div className="mt-6 sm:mt-8 space-y-5 text-midnight/80 leading-relaxed text-base sm:text-lg">
-              <p className="drop-cap">
-                Vogim Deliverance Ministries Church began in May 2021 as a
-                village evangelism ministry — preaching the gospel to Porto
-                Novo and the surrounding communities. From those humble
-                beginnings, the Lord has opened doors across nations.
-              </p>
-              <p>
-                We have been able to deliver people from the captivity of
-                Satan, heal the sick, and set the captives free by the power
-                of Jesus Christ of Nazareth.
-              </p>
-              <p>
-                We are also committed to standing with widows, orphans, and
-                orphanage homes — financially, physically, and spiritually.
-                Because love that does not feed, does not move, does not
-                visit — is not love at all.
-              </p>
+              <p className="drop-cap">{c.storyPara1}</p>
+              <p>{c.storyPara2}</p>
+              <p>{c.storyPara3}</p>
             </div>
           </Reveal>
 
@@ -84,7 +56,7 @@ export default function AboutPage() {
               <div className="absolute -inset-3 sm:-inset-4 border border-gold/50" />
               <div className="relative w-full h-full overflow-hidden">
                 <Image
-                  src="https://img.vogimprayerland.org/1780648525156-prophet.webp"
+                  src={c.storyImage}
                   alt="Prophet Olaofe Oladele"
                   fill
                   className="object-cover"
@@ -93,14 +65,13 @@ export default function AboutPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-midnight via-midnight/40 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-8 text-white">
                   <p className="text-[10px] tracking-[0.35em] uppercase text-gold">
-                    Founder &amp; General Overseer
+                    {c.founderRole}
                   </p>
                   <p className="font-display text-2xl sm:text-3xl mt-2 leading-tight">
-                    Prophet Olaofe Oladele
+                    {c.founderName}
                   </p>
                   <p className="mt-2 sm:mt-3 text-white/80 text-xs sm:text-sm italic font-display">
-                    A man of God, a father to the nation, a giver, and a
-                    philanthropist.
+                    {c.founderTagline}
                   </p>
                 </div>
               </div>
@@ -119,21 +90,13 @@ export default function AboutPage() {
             <div className="bg-ivory-dark p-7 sm:p-10 lg:p-14">
               <p className="eyebrow text-gold-deep">Mission Statement</p>
               <h3 className="font-display text-2xl sm:text-3xl md:text-4xl text-midnight mt-4 leading-tight">
-                By the power of the Holy Ghost — deliverance, healing &amp;
-                restoration to families oppressed by the devil.
+                <RichText text={c.missionTitle} accentClass="italic" />
               </h3>
               <p className="mt-5 sm:mt-6 text-midnight/80 leading-relaxed text-sm sm:text-base">
-                Chains of bondage are broken by the power in the blood of
-                Jesus Christ of Nazareth. We demonstrate the power of God by
-                breaking generational chains — poverty, ancestral curses,
-                generational sins — through teaching and the raw display of
-                God&apos;s power, grace, love, and forgiveness in the Lord
-                Jesus Christ.
+                {c.missionPara1}
               </p>
               <p className="mt-4 text-midnight/80 leading-relaxed text-sm sm:text-base">
-                In every aspect of the ministry, we will exemplify integrity,
-                excellence, compassion, and a commitment to Christian
-                character and values.
+                {c.missionPara2}
               </p>
             </div>
           </Reveal>
@@ -141,26 +104,17 @@ export default function AboutPage() {
             <div className="bg-midnight text-ivory p-7 sm:p-10 lg:p-14 h-full">
               <p className="eyebrow text-gold">Our Vision</p>
               <h3 className="font-display text-2xl sm:text-3xl md:text-4xl mt-4 leading-tight">
-                Loving God, loving others —
-                <span className="italic text-gold"> in the world.</span>
+                <RichText text={c.visionTitle} />
               </h3>
               <p className="mt-5 sm:mt-6 text-ivory/80 leading-relaxed text-sm sm:text-base">
-                Souls saved. Lives restored. Families transformed — through
-                the raw word of God and Spirit-led counseling. We see a
-                generation that loves the Lord with all its heart, and loves
-                its neighbor as itself.
+                {c.visionPara}
               </p>
               <figure className="mt-8 sm:mt-10 border-l-2 border-gold pl-4 sm:pl-5">
                 <blockquote className="font-display italic text-lg sm:text-xl text-ivory/95 leading-snug">
-                  &ldquo;The Spirit of the Lord is upon me, because he hath
-                  anointed me to preach the gospel to the poor; to heal the
-                  brokenhearted, to preach deliverance to the captives, and
-                  recovering of sight to the blind, to set at liberty them
-                  that are bruised — and to preach the acceptable year of the
-                  Lord.&rdquo;
+                  &ldquo;{c.visionScripture}&rdquo;
                 </blockquote>
                 <figcaption className="mt-3 text-[10px] tracking-[0.32em] uppercase text-gold">
-                  Luke 4:18–19
+                  {c.visionScriptureRef}
                 </figcaption>
               </figure>
             </div>
@@ -183,7 +137,7 @@ export default function AboutPage() {
           </Reveal>
 
           <div className="mt-10 sm:mt-14 grid md:grid-cols-3 gap-px bg-midnight/15">
-            {PILLARS.map((p, i) => (
+            {pillars.map((p, i) => (
               <Reveal key={p.title} delay={i * 0.08}>
                 <article className="bg-ivory p-7 sm:p-10 h-full flex flex-col">
                   <span className="font-display text-5xl sm:text-6xl text-gold-deep/90">
@@ -207,9 +161,7 @@ export default function AboutPage() {
         <div className="absolute inset-0 starfield opacity-40" />
         <div className="relative mx-auto max-w-5xl px-5 sm:px-6 py-16 sm:py-20 lg:py-28 text-center">
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight">
-            Step into the place where
-            <br />
-            <span className="italic text-gold">heaven meets your story.</span>
+            <RichText text={c.ctaTitle} />
           </h2>
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-5 justify-center items-center">
             <Link href="/deliverance-request" className="btn-gold w-full sm:w-auto justify-center">

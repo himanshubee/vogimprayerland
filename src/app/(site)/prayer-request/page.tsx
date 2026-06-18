@@ -1,6 +1,8 @@
 import { PageHeader } from "@/components/PageHeader";
 import { RequestForm } from "@/components/RequestForm";
 import { Reveal } from "@/components/Reveal";
+import { getPageContent } from "@/lib/page-content";
+import { RichText } from "@/components/RichText";
 
 export const metadata = {
   alternates: { canonical: "/prayer-request/" },
@@ -9,20 +11,17 @@ export const metadata = {
     "Send your prayer request to VOGIM. Our intercessors will stand with you.",
 };
 
-export default function PrayerRequestPage() {
+export const revalidate = 300;
+
+export default async function PrayerRequestPage() {
+  const c = await getPageContent("prayer-request");
   return (
     <>
       <PageHeader
-        image="https://img.vogimprayerland.org/1780648526009-slider2.webp"
-        eyebrow="Prayer Request"
-        title={
-          <>
-            We would love
-            <br />
-            to <span className="italic text-gold">pray for you.</span>
-          </>
-        }
-        intro="Wherever you are, whatever the burden — write it down and we will stand with you before the throne of grace."
+        image={c.heroImage}
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
         scripture={{
           ref: "Matthew 18:19",
           text: "If two of you shall agree on earth as touching any thing that they shall ask, it shall be done for them.",

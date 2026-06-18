@@ -2,6 +2,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { RequestForm } from "@/components/RequestForm";
 import { Reveal } from "@/components/Reveal";
 import { ShieldCheck, Lock, Clock } from "lucide-react";
+import { getPageContent } from "@/lib/page-content";
+import { RichText } from "@/components/RichText";
 
 export const metadata = {
   alternates: { canonical: "/deliverance-request/" },
@@ -10,20 +12,17 @@ export const metadata = {
     "Submit your deliverance request to VOGIM. Schedule a one-on-one online session with Prophet Olaofe Emmanuel.",
 };
 
-export default function DeliveranceRequestPage() {
+export const revalidate = 300;
+
+export default async function DeliveranceRequestPage() {
+  const c = await getPageContent("deliverance-request");
   return (
     <>
       <PageHeader
-        image="https://img.vogimprayerland.org/1780648546756-deliverance.webp"
-        eyebrow="Deliverance Request"
-        title={
-          <>
-            Schedule your
-            <br />
-            <span className="italic text-gold">deliverance session.</span>
-          </>
-        }
-        intro="One form, one click — and a Spirit-led prophet steps into the gap for you. Sessions are conducted online, privately, and powerfully."
+        image={c.heroImage}
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
         scripture={{
           ref: "John 8:36",
           text: "If the Son therefore shall make you free, ye shall be free indeed.",

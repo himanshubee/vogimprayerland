@@ -13,6 +13,7 @@ import {
   Layers,
 } from "lucide-react";
 import type { Post } from "@/lib/posts";
+import { AdminTabs } from "@/components/admin/AdminTabs";
 
 const PER_PAGE = 40;
 const TABS = ["all", "publish", "draft"] as const;
@@ -69,17 +70,7 @@ export function PostsList({ initial }: { initial: Post[] }) {
                 Posts
               </h1>
             </div>
-            <nav className="hidden sm:flex items-center gap-1 ml-2">
-              <Link
-                href="/admin"
-                className="text-[11px] tracking-[0.18em] uppercase text-white/60 hover:text-gold px-3 py-2 transition-colors"
-              >
-                Submissions
-              </Link>
-              <span className="text-[11px] tracking-[0.18em] uppercase text-gold border-b-2 border-gold px-3 py-2">
-                Posts
-              </span>
-            </nav>
+            <AdminTabs />
           </div>
           <Link href="/admin/posts/new" className="btn-gold !py-2 !px-4 !text-[11px]">
             <Plus size={14} /> New post

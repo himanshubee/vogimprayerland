@@ -1,8 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PageHeader } from "@/components/PageHeader";
+import { RichText } from "@/components/RichText";
 import { Reveal } from "@/components/Reveal";
 import { Play, Headphones, ImageIcon, ArrowUpRight } from "lucide-react";
+import { listMedia } from "@/lib/media";
+import { getPageContent } from "@/lib/page-content";
 
 export const metadata = {
   alternates: { canonical: "/media/" },
@@ -11,65 +14,54 @@ export const metadata = {
     "Sermons, prophetic words, worship moments and gallery from VOGIM Deliverance Ministries.",
 };
 
-const SERMONS = [
-  {
-    title: "Breaking generational chains",
-    speaker: "Prophet Olaofe Oladele",
-    length: "47 min",
-    series: "Deliverance Series · Vol I",
-  },
-  {
-    title: "The altar that cannot be denied",
-    speaker: "Prophet Olaofe Oladele",
-    length: "53 min",
-    series: "Prophetic Service",
-  },
-  {
-    title: "When God speaks in the night",
-    speaker: "Prophet Olaofe Oladele",
-    length: "38 min",
-    series: "Dreams & Visions",
-  },
-  {
-    title: "Marital settlement by fire",
-    speaker: "Prophet Olaofe Oladele",
-    length: "59 min",
-    series: "Family Restored",
-  },
-];
+export const revalidate = 300;
 
-const GALLERY = [
-  { id: 1, title: "Prophetic Service", src: "https://img.vogimprayerland.org/1780648526061-slider3.webp" },
-  { id: 2, title: "Worship Night", src: "https://img.vogimprayerland.org/1780648526009-slider2.webp" },
-  { id: 3, title: "Children at the Altar", src: "https://img.vogimprayerland.org/1780648525318-slider1.jpg" },
-  { id: 4, title: "Believe — Sunset Vigil", src: "https://img.vogimprayerland.org/1780648526688-worship.jpg" },
-  { id: 5, title: "Marital Settlement Service", src: "https://img.vogimprayerland.org/1780648524880-marital-large.jpg" },
-  { id: 6, title: "Online Deliverance Session", src: "https://img.vogimprayerland.org/1780648546756-deliverance.webp" },
-];
+export default async function MediaPage() {
+  const c = await getPageContent("media");
+  const gallery = (await listMedia()).slice(0, 6);
 
-export default function MediaPage() {
+  const SERMONS = [
+    {
+      title: c.sermon1Title,
+      speaker: c.sermon1Speaker,
+      length: c.sermon1Length,
+      series: c.sermon1Series,
+    },
+    {
+      title: c.sermon2Title,
+      speaker: c.sermon2Speaker,
+      length: c.sermon2Length,
+      series: c.sermon2Series,
+    },
+    {
+      title: c.sermon3Title,
+      speaker: c.sermon3Speaker,
+      length: c.sermon3Length,
+      series: c.sermon3Series,
+    },
+    {
+      title: c.sermon4Title,
+      speaker: c.sermon4Speaker,
+      length: c.sermon4Length,
+      series: c.sermon4Series,
+    },
+  ];
   return (
     <>
       <PageHeader
-        image="https://img.vogimprayerland.org/1780648526009-slider2.webp"
-        eyebrow="Media"
-        title={
-          <>
-            Sermons, sounds
-            <br />
-            &amp; <span className="italic text-gold">moments of glory.</span>
-          </>
-        }
-        intro="Catch up on prophetic services, watch worship moments, and walk through what God has done."
+        image={c.heroImage}
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
       />
 
       {/* TABS / TYPE STRIP */}
       <section className="bg-ivory border-b border-midnight/10">
         <div className="mx-auto max-w-7xl px-6 py-10 grid sm:grid-cols-3 gap-px bg-midnight/15">
           {[
-            { icon: Play, title: "Video", desc: "Sermons & livestream replays" },
-            { icon: Headphones, title: "Audio", desc: "Messages to listen on the go" },
-            { icon: ImageIcon, title: "Gallery", desc: "Photos from the altar and the field" },
+            { icon: Play, title: c.type1Title, desc: c.type1Desc },
+            { icon: Headphones, title: c.type2Title, desc: c.type2Desc },
+            { icon: ImageIcon, title: c.type3Title, desc: c.type3Desc },
           ].map(({ icon: Icon, title, desc }) => (
             <div key={title} className="bg-ivory p-8 flex items-center gap-5">
               <Icon className="text-gold-deep" size={28} />
@@ -88,10 +80,10 @@ export default function MediaPage() {
           <Reveal>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              Latest sermons
+              {c.sermonsEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-4 leading-tight">
-              The Word, <span className="italic">on demand.</span>
+              <RichText text={c.sermonsTitle} accentClass="italic" />
             </h2>
           </Reveal>
 
@@ -130,15 +122,15 @@ export default function MediaPage() {
           <Reveal>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              From the altar
+              {c.galleryEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-4 leading-tight">
-              Glory captured in <span className="italic">a moment.</span>
+              <RichText text={c.galleryTitle} accentClass="italic" />
             </h2>
           </Reveal>
 
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-midnight/15">
-            {GALLERY.map((g, i) => (
+            {gallery.map((g, i) => (
               <Reveal key={g.id} delay={i * 0.04}>
                 <div className="relative aspect-[4/5] overflow-hidden group bg-midnight">
                   <Image
@@ -151,7 +143,7 @@ export default function MediaPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-midnight via-midnight/40 to-transparent" />
                   <div className="absolute inset-0 flex flex-col justify-end p-7 text-white">
                     <span className="text-[10px] tracking-[0.32em] uppercase text-gold">
-                      Photo {String(g.id).padStart(2, "0")}
+                      Photo {String(i + 1).padStart(2, "0")}
                     </span>
                     <p className="font-display text-2xl mt-2">{g.title}</p>
                   </div>
@@ -165,7 +157,7 @@ export default function MediaPage() {
 
           <div className="mt-14 text-center">
             <Link href="/contact" className="btn-ghost text-midnight">
-              Request a custom recording
+              {c.galleryCtaLabel}
             </Link>
           </div>
         </div>

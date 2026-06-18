@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
-import { GalleryClient, type Photo } from "./GalleryClient";
+import { GalleryClient } from "./GalleryClient";
+import { listMedia } from "@/lib/media";
 
 export const metadata = {
   alternates: { canonical: "/gallery/" },
@@ -11,91 +12,11 @@ export const metadata = {
     "Photographs from VOGIM Deliverance Ministries — prophetic services, worship nights, deliverance encounters, and moments of restoration.",
 };
 
-const PHOTOS: Photo[] = [
-  {
-    id: 1,
-    title: "Prophetic Service",
-    caption: "The Word goes forth, the altar burns.",
-    src: "https://img.vogimprayerland.org/1780648526061-slider3.webp",
-    category: "Services",
-    width: 1920,
-    height: 1000,
-  },
-  {
-    id: 2,
-    title: "Worship Night",
-    caption: "Hearts lifted, heaven opened.",
-    src: "https://img.vogimprayerland.org/1780648526009-slider2.webp",
-    category: "Worship",
-    width: 1920,
-    height: 1000,
-  },
-  {
-    id: 3,
-    title: "Children at the Altar",
-    caption: "The next generation, hands lifted high.",
-    src: "https://img.vogimprayerland.org/1780648525318-slider1.jpg",
-    category: "Services",
-    width: 1920,
-    height: 1000,
-  },
-  {
-    id: 4,
-    title: "Sunset Vigil",
-    caption: "All-night prayer until the breakthrough.",
-    src: "https://img.vogimprayerland.org/1780648526688-worship.jpg",
-    category: "Worship",
-    width: 1600,
-    height: 970,
-  },
-  {
-    id: 5,
-    title: "Marital Settlement",
-    caption: "Homes rebuilt by the power of God.",
-    src: "https://img.vogimprayerland.org/1780648524880-marital-large.jpg",
-    category: "Family",
-    width: 1024,
-    height: 606,
-  },
-  {
-    id: 6,
-    title: "Online Deliverance",
-    caption: "Captives set free across nations.",
-    src: "https://img.vogimprayerland.org/1780648546756-deliverance.webp",
-    category: "Deliverance",
-    width: 1024,
-    height: 1024,
-  },
-  {
-    id: 7,
-    title: "Family Restored",
-    caption: "What God has joined together.",
-    src: "https://img.vogimprayerland.org/1780648527627-marital.webp",
-    category: "Family",
-    width: 768,
-    height: 512,
-  },
-  {
-    id: 8,
-    title: "The Anointing Flows",
-    caption: "Prophet Olaofe ministering by the Spirit.",
-    src: "https://img.vogimprayerland.org/1780648525156-prophet.webp",
-    category: "Services",
-    width: 2400,
-    height: 1658,
-  },
-  {
-    id: 9,
-    title: "Sunday Gathering",
-    caption: "Where the saints come together.",
-    src: "https://img.vogimprayerland.org/1780648525834-main-height.jpg",
-    category: "Services",
-    width: 1778,
-    height: 1000,
-  },
-];
+// Refresh the gallery shortly after media is edited in the admin panel.
+export const revalidate = 300;
 
-export default function GalleryPage() {
+export default async function GalleryPage() {
+  const photos = await listMedia();
   return (
     <>
       <PageHeader
@@ -111,7 +32,7 @@ export default function GalleryPage() {
         intro="A walk through services, worship nights, deliverance encounters, and the families God has restored at VOGIM Deliverance Ministries."
       />
 
-      <GalleryClient photos={PHOTOS} />
+      <GalleryClient photos={photos} />
 
       {/* CTA */}
       <section className="relative bg-midnight text-ivory overflow-hidden">

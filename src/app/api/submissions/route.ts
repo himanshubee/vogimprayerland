@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { sendSubmissionEmail } from "@/lib/mailer";
 import { isAuthenticated } from "@/lib/auth";
+import { linkSubmissionToContact } from "@/lib/crm";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,12 @@ export async function POST(req: NextRequest) {
 
     // Fire the email but never let a mail failure break the user's submission.
     sendSubmissionEmail({ intent, fields }).catch(() => {});
+
+    // Create/link the CRM contact in the background — never block the response.
+    linkSubmissionToContact(
+      { id: String(result.insertedId), intent, fields, createdAt: doc.createdAt },
+      db
+    ).catch((err) => console.error("[submissions] contact link failed:", err));
 
     return NextResponse.json({ ok: true, id: result.insertedId }, { status: 201 });
   } catch (err) {

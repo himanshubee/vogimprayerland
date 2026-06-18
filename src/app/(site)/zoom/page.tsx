@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Video, ArrowUpRight, Hash, Clock, Smartphone, Monitor } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
+import { getPageContent } from "@/lib/page-content";
+import { RichText } from "@/components/RichText";
 
 export const metadata = {
   alternates: { canonical: "/zoom/" },
@@ -10,41 +12,35 @@ export const metadata = {
     "Join Voice of God International Ministry (VOGIM) live on Zoom for prayer, deliverance, and the Word. Connect from anywhere in the world.",
 };
 
-const ZOOM_URL =
-  "https://us06web.zoom.us/j/7885810191?pwd=7RhsFPIzCcnZuKkwos0r7bhhmyS9ec.1";
-const MEETING_ID = "788 5810 191";
+export const revalidate = 300;
 
-const STEPS = [
-  {
-    icon: Smartphone,
-    title: "On your phone",
-    body: "Install the free Zoom app, then tap “Join” above — the meeting opens automatically.",
-  },
-  {
-    icon: Monitor,
-    title: "On your computer",
-    body: "Click “Join the meeting” and Zoom opens in your browser or desktop app. No account needed.",
-  },
-  {
-    icon: Hash,
-    title: "By Meeting ID",
-    body: `In the Zoom app choose “Join a Meeting” and enter the Meeting ID ${MEETING_ID}.`,
-  },
-];
+export default async function ZoomPage() {
+  const c = await getPageContent("zoom");
 
-export default function ZoomPage() {
+  const STEPS = [
+    {
+      icon: Smartphone,
+      title: c.step1Title,
+      body: c.step1Body,
+    },
+    {
+      icon: Monitor,
+      title: c.step2Title,
+      body: c.step2Body,
+    },
+    {
+      icon: Hash,
+      title: c.step3Title,
+      body: c.step3Body,
+    },
+  ];
+
   return (
     <>
       <PageHeader
-        eyebrow="Live on Zoom"
-        title={
-          <>
-            Pray with us,
-            <br />
-            <span className="italic text-gold">wherever you are.</span>
-          </>
-        }
-        intro="Step into the presence of God with us in real time. Join our live Zoom gatherings for prayer, deliverance, and the preaching of the Word — from any corner of the earth."
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
         scripture={{
           ref: "Matthew 18:20",
           text: "For where two or three are gathered together in my name, there am I in the midst of them.",
@@ -62,31 +58,30 @@ export default function ZoomPage() {
                   <Video size={28} />
                 </span>
                 <h2 className="font-display text-3xl sm:text-4xl text-midnight mt-6 leading-tight">
-                  Join the live meeting
+                  {c.joinCardTitle}
                 </h2>
                 <p className="mt-4 text-midnight/70 max-w-md mx-auto leading-relaxed">
-                  Tap the button below to enter the Zoom room. The meeting
-                  passcode is built into the link — no extra steps.
+                  {c.joinCardBody}
                 </p>
 
                 <Link
-                  href={ZOOM_URL}
+                  href={c.joinCardButtonHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-gold mt-8 inline-flex"
                 >
-                  Join the meeting
+                  {c.joinCardButtonLabel}
                   <ArrowUpRight size={16} />
                 </Link>
 
                 <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 text-sm text-midnight/75">
                   <p className="flex items-center gap-2">
                     <Hash size={15} className="text-gold-deep" />
-                    Meeting ID: <span className="font-medium text-midnight">{MEETING_ID}</span>
+                    {c.meetingIdLabel} <span className="font-medium text-midnight">{c.meetingId}</span>
                   </p>
                   <p className="flex items-center gap-2">
                     <Clock size={15} className="text-gold-deep" />
-                    Open at service times
+                    {c.serviceTimesNote}
                   </p>
                 </div>
               </div>
@@ -101,10 +96,10 @@ export default function ZoomPage() {
           <Reveal>
             <p className="eyebrow text-gold-deep">
               <span className="gold-rule mr-3" />
-              How to join
+              {c.howToJoinEyebrow}
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-midnight mt-5 leading-tight max-w-3xl">
-              Three simple ways to <span className="italic">be in the room.</span>
+              <RichText text={c.howToJoinTitle} accentClass="italic" />
             </h2>
           </Reveal>
 
@@ -140,21 +135,18 @@ export default function ZoomPage() {
         />
         <div className="relative mx-auto max-w-4xl px-6 py-24 text-center">
           <h2 className="font-display text-5xl md:text-6xl leading-[1.05]">
-            Heaven is
-            <br />
-            <span className="italic text-gold">one click away.</span>
+            <RichText text={c.ctaTitle} accentClass="italic text-gold" />
           </h2>
           <p className="mt-6 text-ivory/70 max-w-xl mx-auto">
-            Don&apos;t miss your appointment with God. Join the live gathering
-            and receive your breakthrough.
+            {c.ctaBody}
           </p>
           <Link
-            href={ZOOM_URL}
+            href={c.ctaButtonHref}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-gold mt-10 inline-flex"
           >
-            Join on Zoom now
+            {c.ctaButtonLabel}
             <ArrowUpRight size={16} />
           </Link>
         </div>

@@ -1,6 +1,8 @@
 import { PageHeader } from "@/components/PageHeader";
 import { RequestForm } from "@/components/RequestForm";
 import { Reveal } from "@/components/Reveal";
+import { getPageContent } from "@/lib/page-content";
+import { RichText } from "@/components/RichText";
 
 export const metadata = {
   alternates: { canonical: "/dream-interpretation/" },
@@ -9,20 +11,17 @@ export const metadata = {
     "Submit your dream for Spirit-led interpretation by Prophet Olaofe and the VOGIM team.",
 };
 
-export default function DreamInterpretationPage() {
+export const revalidate = 300;
+
+export default async function DreamInterpretationPage() {
+  const c = await getPageContent("dream-interpretation");
   return (
     <>
       <PageHeader
-        image="https://img.vogimprayerland.org/1780648525834-main-height.jpg"
-        eyebrow="Dream Interpretation"
-        title={
-          <>
-            God still speaks
-            <br />
-            in <span className="italic text-gold">the night.</span>
-          </>
-        }
-        intro="From Joseph to Daniel, God has revealed mysteries through dreams. Submit your dream and our team will seek the mind of the Spirit on your behalf."
+        image={c.heroImage}
+        eyebrow={c.heroEyebrow}
+        title={<RichText text={c.heroTitle} />}
+        intro={c.heroIntro}
         scripture={{
           ref: "Job 33:14–15",
           text: "For God speaketh once, yea twice, yet man perceiveth it not. In a dream, in a vision of the night…",

@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { RequestForm } from "@/components/RequestForm";
 import { Reveal } from "@/components/Reveal";
 import { MapPin, Mail, Phone, Clock } from "lucide-react";
+import { getSettings } from "@/lib/settings";
 
 export const metadata = {
   alternates: { canonical: "/contact/" },
@@ -10,7 +11,9 @@ export const metadata = {
     "Reach VOGIM Deliverance Ministries — Lagos, Nigeria. Online and in person.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getSettings();
+  const waHref = settings.social.whatsapp || `https://wa.me/${settings.whatsapp}`;
   return (
     <>
       <PageHeader
@@ -43,9 +46,12 @@ export default function ContactPage() {
                 <div>
                   <p className="eyebrow text-midnight/60 mb-1">Visit</p>
                   <p className="font-display text-xl text-midnight leading-snug">
-                    18 Association Avenue,<br />
-                    Owutu-Agric, Ikorodu,<br />
-                    Lagos State, Nigeria
+                    {settings.address.map((line, i) => (
+                      <span key={i}>
+                        {line}
+                        {i < settings.address.length - 1 && <br />}
+                      </span>
+                    ))}
                   </p>
                 </div>
               </li>
@@ -54,10 +60,10 @@ export default function ContactPage() {
                 <div>
                   <p className="eyebrow text-midnight/60 mb-1">Email</p>
                   <a
-                    href="mailto:hello@vogimprayerland.org"
+                    href={`mailto:${settings.email}`}
                     className="font-display text-xl text-midnight u-link"
                   >
-                    hello@vogimprayerland.org
+                    {settings.email}
                   </a>
                 </div>
               </li>
@@ -66,12 +72,12 @@ export default function ContactPage() {
                 <div>
                   <p className="eyebrow text-midnight/60 mb-1">WhatsApp</p>
                   <a
-                    href="https://wa.me/2348150743998"
+                    href={waHref}
                     target="_blank"
                     rel="noreferrer"
                     className="font-display text-xl text-midnight u-link"
                   >
-                    +234 815 074 3998
+                    {settings.phone}
                   </a>
                 </div>
               </li>
@@ -111,11 +117,7 @@ export default function ContactPage() {
       {/* MAP-LIKE STRIP */}
       <section className="bg-midnight text-ivory">
         <div className="mx-auto max-w-7xl px-6 py-16 grid md:grid-cols-3 gap-px bg-ivory/10">
-          {[
-            ["Worship", "Sundays · 9am WAT", "In person & livestream"],
-            ["Bible Study", "Wednesdays · 7pm WAT", "Online via Zoom"],
-            ["Prophetic Service", "Mon & Sat · 10pm WAT", "Online — global audience"],
-          ].map(([title, when, mode]) => (
+          {settings.serviceTimes.map(({ title, when, mode }) => (
             <div key={title} className="bg-midnight p-8 md:p-10">
               <p className="eyebrow text-gold">{title}</p>
               <p className="font-display text-2xl mt-3">{when}</p>

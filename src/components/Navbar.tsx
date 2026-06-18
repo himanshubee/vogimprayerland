@@ -5,9 +5,23 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { Logo } from "./Logo";
-import { NAV_LINKS } from "@/lib/nav";
+import { NAV_LINKS, type NavLink } from "@/lib/nav";
 
-export function Navbar() {
+type Announcement = { enabled: boolean; left: string; right: string };
+
+const DEFAULT_ANNOUNCEMENT: Announcement = {
+  enabled: true,
+  left: "Online Prophetic Service · Mon & Sat · 10pm WAT",
+  right: "18 Association Avenue, Owutu-Agric, Ikorodu · Lagos",
+};
+
+export function Navbar({
+  nav = NAV_LINKS,
+  announcement = DEFAULT_ANNOUNCEMENT,
+}: {
+  nav?: NavLink[];
+  announcement?: Announcement;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -26,14 +40,14 @@ export function Navbar() {
   return (
     <>
       {/* Top announcement strip */}
-      <div className="hidden md:block bg-midnight text-white/85 text-[11px] tracking-[0.28em] uppercase">
-        <div className="mx-auto max-w-7xl flex justify-between items-center px-6 py-2">
-          <span>Online Prophetic Service · Mon &amp; Sat · 10pm WAT</span>
-          <span className="text-gold">
-            18 Association Avenue, Owutu-Agric, Ikorodu · Lagos
-          </span>
+      {announcement.enabled && (announcement.left || announcement.right) && (
+        <div className="hidden md:block bg-midnight text-white/85 text-[11px] tracking-[0.28em] uppercase">
+          <div className="mx-auto max-w-7xl flex justify-between items-center px-6 py-2">
+            <span>{announcement.left}</span>
+            <span className="text-gold">{announcement.right}</span>
+          </div>
         </div>
-      </div>
+      )}
 
       <header
         className={`sticky top-0 z-50 transition-all duration-500 ${
@@ -46,7 +60,7 @@ export function Navbar() {
           <Logo tagline={false} />
 
           <ul className="hidden lg:flex items-center gap-7 text-[13px] tracking-wide text-midnight/85">
-            {NAV_LINKS.map((link) => {
+            {nav.map((link) => {
               const active =
                 pathname === link.href ||
                 link.children?.some((c) => pathname === c.href);
@@ -106,7 +120,7 @@ export function Navbar() {
         {open && (
           <div className="lg:hidden border-t border-midnight/10 bg-white">
             <ul className="px-6 py-6 flex flex-col gap-1 text-midnight">
-              {NAV_LINKS.map((link) => (
+              {nav.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}

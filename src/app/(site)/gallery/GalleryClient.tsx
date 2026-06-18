@@ -7,34 +7,38 @@ import { ArrowUpRight, Camera, X, ChevronLeft, ChevronRight } from "lucide-react
 import { Reveal } from "@/components/Reveal";
 
 export type Photo = {
-  id: number;
+  id: string;
   title: string;
   caption: string;
   src: string;
-  category: "Services" | "Worship" | "Deliverance" | "Family";
+  category: string;
   width: number;
   height: number;
 };
 
-const CATEGORIES = ["All", "Services", "Worship", "Deliverance", "Family"] as const;
-type Category = (typeof CATEGORIES)[number];
-
 export function GalleryClient({ photos }: { photos: Photo[] }) {
   const reduce = useReducedMotion();
-  const [active, setActive] = useState<Category>("All");
+  const [active, setActive] = useState<string>("All");
   const [lightbox, setLightbox] = useState<number | null>(null);
+
+  // Categories are derived from the photos so they stay in sync with the
+  // images managed in the admin Media library.
+  const CATEGORIES = [
+    "All",
+    ...Array.from(new Set(photos.map((p) => p.category).filter(Boolean))),
+  ];
 
   const filtered =
     active === "All" ? photos : photos.filter((p) => p.category === active);
 
   const count = useCallback(
-    (c: Category) =>
+    (c: string) =>
       c === "All" ? photos.length : photos.filter((p) => p.category === c).length,
     [photos]
   );
 
   const openAt = useCallback(
-    (id: number) => setLightbox(filtered.findIndex((p) => p.id === id)),
+    (id: string) => setLightbox(filtered.findIndex((p) => p.id === id)),
     [filtered]
   );
 
@@ -156,7 +160,7 @@ export function GalleryClient({ photos }: { photos: Photo[] }) {
                   <div className="absolute inset-2.5 border border-gold/0 group-hover:border-gold/50 transition-colors duration-500 pointer-events-none" />
                   <figcaption className="absolute inset-x-0 bottom-0 p-4 sm:p-5 text-white">
                     <span className="text-[10px] tracking-[0.3em] uppercase text-gold">
-                      {p.category} · {String(p.id).padStart(2, "0")}
+                      {p.category} · {String(i + 1).padStart(2, "0")}
                     </span>
                     <p className="font-display text-lg sm:text-xl mt-1 leading-tight translate-y-1 group-hover:translate-y-0 transition-transform duration-500">
                       {p.title}
