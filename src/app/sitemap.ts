@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllPublishedSlugs } from "@/lib/posts";
+import { PAGE_SCHEMAS, getPageModifiedMap } from "@/lib/page-content";
 
 export const revalidate = 3600;
 
@@ -29,12 +30,23 @@ const STATIC_PATHS = [
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
-  const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((p) => ({
-    url: `${SITE_URL}/${p ? `${p}/` : ""}`,
-    lastModified: now,
-    changeFrequency: p === "" || p === "blog" ? "daily" : "monthly",
-    priority: p === "" ? 1 : 0.7,
-  }));
+  // Map each static path to its CMS page key (if any) so the sitemap reflects
+  // the real last-edited time of editable marketing pages.
+  const pathToKey = new Map(
+    PAGE_SCHEMAS.map((s) => [s.path === "/" ? "" : s.path.replace(/^\//, ""), s.key])
+  );
+  const modifiedMap = await getPageModifiedMap();
+
+  const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((p) => {
+    const key = pathToKey.get(p);
+    const mod = key && modifiedMap[key] ? new Date(modifiedMap[key]) : now;
+    return {
+      url: `${SITE_URL}/${p ? `${p}/` : ""}`,
+      lastModified: mod,
+      changeFrequency: p === "" || p === "blog" ? "daily" : "monthly",
+      priority: p === "" ? 1 : 0.7,
+    };
+  });
 
   let postEntries: MetadataRoute.Sitemap = [];
   try {

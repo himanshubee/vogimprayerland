@@ -37,6 +37,7 @@ export async function PUT(
   try {
     const values = await updatePageContent(key, body.values ?? body);
     revalidatePath(schema.path);
+    revalidatePath("/sitemap.xml"); // keep lastModified fresh for search engines
     return NextResponse.json({ ok: true, values });
   } catch (err) {
     console.error("[page-content] save error:", err);

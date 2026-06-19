@@ -488,6 +488,7 @@ type PageDoc = {
   _id: string;
   values?: Record<string, string>;
   draft?: Record<string, string>; // legacy; cleared on next save
+  modifiedAt?: Date | string;
 };
 
 /** Defaults overlaid by saved edits. Safe — never throws. */
@@ -526,6 +527,33 @@ export async function updatePageContent(
   const db = await getDb();
   await db
     .collection<PageDoc>(COLLECTION)
-    .updateOne({ _id: key }, { $set: { values: clean }, $unset: { draft: "" } }, { upsert: true });
+    .updateOne(
+      { _id: key },
+      { $set: { values: clean, modifiedAt: new Date() }, $unset: { draft: "" } },
+      { upsert: true }
+    );
   return { ...defaultsFor(key), ...clean };
+}
+
+/** Map of pageKey → last-modified ISO string, for the sitemap. */
+export async function getPageModifiedMap(): Promise<Record<string, string>> {
+  try {
+    const db = await getDb();
+    const docs = await db
+      .collection<PageDoc>(COLLECTION)
+      .find({}, { projection: { modifiedAt: 1 } })
+      .toArray();
+    const map: Record<string, string> = {};
+    for (const d of docs) {
+      if (d.modifiedAt) {
+        map[d._id] = (d.modifiedAt instanceof Date
+          ? d.modifiedAt
+          : new Date(d.modifiedAt)
+        ).toISOString();
+      }
+    }
+    return map;
+  } catch {
+    return {};
+  }
 }
