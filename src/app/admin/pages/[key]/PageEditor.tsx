@@ -10,10 +10,11 @@ import {
   Check,
   Upload,
   Loader2,
-  Monitor,
   RefreshCw,
   Search,
   ChevronDown,
+  Eye,
+  X,
 } from "lucide-react";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { SeoPanel } from "@/components/admin/SeoPanel";
@@ -24,7 +25,6 @@ const inputCls =
   "w-full bg-white border border-midnight/15 px-3 py-2.5 text-sm outline-none focus:border-gold transition-colors";
 const labelCls = "block text-[11px] tracking-[0.12em] uppercase text-midnight/55 mb-1.5";
 
-// Path → iframe URL (keep the trailing slash the site uses, add a cache-buster).
 function previewSrc(path: string, tick: number) {
   const base = path.endsWith("/") ? path : `${path}/`;
   return `${base}?cmsv=${tick}`;
@@ -46,8 +46,17 @@ export function PageEditor({
   const [busy, setBusy] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
-  const [tick, setTick] = useState(1);
+
+  // Live preview is opt-in (loads only when opened / refreshed).
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
+  const [previewStale, setPreviewStale] = useState(false);
+  const [tick, setTick] = useState(0);
+
+  const firstGroup = schema.fields[0]?.group ?? "Content";
+  const [openSections, setOpenSections] = useState<Set<string>>(
+    () => new Set([firstGroup])
+  );
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -62,7 +71,6 @@ export function PageEditor({
     return Array.from(map.entries());
   }, [schema]);
 
-  // Save edits (content + SEO) straight to the live page, then reload preview.
   const save = useCallback(
     async (next: Record<string, string>, nextSeo: PostSeo) => {
       setSaveState("saving");
@@ -76,7 +84,7 @@ export function PageEditor({
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "Save failed");
         setSaveState("saved");
-        setTick((t) => t + 1); // reload preview with the saved content
+        setPreviewStale(true); // preview (if open) now shows older content
         router.refresh();
       } catch (e) {
         setSaveState("idle");
@@ -90,19 +98,16 @@ export function PageEditor({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => save(next, nextSeo), 800);
   }
-
   function set(key: string, val: string) {
     const next = { ...values, [key]: val };
     setValues(next);
     schedule(next, seo);
   }
-
   function patchSeo(patch: Partial<PostSeo>) {
     const nextSeo = { ...seo, ...patch };
     setSeo(nextSeo);
     schedule(values, nextSeo);
   }
-
   async function saveNow() {
     setBusy(true);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -110,8 +115,30 @@ export function PageEditor({
     setBusy(false);
   }
 
-  function scrollToGroup(g: string) {
-    sectionRefs.current[g]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  function toggleSection(g: string) {
+    setOpenSections((prev) => {
+      const n = new Set(prev);
+      if (n.has(g)) n.delete(g);
+      else n.add(g);
+      return n;
+    });
+  }
+  function jumpToSection(g: string) {
+    setOpenSections((prev) => new Set(prev).add(g));
+    requestAnimationFrame(() =>
+      sectionRefs.current[g]?.scrollIntoView({ behavior: "smooth", block: "start" })
+    );
+  }
+  function openPreview() {
+    setPreviewReady(false);
+    setPreviewStale(false);
+    setTick((t) => t + 1);
+    setPreviewOpen(true);
+  }
+  function refreshPreview() {
+    setPreviewReady(false);
+    setPreviewStale(false);
+    setTick((t) => t + 1);
   }
 
   return (
@@ -133,23 +160,28 @@ export function PageEditor({
               {saveState === "saving"
                 ? "Saving…"
                 : saveState === "saved"
-                ? "Saved ✓ — live on the site"
-                : "Edits save automatically"}
+                ? "Saved ✓ live"
+                : "Autosaves"}
             </span>
             <button
               onClick={() => setShowSeo((v) => !v)}
-              className={`inline-flex items-center gap-1.5 text-[11px] tracking-[0.2em] uppercase border px-3 py-2 transition-colors ${
-                showSeo
-                  ? "border-gold text-gold bg-white/10"
-                  : "border-white/25 text-white/80 hover:bg-white/10"
+              className={`inline-flex items-center gap-1.5 text-[11px] tracking-[0.18em] uppercase border px-3 py-2 transition-colors ${
+                showSeo ? "border-gold text-gold bg-white/10" : "border-white/25 text-white/80 hover:bg-white/10"
               }`}
             >
               <Search size={13} /> SEO
-              <ChevronDown size={13} className={showSeo ? "rotate-180 transition-transform" : "transition-transform"} />
+            </button>
+            <button
+              onClick={() => (previewOpen ? setPreviewOpen(false) : openPreview())}
+              className={`inline-flex items-center gap-1.5 text-[11px] tracking-[0.18em] uppercase border px-3 py-2 transition-colors ${
+                previewOpen ? "border-gold text-gold bg-white/10" : "border-white/25 text-white/80 hover:bg-white/10"
+              }`}
+            >
+              <Eye size={13} /> Live preview
             </button>
             <Link
               href="/admin/pages"
-              className="inline-flex items-center gap-1.5 text-[11px] tracking-[0.2em] uppercase border border-white/25 text-white/80 px-3 py-2 hover:bg-white/10 transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 text-[11px] tracking-[0.18em] uppercase border border-white/25 text-white/80 px-3 py-2 hover:bg-white/10 transition-colors"
             >
               <ArrowLeft size={13} /> Pages
             </Link>
@@ -159,7 +191,7 @@ export function PageEditor({
               className="btn-gold !py-2 !px-4 !text-[11px] disabled:opacity-50"
             >
               {saveState === "saved" ? <Check size={14} /> : <Save size={14} />}
-              {saveState === "saving" || busy ? "Saving…" : "Save now"}
+              {saveState === "saving" || busy ? "Saving…" : "Save"}
             </button>
           </div>
         </div>
@@ -195,92 +227,152 @@ export function PageEditor({
       )}
 
       <div className="flex-1 flex min-h-0">
-        {/* LEFT: fields */}
-        <div className="w-full lg:w-[440px] xl:w-[480px] shrink-0 flex flex-col border-r border-midnight/10 bg-ivory-dark">
-          {/* section nav */}
-          <div className="shrink-0 flex gap-1.5 overflow-x-auto px-4 py-2.5 border-b border-midnight/10 bg-white/60">
+        {/* FIELDS */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* section quick-nav */}
+          <div className="shrink-0 flex items-center gap-1.5 overflow-x-auto px-4 py-2.5 border-b border-midnight/10 bg-white/60">
+            <span className="text-[10px] tracking-[0.18em] uppercase text-midnight/40 shrink-0 mr-1">
+              Sections
+            </span>
             {groups.map(([g]) => (
               <button
                 key={g}
-                onClick={() => scrollToGroup(g)}
-                className="shrink-0 text-[10px] tracking-[0.14em] uppercase px-2.5 py-1.5 border border-midnight/15 text-midnight/60 hover:border-gold hover:text-gold-deep transition-colors"
+                onClick={() => jumpToSection(g)}
+                className="shrink-0 text-[10px] tracking-[0.12em] uppercase px-2.5 py-1.5 border border-midnight/15 text-midnight/60 hover:border-gold hover:text-gold-deep transition-colors"
               >
                 {g}
               </button>
             ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-            {error && (
-              <div className="border border-red-300 bg-red-50 text-red-700 text-sm px-4 py-3">
-                {error}
-              </div>
-            )}
-            {groups.map(([group, fields]) => (
-              <section
-                key={group}
-                ref={(el) => {
-                  sectionRefs.current[group] = el;
-                }}
-                className="bg-white border border-midnight/10 p-4 scroll-mt-2"
-              >
-                <h2 className="font-display text-lg text-midnight mb-4">{group}</h2>
-                <div className="space-y-3.5">
-                  {fields.map((f) => (
-                    <FieldInput
-                      key={f.key}
-                      field={f}
-                      value={values[f.key] ?? ""}
-                      onChange={(v) => set(f.key, v)}
-                    />
-                  ))}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
+            <div className={`mx-auto w-full ${previewOpen ? "max-w-2xl" : "max-w-3xl"}`}>
+              {error && (
+                <div className="border border-red-300 bg-red-50 text-red-700 text-sm px-4 py-3 mb-4">
+                  {error}
                 </div>
-              </section>
-            ))}
-            <div className="pb-8">
-              <button
-                onClick={saveNow}
-                disabled={busy || saveState === "saving"}
-                className="btn-gold w-full justify-center disabled:opacity-50"
-              >
-                {saveState === "saved" ? <Check size={16} /> : <Save size={16} />}
-                {saveState === "saving" || busy ? "Saving…" : "Save now"}
-              </button>
-              <p className="text-center text-[11px] text-midnight/45 mt-2">
-                Changes save automatically as you type and go live on the page.
-              </p>
+              )}
+
+              <div className="space-y-3">
+                {groups.map(([group, fields]) => {
+                  const isOpen = openSections.has(group);
+                  return (
+                    <section
+                      key={group}
+                      ref={(el) => {
+                        sectionRefs.current[group] = el;
+                      }}
+                      className="bg-white border border-midnight/10 scroll-mt-2"
+                    >
+                      <button
+                        onClick={() => toggleSection(group)}
+                        className="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-ivory/40 transition-colors"
+                      >
+                        <span className="font-display text-lg text-midnight">{group}</span>
+                        <span className="flex items-center gap-2">
+                          <span className="text-[11px] text-midnight/35">
+                            {fields.length} field{fields.length === 1 ? "" : "s"}
+                          </span>
+                          <ChevronDown
+                            size={16}
+                            className={`text-midnight/40 transition-transform ${
+                              isOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </span>
+                      </button>
+                      {isOpen && (
+                        <div className="px-4 pb-4 pt-1 grid sm:grid-cols-2 gap-x-5 gap-y-4">
+                          {fields.map((f) => (
+                            <div
+                              key={f.key}
+                              className={
+                                f.type === "textarea" || f.type === "image"
+                                  ? "sm:col-span-2"
+                                  : ""
+                              }
+                            >
+                              <FieldInput
+                                field={f}
+                                value={values[f.key] ?? ""}
+                                onChange={(v) => set(f.key, v)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-between gap-3 mt-6 pb-10">
+                <button
+                  onClick={() =>
+                    setOpenSections((prev) =>
+                      prev.size === groups.length
+                        ? new Set([firstGroup])
+                        : new Set(groups.map(([g]) => g))
+                    )
+                  }
+                  className="text-xs text-midnight/50 hover:text-midnight"
+                >
+                  {openSections.size === groups.length ? "Collapse all" : "Expand all"}
+                </button>
+                <button
+                  onClick={saveNow}
+                  disabled={busy || saveState === "saving"}
+                  className="btn-gold disabled:opacity-50"
+                >
+                  {saveState === "saved" ? <Check size={16} /> : <Save size={16} />}
+                  {saveState === "saving" || busy ? "Saving…" : "Save changes"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT: live preview */}
-        <div className="hidden lg:flex flex-1 flex-col bg-midnight/5 min-w-0">
-          <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-midnight/10 bg-white/60">
-            <span className="inline-flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-midnight/55">
-              <Monitor size={13} /> Live preview {schema.path}
-            </span>
-            <button
-              onClick={() => setTick((t) => t + 1)}
-              className="inline-flex items-center gap-1.5 text-[11px] text-midnight/55 hover:text-gold-deep"
-            >
-              <RefreshCw size={12} /> Refresh
-            </button>
-          </div>
-          <div className="flex-1 relative">
-            {!previewReady && (
-              <div className="absolute inset-0 flex items-center justify-center text-midnight/40">
-                <Loader2 className="animate-spin" size={22} />
+        {/* LIVE PREVIEW (on demand) */}
+        {previewOpen && (
+          <aside className="hidden lg:flex w-[46%] max-w-[760px] shrink-0 flex-col border-l border-midnight/10 bg-midnight/5">
+            <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-midnight/10 bg-white/70">
+              <span className="inline-flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-midnight/55">
+                <Eye size={13} /> Preview {schema.path}
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={refreshPreview}
+                  className={`inline-flex items-center gap-1.5 text-[11px] ${
+                    previewStale ? "text-gold-deep font-medium" : "text-midnight/55"
+                  } hover:text-gold-deep`}
+                >
+                  <RefreshCw size={12} /> {previewStale ? "Refresh (new edits)" : "Refresh"}
+                </button>
+                <button
+                  onClick={() => setPreviewOpen(false)}
+                  className="text-midnight/45 hover:text-midnight"
+                  aria-label="Close preview"
+                >
+                  <X size={15} />
+                </button>
               </div>
-            )}
-            <iframe
-              key={tick}
-              src={previewSrc(schema.path, tick)}
-              title="Live preview"
-              onLoad={() => setPreviewReady(true)}
-              className="w-full h-full border-0 bg-white"
-            />
-          </div>
-        </div>
+            </div>
+            <div className="flex-1 relative">
+              {!previewReady && (
+                <div className="absolute inset-0 flex items-center justify-center text-midnight/40">
+                  <Loader2 className="animate-spin" size={22} />
+                </div>
+              )}
+              <iframe
+                key={tick}
+                src={previewSrc(schema.path, tick)}
+                title="Live preview"
+                onLoad={() => setPreviewReady(true)}
+                className="w-full h-full border-0 bg-white"
+              />
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   );
