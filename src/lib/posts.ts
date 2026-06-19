@@ -53,6 +53,7 @@ function cleanSeo(s?: Partial<PostSeo> | null): PostSeo {
     String(v ?? "").slice(0, max).trim();
   return {
     focusKeyword: str(s.focusKeyword, 120),
+    keywords: str(s.keywords, 300),
     title: str(s.title, 160),
     description: str(s.description, 320),
     canonical: str(s.canonical, 500),

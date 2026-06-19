@@ -12,9 +12,13 @@ import {
   Loader2,
   Monitor,
   RefreshCw,
+  Search,
+  ChevronDown,
 } from "lucide-react";
 import { AdminTabs } from "@/components/admin/AdminTabs";
+import { SeoPanel } from "@/components/admin/SeoPanel";
 import type { PageSchema, FieldDef } from "@/lib/page-content";
+import type { PostSeo } from "@/lib/seo-analysis";
 
 const inputCls =
   "w-full bg-white border border-midnight/15 px-3 py-2.5 text-sm outline-none focus:border-gold transition-colors";
@@ -29,12 +33,16 @@ function previewSrc(path: string, tick: number) {
 export function PageEditor({
   schema,
   initial,
+  initialSeo,
 }: {
   schema: PageSchema;
   initial: Record<string, string>;
+  initialSeo: PostSeo;
 }) {
   const router = useRouter();
   const [values, setValues] = useState<Record<string, string>>(initial);
+  const [seo, setSeo] = useState<PostSeo>(initialSeo);
+  const [showSeo, setShowSeo] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -54,16 +62,16 @@ export function PageEditor({
     return Array.from(map.entries());
   }, [schema]);
 
-  // Save edits straight to the live page, then reload the preview to show them.
+  // Save edits (content + SEO) straight to the live page, then reload preview.
   const save = useCallback(
-    async (next: Record<string, string>) => {
+    async (next: Record<string, string>, nextSeo: PostSeo) => {
       setSaveState("saving");
       setError(null);
       try {
         const res = await fetch(`/api/page-content/${schema.key}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ values: next }),
+          body: JSON.stringify({ values: next, seo: nextSeo }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "Save failed");
@@ -78,17 +86,27 @@ export function PageEditor({
     [schema.key, router]
   );
 
+  function schedule(next: Record<string, string>, nextSeo: PostSeo) {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => save(next, nextSeo), 800);
+  }
+
   function set(key: string, val: string) {
     const next = { ...values, [key]: val };
     setValues(next);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => save(next), 800);
+    schedule(next, seo);
+  }
+
+  function patchSeo(patch: Partial<PostSeo>) {
+    const nextSeo = { ...seo, ...patch };
+    setSeo(nextSeo);
+    schedule(values, nextSeo);
   }
 
   async function saveNow() {
     setBusy(true);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    await save(values);
+    await save(values, seo);
     setBusy(false);
   }
 
@@ -118,6 +136,17 @@ export function PageEditor({
                 ? "Saved ✓ — live on the site"
                 : "Edits save automatically"}
             </span>
+            <button
+              onClick={() => setShowSeo((v) => !v)}
+              className={`inline-flex items-center gap-1.5 text-[11px] tracking-[0.2em] uppercase border px-3 py-2 transition-colors ${
+                showSeo
+                  ? "border-gold text-gold bg-white/10"
+                  : "border-white/25 text-white/80 hover:bg-white/10"
+              }`}
+            >
+              <Search size={13} /> SEO
+              <ChevronDown size={13} className={showSeo ? "rotate-180 transition-transform" : "transition-transform"} />
+            </button>
             <Link
               href="/admin/pages"
               className="inline-flex items-center gap-1.5 text-[11px] tracking-[0.2em] uppercase border border-white/25 text-white/80 px-3 py-2 hover:bg-white/10 transition-colors"
@@ -135,6 +164,35 @@ export function PageEditor({
           </div>
         </div>
       </header>
+
+      {showSeo && (
+        <div className="shrink-0 max-h-[55vh] overflow-y-auto border-b border-midnight/10 bg-ivory-dark px-4 py-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[11px] tracking-[0.18em] uppercase text-midnight/55">
+              Page URL (slug):{" "}
+              <span className="text-midnight font-mono normal-case tracking-normal">
+                {schema.path}
+              </span>
+            </p>
+            <span className="text-[10px] text-midnight/40">
+              Fixed route — use a Blog/Page entry for a custom slug
+            </span>
+          </div>
+          <SeoPanel
+            seo={seo}
+            onChange={patchSeo}
+            title={(values.heroTitle || schema.label || "")
+              .replace(/_/g, "")
+              .replace(/\n/g, " ")
+              .replace(/\s+/g, " ")
+              .trim()}
+            slug={schema.path === "/" ? "" : schema.path.replace(/^\//, "")}
+            excerpt={values.heroIntro || ""}
+            content={Object.values(values).join("  ")}
+            featuredImage={values.heroImage || seo.ogImage || null}
+          />
+        </div>
+      )}
 
       <div className="flex-1 flex min-h-0">
         {/* LEFT: fields */}

@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { getDb } from "@/lib/mongodb";
+import { EMPTY_SEO, type PostSeo } from "@/lib/seo-analysis";
+
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.vogimprayerland.org"
+).replace(/\/$/, "");
 
 /**
  * Field-level CMS for the bespoke marketing pages. Each page declares a set of
@@ -28,6 +34,10 @@ export type PageSchema = {
   label: string; // admin label
   path: string; // public path (for "view" link + revalidation)
   fields: FieldDef[];
+  // Default SEO title/description (the page's current metadata), used as the
+  // fallback until overridden in the SEO panel.
+  seoTitle?: string;
+  seoDescription?: string;
 };
 
 /* ----------------------------- Schemas ----------------------------- */
@@ -49,6 +59,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "home",
     label: "Home",
     path: "/",
+    seoTitle: "VOGIM Prayer Land — Online Deliverance Ministry",
+    seoDescription:
+      "Voice of God International Ministry (VOGIM) — Online deliverance, healing, and restoration through the power of Jesus Christ. Lagos, Nigeria.",
     fields: [
       // Hero
       { key: "heroEyebrow", label: "Hero eyebrow", type: "text", default: "Voice of God International Ministry · est. 2021", group: "Hero" },
@@ -129,6 +142,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "about",
     label: "About",
     path: "/about",
+    seoTitle: "About — VOGIM Prayer Land",
+    seoDescription:
+      "Voice of God International Ministry (VOGIM) — a deliverance ministry rooted in Lagos, Nigeria, founded May 2021 by Prophet Olaofe Oladele.",
     fields: [
       ...heroFields(
         "About the Ministry",
@@ -165,6 +181,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "online-deliverance",
     label: "Online Deliverance",
     path: "/online-deliverance",
+    seoTitle: "Online Deliverance Ministry — VOGIM",
+    seoDescription:
+      "Embracing freedom through Christ at VOGIM. Online deliverance sessions with Prophet Olaofe Emmanuel — wherever you are.",
     fields: [
       ...heroFields(
         "Online Deliverance Ministry",
@@ -223,6 +242,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "marital-settlement",
     label: "Marital Settlement",
     path: "/marital-settlement",
+    seoTitle: "Prayer for Marital Settlement — VOGIM",
+    seoDescription:
+      "A guide to finding divine guidance and peace in your marital journey. Through prayer and spiritual counsel, VOGIM helps individuals navigate the complexities of marriage.",
     fields: [
       ...heroFields(
         "Prayer for Marital Settlement",
@@ -273,6 +295,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "dream-interpretation",
     label: "Dream Interpretation",
     path: "/dream-interpretation",
+    seoTitle: "Dream Interpretation — VOGIM",
+    seoDescription:
+      "Submit your dream for Spirit-led interpretation by Prophet Olaofe and the VOGIM team.",
     fields: heroFields(
       "Dream Interpretation",
       "God still speaks\nin _the night._",
@@ -284,6 +309,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "give",
     label: "Give",
     path: "/give",
+    seoTitle: "Give — VOGIM Prayer Land",
+    seoDescription:
+      "Partner with VOGIM. Give to support the work of deliverance, healing, and care for widows and orphans.",
     fields: [
       ...heroFields(
         "Give",
@@ -318,6 +346,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "partnership",
     label: "Partnership",
     path: "/partnership",
+    seoTitle: "Partnership — VOGIM Prayer Land",
+    seoDescription:
+      "Become a covenant partner of VOGIM and help carry deliverance, healing, and the gospel to the nations.",
     fields: [
       ...heroFields(
         "Partnership",
@@ -370,6 +401,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "zoom",
     label: "Zoom Service",
     path: "/zoom",
+    seoTitle: "Join Us on Zoom — VOGIM Prayer Land",
+    seoDescription:
+      "Join Voice of God International Ministry (VOGIM) live on Zoom for prayer, deliverance, and the Word. Connect from anywhere in the world.",
     fields: [
       { key: "heroEyebrow", label: "Hero eyebrow", type: "text", default: "Live on Zoom", group: "Hero" },
       { key: "heroTitle", label: "Hero title", type: "textarea", default: "Pray with us,\n_wherever you are._", group: "Hero", hint: "New line = line break · _wrap_ for gold italic" },
@@ -399,6 +433,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "prayer-request",
     label: "Prayer Request",
     path: "/prayer-request",
+    seoTitle: "Prayer Request — VOGIM",
+    seoDescription:
+      "Send your prayer request to VOGIM. Our intercessors will stand with you.",
     fields: heroFields(
       "Prayer Request",
       "We would love\nto _pray for you._",
@@ -410,6 +447,8 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "healing-request",
     label: "Healing Request",
     path: "/healing-request",
+    seoTitle: "Healing Request — VOGIM",
+    seoDescription: "Submit a healing request to VOGIM. Jesus is still the Healer.",
     fields: heroFields(
       "Healing Request",
       "Jesus is still\n_the Healer._",
@@ -421,6 +460,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "deliverance-request",
     label: "Deliverance Request",
     path: "/deliverance-request",
+    seoTitle: "Deliverance Request — VOGIM",
+    seoDescription:
+      "Submit your deliverance request to VOGIM. Schedule a one-on-one online session with Prophet Olaofe Emmanuel.",
     fields: heroFields(
       "Deliverance Request",
       "Schedule your\n_deliverance session._",
@@ -432,6 +474,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "media",
     label: "Media",
     path: "/media",
+    seoTitle: "Media — VOGIM Prayer Land",
+    seoDescription:
+      "Sermons, prophetic words, worship moments and gallery from VOGIM Deliverance Ministries.",
     fields: [
       { key: "heroEyebrow", label: "Hero eyebrow", type: "text", default: "Media", group: "Hero" },
       { key: "heroTitle", label: "Hero title", type: "textarea", default: "Sermons, sounds\n& _moments of glory._", group: "Hero" },
@@ -488,8 +533,88 @@ type PageDoc = {
   _id: string;
   values?: Record<string, string>;
   draft?: Record<string, string>; // legacy; cleared on next save
+  seo?: Partial<PostSeo>;
   modifiedAt?: Date | string;
 };
+
+const seoStr = (v: unknown, max = 320) => String(v ?? "").slice(0, max).trim();
+
+/** Normalize an SEO payload into a complete PostSeo object. */
+export function cleanPageSeo(s?: Partial<PostSeo> | null): PostSeo {
+  if (!s) return { ...EMPTY_SEO };
+  return {
+    focusKeyword: seoStr(s.focusKeyword, 120),
+    keywords: seoStr(s.keywords, 300),
+    title: seoStr(s.title, 160),
+    description: seoStr(s.description, 320),
+    canonical: seoStr(s.canonical, 500),
+    noindex: Boolean(s.noindex),
+    nofollow: Boolean(s.nofollow),
+    ogTitle: seoStr(s.ogTitle, 160),
+    ogDescription: seoStr(s.ogDescription, 320),
+    ogImage: s.ogImage ? seoStr(s.ogImage, 500) : null,
+    score: Math.max(0, Math.min(100, Math.round(Number(s.score) || 0))),
+  };
+}
+
+/** Stored SEO for a page (defaults merged). */
+export async function getPageSeo(key: string): Promise<PostSeo> {
+  try {
+    const db = await getDb();
+    const doc = await db.collection<PageDoc>(COLLECTION).findOne({ _id: key });
+    return { ...EMPTY_SEO, ...(doc?.seo ?? {}) };
+  } catch {
+    return { ...EMPTY_SEO };
+  }
+}
+
+const plainText = (s: string) =>
+  s.replace(/_/g, "").replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+
+/** Build the Next.js Metadata for a CMS page from its content + SEO settings. */
+export async function getPageMeta(key: string): Promise<Metadata> {
+  const schema = getSchema(key);
+  const path = schema?.path ?? "/";
+  const [content, seo] = await Promise.all([getPageContent(key), getPageSeo(key)]);
+
+  const heroTitle = plainText(content.heroTitle || "");
+  const baseTitle =
+    schema?.seoTitle ||
+    (heroTitle ? `${heroTitle} — VOGIM Prayer Land` : "VOGIM Prayer Land");
+  const title = seo.title || baseTitle;
+  const description =
+    seo.description || schema?.seoDescription || content.heroIntro || undefined;
+
+  const url = `${SITE_URL}${path === "/" ? "/" : `${path}/`}`;
+  const canonical = seo.canonical || url;
+  const ogImage = seo.ogImage || content.heroImage || undefined;
+  const ogTitle = seo.ogTitle || seo.title || baseTitle;
+  const ogDescription = seo.ogDescription || description;
+
+  return {
+    title,
+    description,
+    keywords: seo.keywords
+      ? seo.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+      : undefined,
+    alternates: { canonical },
+    robots: { index: !seo.noindex, follow: !seo.nofollow },
+    openGraph: {
+      type: "website",
+      siteName: "VOGIM Prayer Land",
+      title: ogTitle,
+      description: ogDescription,
+      url,
+      images: ogImage ? [{ url: ogImage }] : undefined,
+    },
+    twitter: {
+      card: ogImage ? "summary_large_image" : "summary",
+      title: ogTitle,
+      description: ogDescription,
+      images: ogImage ? [ogImage] : undefined,
+    },
+  };
+}
 
 /** Defaults overlaid by saved edits. Safe — never throws. */
 export async function getPageContent(key: string): Promise<Record<string, string>> {
@@ -518,20 +643,19 @@ function cleanValues(key: string, values: Record<string, unknown>) {
   return clean;
 }
 
-/** Save edits straight to the live page and clear any legacy draft. */
+/** Save edits (content + optional SEO) straight to the live page. */
 export async function updatePageContent(
   key: string,
-  values: Record<string, unknown>
+  values: Record<string, unknown>,
+  seo?: Partial<PostSeo> | null
 ): Promise<Record<string, string>> {
   const clean = cleanValues(key, values);
+  const set: Record<string, unknown> = { values: clean, modifiedAt: new Date() };
+  if (seo !== undefined && seo !== null) set.seo = cleanPageSeo(seo);
   const db = await getDb();
   await db
     .collection<PageDoc>(COLLECTION)
-    .updateOne(
-      { _id: key },
-      { $set: { values: clean, modifiedAt: new Date() }, $unset: { draft: "" } },
-      { upsert: true }
-    );
+    .updateOne({ _id: key }, { $set: set, $unset: { draft: "" } }, { upsert: true });
   return { ...defaultsFor(key), ...clean };
 }
 

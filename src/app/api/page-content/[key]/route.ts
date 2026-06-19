@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { isAuthenticated } from "@/lib/auth";
-import { getPageContent, updatePageContent, getSchema } from "@/lib/page-content";
+import {
+  getPageContent,
+  getPageSeo,
+  updatePageContent,
+  getSchema,
+} from "@/lib/page-content";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +19,8 @@ export async function GET(
   }
   const { key } = await ctx.params;
   if (!getSchema(key)) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json({ values: await getPageContent(key) });
+  const [values, seo] = await Promise.all([getPageContent(key), getPageSeo(key)]);
+  return NextResponse.json({ values, seo });
 }
 
 // PUT — save edits to the live page and revalidate it.
@@ -35,7 +41,7 @@ export async function PUT(
   }
 
   try {
-    const values = await updatePageContent(key, body.values ?? body);
+    const values = await updatePageContent(key, body.values ?? body, body.seo);
     revalidatePath(schema.path);
     revalidatePath("/sitemap.xml"); // keep lastModified fresh for search engines
     return NextResponse.json({ ok: true, values });

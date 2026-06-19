@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
-import { getSchema, getPageContent } from "@/lib/page-content";
+import { getSchema, getPageContent, getPageSeo } from "@/lib/page-content";
 import { PageEditor } from "./PageEditor";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +15,6 @@ export default async function EditPage({
   const { key } = await params;
   const schema = getSchema(key);
   if (!schema) notFound();
-  const values = await getPageContent(key);
-  return <PageEditor schema={schema} initial={values} />;
+  const [values, seo] = await Promise.all([getPageContent(key), getPageSeo(key)]);
+  return <PageEditor schema={schema} initial={values} initialSeo={seo} />;
 }

@@ -1,17 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Heart, BookOpen, HandHeart, Hourglass, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
 
-export const metadata = {
-  alternates: { canonical: "/marital-settlement/" },
-  title: "Prayer for Marital Settlement — VOGIM",
-  description:
-    "A guide to finding divine guidance and peace in your marital journey. Through prayer and spiritual counsel, VOGIM helps individuals navigate the complexities of marriage.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("marital-settlement");
+}
 
 export const revalidate = 300;
 

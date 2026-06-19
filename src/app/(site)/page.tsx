@@ -13,11 +13,11 @@ import {
 } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { RichText } from "@/components/RichText";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 
-export const metadata: Metadata = {
-  alternates: { canonical: "/" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("home");
+}
 
 export const revalidate = 300;
 

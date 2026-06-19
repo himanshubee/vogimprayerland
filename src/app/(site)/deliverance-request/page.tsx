@@ -1,16 +1,14 @@
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { RequestForm } from "@/components/RequestForm";
 import { Reveal } from "@/components/Reveal";
 import { ShieldCheck, Lock, Clock } from "lucide-react";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
 
-export const metadata = {
-  alternates: { canonical: "/deliverance-request/" },
-  title: "Deliverance Request — VOGIM",
-  description:
-    "Submit your deliverance request to VOGIM. Schedule a one-on-one online session with Prophet Olaofe Emmanuel.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("deliverance-request");
+}
 
 export const revalidate = 300;
 

@@ -1,17 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Cross } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 import { RichText } from "@/components/RichText";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 
-export const metadata = {
-  alternates: { canonical: "/about/" },
-  title: "About — VOGIM Prayer Land",
-  description:
-    "Voice of God International Ministry (VOGIM) — a deliverance ministry rooted in Lagos, Nigeria, founded May 2021 by Prophet Olaofe Oladele.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("about");
+}
 
 export const revalidate = 300;
 

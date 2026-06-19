@@ -183,7 +183,22 @@ export function SeoPanel({
               className="mt-1.5 w-full bg-ivory-dark border border-midnight/15 px-3 py-2 text-sm outline-none focus:border-gold transition-colors"
             />
             <p className="mt-1 text-[10px] text-midnight/40">
-              The main term you want this post to rank for.
+              The main term you want this page to rank for.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-[10px] tracking-[0.22em] uppercase text-midnight/50">
+              Meta keywords
+            </label>
+            <input
+              value={seo.keywords}
+              onChange={(e) => onChange({ keywords: e.target.value })}
+              placeholder="deliverance, healing, prayer, Lagos"
+              className="mt-1.5 w-full bg-ivory-dark border border-midnight/15 px-3 py-2 text-sm outline-none focus:border-gold transition-colors"
+            />
+            <p className="mt-1 text-[10px] text-midnight/40">
+              Comma-separated, emitted as the page&apos;s meta keywords tag.
             </p>
           </div>
 

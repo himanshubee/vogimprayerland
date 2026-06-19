@@ -1,15 +1,13 @@
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { RequestForm } from "@/components/RequestForm";
 import { Reveal } from "@/components/Reveal";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
 
-export const metadata = {
-  alternates: { canonical: "/dream-interpretation/" },
-  title: "Dream Interpretation — VOGIM",
-  description:
-    "Submit your dream for Spirit-led interpretation by Prophet Olaofe and the VOGIM team.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("dream-interpretation");
+}
 
 export const revalidate = 300;
 

@@ -1,16 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 import { ArrowUpRight, HandHeart, Sprout, HomeIcon } from "lucide-react";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
 
-export const metadata = {
-  alternates: { canonical: "/give/" },
-  title: "Give — VOGIM Prayer Land",
-  description:
-    "Partner with VOGIM. Give to support the work of deliverance, healing, and care for widows and orphans.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("give");
+}
 
 export const revalidate = 300;
 

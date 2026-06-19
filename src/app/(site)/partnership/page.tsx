@@ -16,22 +16,12 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 import { RequestForm } from "@/components/RequestForm";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
 
-export const metadata: Metadata = {
-  alternates: { canonical: "/partnership/" },
-  title: "Partnership — VOGIM Prayer Land",
-  description:
-    "Become a covenant partner of Voice of God International Ministry (VOGIM). Stand with us in prayer and giving to reach a generation with deliverance, healing, and the gospel of Jesus Christ.",
-  openGraph: {
-    title: "Partnership — VOGIM Prayer Land",
-    description:
-      "Become a covenant partner of VOGIM and help carry deliverance, healing, and the gospel to the nations.",
-    url: "/partnership/",
-    type: "website",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("partnership");
+}
 
 export const revalidate = 300;
 

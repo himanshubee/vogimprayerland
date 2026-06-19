@@ -36,6 +36,9 @@ export async function generateMetadata({
   return {
     title: metaTitle,
     description: metaDescription,
+    keywords: seo.keywords
+      ? seo.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+      : undefined,
     alternates: { canonical },
     robots: {
       index: !seo.noindex,

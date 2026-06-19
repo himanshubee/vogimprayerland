@@ -14,6 +14,7 @@
  */
 export type PostSeo = {
   focusKeyword: string;
+  keywords: string; // comma-separated <meta name="keywords">
   title: string; // SEO title override (falls back to post title)
   description: string; // meta description override (falls back to excerpt)
   canonical: string;
@@ -27,6 +28,7 @@ export type PostSeo = {
 
 export const EMPTY_SEO: PostSeo = {
   focusKeyword: "",
+  keywords: "",
   title: "",
   description: "",
   canonical: "",

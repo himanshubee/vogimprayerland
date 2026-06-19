@@ -4,15 +4,13 @@ import { PageHeader } from "@/components/PageHeader";
 import { RichText } from "@/components/RichText";
 import { Reveal } from "@/components/Reveal";
 import { Play, Headphones, ImageIcon, ArrowUpRight } from "lucide-react";
+import type { Metadata } from "next";
 import { listMedia } from "@/lib/media";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 
-export const metadata = {
-  alternates: { canonical: "/media/" },
-  title: "Media — VOGIM Prayer Land",
-  description:
-    "Sermons, prophetic words, worship moments and gallery from VOGIM Deliverance Ministries.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("media");
+}
 
 export const revalidate = 300;
 

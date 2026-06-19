@@ -1,15 +1,13 @@
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { RequestForm } from "@/components/RequestForm";
 import { Reveal } from "@/components/Reveal";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
 
-export const metadata = {
-  alternates: { canonical: "/prayer-request/" },
-  title: "Prayer Request — VOGIM",
-  description:
-    "Send your prayer request to VOGIM. Our intercessors will stand with you.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("prayer-request");
+}
 
 export const revalidate = 300;
 

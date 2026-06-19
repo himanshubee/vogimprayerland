@@ -1,16 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Video, ArrowUpRight, Hash, Clock, Smartphone, Monitor } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
 
-export const metadata = {
-  alternates: { canonical: "/zoom/" },
-  title: "Join Us on Zoom — VOGIM Prayer Land",
-  description:
-    "Join Voice of God International Ministry (VOGIM) live on Zoom for prayer, deliverance, and the Word. Connect from anywhere in the world.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("zoom");
+}
 
 export const revalidate = 300;
 

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -12,15 +13,12 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
-import { getPageContent } from "@/lib/page-content";
+import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
 
-export const metadata = {
-  alternates: { canonical: "/online-deliverance/" },
-  title: "Online Deliverance Ministry — VOGIM",
-  description:
-    "Embracing freedom through Christ at VOGIM. Online deliverance sessions with Prophet Olaofe Emmanuel — wherever you are.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMeta("online-deliverance");
+}
 
 export const revalidate = 300;
 
