@@ -167,7 +167,25 @@ export async function verifyTransaction(
 ): Promise<VerifiedTransaction | null> {
   const id = String(transactionId).replace(/[^\w-]/g, "");
   if (!id) return null;
+  return verifyAt(`/transactions/${id}/verify`);
+}
 
+/**
+ * Verify by *our* reference instead of Flutterwave's id — the only way to
+ * reconcile a gift when both the redirect and the webhook were missed, since
+ * in that case we never learn the transaction id.
+ */
+export async function verifyTransactionByReference(
+  txRef: string
+): Promise<VerifiedTransaction | null> {
+  const ref = String(txRef).trim();
+  if (!ref) return null;
+  return verifyAt(
+    `/transactions/verify_by_reference?tx_ref=${encodeURIComponent(ref)}`
+  );
+}
+
+async function verifyAt(path: string): Promise<VerifiedTransaction | null> {
   type Raw = {
     id: number;
     tx_ref: string;
@@ -184,11 +202,11 @@ export async function verifyTransaction(
 
   let res: FlwResponse<Raw>;
   try {
-    res = await flwFetch<Raw>(`/transactions/${id}/verify`, { method: "GET" });
+    res = await flwFetch<Raw>(path, { method: "GET" });
   } catch (err) {
-    // Flutterwave answers an unknown transaction id with HTTP 400 and a null
-    // body ("No transaction was found for this id") — that is a definitive
-    // "doesn't exist", not an error worth retrying.
+    // Flutterwave answers an unknown transaction id or reference with HTTP 400
+    // and a null body ("No transaction was found for this id") — that is a
+    // definitive "doesn't exist", not an error worth retrying.
     if (err instanceof FlutterwaveError && err.status === 400) return null;
     throw err;
   }
