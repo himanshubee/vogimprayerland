@@ -5,6 +5,13 @@ import { Reveal } from "@/components/Reveal";
 import { ArrowUpRight, HandHeart, Sprout, HomeIcon } from "lucide-react";
 import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
+import { GiveForm } from "@/components/GiveForm";
+import {
+  CURRENCIES,
+  isCurrency,
+  isFlutterwaveConfigured,
+  isTestMode,
+} from "@/lib/flutterwave";
 
 export async function generateMetadata(): Promise<Metadata> {
   return getPageMeta("give");
@@ -12,9 +19,46 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const revalidate = 300;
 
+/** "2000, 5000 , x, 10000" → [2000, 5000, 10000] */
+const numbers = (csv: string): number[] =>
+  csv
+    .split(",")
+    .map((v) => Number(v.trim()))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .slice(0, 8);
+
+const strings = (csv: string): string[] =>
+  csv
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean)
+    .slice(0, 8);
+
 export default async function GivePage() {
   const c = await getPageContent("give");
-  const AMOUNTS = [c.amount1, c.amount2, c.amount3, c.amount4, c.amount5];
+
+  const currencies = strings(c.giveCurrencies)
+    .map((code) => code.toUpperCase())
+    .filter(isCurrency)
+    .map((code) => ({
+      code,
+      symbol: CURRENCIES[code].symbol,
+      min: CURRENCIES[code].min,
+    }));
+
+  const presets: Record<string, number[]> = {
+    NGN: numbers(c.amountsNgn),
+    USD: numbers(c.amountsUsd),
+    GBP: numbers(c.amountsGbp),
+  };
+  // Any other enabled currency falls back to the USD ladder so the chips are
+  // never empty when a new code is added in the admin.
+  for (const { code } of currencies) {
+    if (!presets[code]?.length) presets[code] = presets.USD;
+  }
+
+  const defaultCurrency = (c.defaultCurrency || "NGN").toUpperCase();
+  const giveEnabled = isFlutterwaveConfigured() && currencies.length > 0;
   const AREAS = [
     {
       icon: HandHeart,
@@ -60,29 +104,28 @@ export default async function GivePage() {
               {c.giveIntro}
             </p>
 
-            <div className="mt-10 flex flex-wrap gap-3 items-center">
-              {AMOUNTS.map((a) => (
-                <span
-                  key={a}
-                  className="px-5 py-3 border border-midnight/20 font-display text-xl text-midnight hover:bg-midnight hover:text-gold transition-colors cursor-pointer"
-                >
-                  ${a}
-                </span>
-              ))}
-              <span className="px-5 py-3 border border-midnight/20 font-display text-xl italic text-midnight/70">
-                {c.amountOther}
-              </span>
-            </div>
-
-            <Link
-              href={c.giveButtonHref}
-              className="btn-gold mt-10"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {c.giveButtonLabel}
-              <ArrowUpRight size={16} />
-            </Link>
+            {giveEnabled ? (
+              <GiveForm
+                currencies={currencies}
+                presets={presets}
+                funds={strings(c.giveFunds)}
+                submitLabel={c.giveButtonLabel}
+                defaultCurrency={defaultCurrency}
+                testMode={isTestMode()}
+              />
+            ) : (
+              // Flutterwave isn't configured on this server — fall back to the
+              // ministry's hosted giving page rather than showing a dead form.
+              <Link
+                href={c.giveButtonHref}
+                className="btn-gold mt-10"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {c.giveButtonLabel}
+                <ArrowUpRight size={16} />
+              </Link>
+            )}
           </Reveal>
 
           <Reveal delay={0.1}>

@@ -21,7 +21,7 @@ const SITE_URL = (
 export const GIVE_URL = "https://give.vogimprayerland.org/";
 
 /** Shown as "Last updated" on every legal page. Bump when the copy changes. */
-export const LEGAL_UPDATED = "29 July 2026";
+export const LEGAL_UPDATED = "30 July 2026";
 
 export type LegalBlock =
   | { type: "p"; text: string }
@@ -69,7 +69,7 @@ const REFUND: LegalDoc = {
       blocks: [
         {
           type: "p",
-          text: "{ministry} (“VOGIM”, “the ministry”, “we”, “us”) receives donations, offerings, partnership seeds, and other freewill gifts through our official giving channel at {giveUrl} and through the payment details we publish on this website.",
+          text: "{ministry} (“VOGIM”, “the ministry”, “we”, “us”) receives donations, offerings, partnership seeds, and other freewill gifts through the giving page on this website, at {site}/give, and through our partner giving channel at {giveUrl}. Card and bank payments made on this website are processed securely by Flutterwave; we never see or store your card details.",
         },
         {
           type: "p",
@@ -87,7 +87,7 @@ const REFUND: LegalDoc = {
         },
         {
           type: "note",
-          text: "No pastor, prophet, intercessor, or staff member of VOGIM will ever demand a private payment, a “deliverance fee”, gift cards, or cryptocurrency in exchange for prayer. If anyone contacts you claiming to represent this ministry and asks for such a payment, do not pay — report it to us immediately at {email} or {phone}. The only authorised giving channel is {giveUrl}.",
+          text: "No pastor, prophet, intercessor, or staff member of VOGIM will ever demand a private payment, a “deliverance fee”, gift cards, or cryptocurrency in exchange for prayer. If anyone contacts you claiming to represent this ministry and asks for such a payment, do not pay — report it to us immediately at {email} or {phone}. The only authorised giving channels are the giving page at {site}/give and {giveUrl}.",
         },
       ],
     },
@@ -172,7 +172,7 @@ const REFUND: LegalDoc = {
           items: [
             "We acknowledge every refund request within 3 business days.",
             "We aim to decide on the request within 7 business days of receiving the details above.",
-            "Approved refunds are returned to the original payment method. We cannot refund to a different card, account, or person.",
+            "Approved refunds are returned through the payment provider that processed the gift — Flutterwave for gifts made on this website — and to the original payment method. We cannot refund to a different card, account, or person.",
             "Once issued, funds typically appear within 5–10 business days for cards and 3–7 business days for bank transfers, depending on your bank and country.",
             "Where the gift was made in a currency other than our settlement currency, the refunded amount may differ slightly because of exchange-rate movement between the date of the gift and the date of the refund.",
             "Payment processor or gateway fees, and any bank charges applied at your end, may not be recoverable. Where that is the case, we will tell you before processing.",
@@ -352,7 +352,7 @@ const TERMS: LegalDoc = {
       blocks: [
         {
           type: "p",
-          text: "Gifts are voluntary. Our only authorised online giving channel is {giveUrl}; treat any other channel claiming to collect on our behalf as fraudulent and report it to us. Payments are handled by third-party payment providers under their own terms — we never see or store your full card details.",
+          text: "Gifts are voluntary. Our authorised online giving channels are the giving page on this website ({site}/give) and {giveUrl}; treat any other channel claiming to collect on our behalf as fraudulent and report it to us. Payments made on this website are handled by Flutterwave under their own terms and privacy policy — card details are entered on Flutterwave's checkout, and we never see or store them.",
         },
         {
           type: "p",
@@ -549,7 +549,7 @@ const PRIVACY: LegalDoc = {
         },
         {
           type: "p",
-          text: "Payments: gifts are processed by third-party payment providers on their own systems. We receive confirmation of a gift and the donor's name and contact details. We never receive or store your full card number, CVV, PIN, or banking password.",
+          text: "Payments: gifts made on this website are processed by Flutterwave on their own systems, under their privacy policy. We record your name, email, phone, the amount, currency, the fund you chose, any note you added, and the transaction reference Flutterwave returns to us. We never receive or store your full card number, CVV, PIN, or banking password.",
         },
       ],
     },
@@ -613,7 +613,7 @@ const PRIVACY: LegalDoc = {
           type: "list",
           items: [
             "The VOGIM pastoral and intercessory team — limited to those who pray over and follow up your request. They are bound to confidence.",
-            "Service providers who operate the systems we use: web and database hosting, our email delivery provider, the live-chat provider, our analytics provider, and our payment and giving providers. They act on our instructions and may not use your data for their own purposes.",
+            "Service providers who operate the systems we use: web and database hosting, our email delivery provider, the live-chat provider, our analytics provider, and Flutterwave, our payment processor. They act on our instructions and may not use your data for their own purposes.",
             "Law enforcement or regulators, where we are legally required to disclose, or where disclosure is necessary to protect someone from serious harm.",
           ],
         },
