@@ -3,6 +3,7 @@ import { MapPin, Mail, Phone } from "lucide-react";
 import { Logo } from "./Logo";
 import { FacebookIcon, YoutubeIcon, InstagramIcon, WhatsAppIcon } from "./SocialIcons";
 import { DEFAULT_SETTINGS, type SiteSettings } from "@/lib/settings";
+import { LEGAL_LINKS } from "@/lib/legal";
 
 export function Footer({ settings = DEFAULT_SETTINGS }: { settings?: SiteSettings }) {
   const { social } = settings;
@@ -96,7 +97,19 @@ export function Footer({ settings = DEFAULT_SETTINGS }: { settings?: SiteSetting
           </div>
         </div>
 
-        <div className="mt-16 pt-6 border-t border-ivory/10 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] tracking-[0.28em] uppercase text-ivory/50">
+        {/* Legal — kept out of the editable columns so it is always present. */}
+        <nav
+          aria-label="Legal"
+          className="mt-16 pt-6 border-t border-ivory/10 flex flex-wrap justify-center gap-x-7 gap-y-3 text-[11px] tracking-[0.28em] uppercase text-ivory/60"
+        >
+          {LEGAL_LINKS.map((l) => (
+            <Link key={l.href} href={l.href} className="hover:text-gold transition-colors">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] tracking-[0.28em] uppercase text-ivory/50">
           <span>© {new Date().getFullYear()} {settings.copyrightName}</span>
           <span className="text-gold/70">{settings.footerTagline}</span>
         </div>

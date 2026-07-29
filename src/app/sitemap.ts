@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllPublishedSlugs } from "@/lib/posts";
 import { PAGE_SCHEMAS, getPageModifiedMap } from "@/lib/page-content";
+import { LEGAL_DOCS } from "@/lib/legal";
 
 export const revalidate = 3600;
 
@@ -25,6 +26,7 @@ const STATIC_PATHS = [
   "give",
   "partnership",
   "contact",
+  ...LEGAL_DOCS.map((d) => d.slug),
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -37,14 +39,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
   const modifiedMap = await getPageModifiedMap();
 
+  const legalPaths = new Set(LEGAL_DOCS.map((d) => d.slug));
+
   const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((p) => {
     const key = pathToKey.get(p);
     const mod = key && modifiedMap[key] ? new Date(modifiedMap[key]) : now;
+    const isLegal = legalPaths.has(p);
     return {
       url: `${SITE_URL}/${p ? `${p}/` : ""}`,
       lastModified: mod,
-      changeFrequency: p === "" || p === "blog" ? "daily" : "monthly",
-      priority: p === "" ? 1 : 0.7,
+      changeFrequency: isLegal
+        ? "yearly"
+        : p === "" || p === "blog"
+          ? "daily"
+          : "monthly",
+      priority: p === "" ? 1 : isLegal ? 0.3 : 0.7,
     };
   });
 
