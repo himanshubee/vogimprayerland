@@ -11,6 +11,8 @@ type Props = {
   submitLabel: string;
   defaultCurrency: string;
   testMode: boolean;
+  /** Where to send the donor if the gateway is unavailable server-side. */
+  fallbackHref: string;
 };
 
 const OTHER = "other";
@@ -22,6 +24,7 @@ export function GiveForm({
   submitLabel,
   defaultCurrency,
   testMode,
+  fallbackHref,
 }: Props) {
   const [currency, setCurrency] = useState(
     currencies.some((c) => c.code === defaultCurrency)
@@ -82,6 +85,14 @@ export function GiveForm({
       });
 
       const payload = await res.json().catch(() => ({}));
+
+      // The gateway is not configured on the server. Never dead-end a donor —
+      // hand them to the ministry's hosted giving page instead.
+      if (res.status === 503 && fallbackHref) {
+        window.location.href = fallbackHref;
+        return;
+      }
+
       if (!res.ok || !payload.link) {
         throw new Error(
           payload.error || "We could not start your gift. Please try again."

@@ -59,6 +59,20 @@ export default async function GivePage() {
 
   const defaultCurrency = (c.defaultCurrency || "NGN").toUpperCase();
   const giveEnabled = isFlutterwaveConfigured() && currencies.length > 0;
+
+  if (!giveEnabled) {
+    // Loud, because the symptom is silent: the page renders the old external
+    // button and on-site giving simply never appears. Check FLW_SECRET_KEY is
+    // set in .env.production *on the server*, then rebuild — this page is
+    // prerendered, so the decision is baked in at build time.
+    console.error(
+      `[give] On-site giving is DISABLED — ${
+        !isFlutterwaveConfigured()
+          ? "FLW_SECRET_KEY is not set"
+          : `no valid currencies in "${c.giveCurrencies}"`
+      }. Falling back to ${c.giveButtonHref}`
+    );
+  }
   const AREAS = [
     {
       icon: HandHeart,
@@ -112,6 +126,7 @@ export default async function GivePage() {
                 submitLabel={c.giveButtonLabel}
                 defaultCurrency={defaultCurrency}
                 testMode={isTestMode()}
+                fallbackHref={c.giveButtonHref}
               />
             ) : (
               // Flutterwave isn't configured on this server — fall back to the
