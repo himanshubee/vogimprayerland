@@ -322,14 +322,25 @@ export const PAGE_SCHEMAS: PageSchema[] = [
       { key: "giveEyebrow", label: "Eyebrow", type: "text", default: "Online Giving", group: "Online Giving" },
       { key: "giveTitle", label: "Title", type: "textarea", default: "Give securely to the work of _VOGIM Prayer Land._", group: "Online Giving" },
       { key: "giveIntro", label: "Intro", type: "textarea", default: "Your gift is processed securely by Flutterwave — card, bank transfer, USSD, and mobile money — and goes directly to the work of the ministry, the support of the vulnerable, and the spread of the gospel.", group: "Online Giving" },
-      { key: "giveCurrencies", label: "Currencies offered", type: "text", default: "NGN,USD,GBP", group: "Online Giving", hint: "Comma-separated codes. Each must be enabled on the Flutterwave account. Supported: NGN, USD, GBP, EUR, GHS, KES, ZAR" },
+      { key: "giveCurrencies", label: "Currencies offered", type: "text", default: "NGN,USD,GBP,EUR,AED", group: "Online Giving", hint: "Comma-separated codes. Each must be enabled on the Flutterwave account. Supported: NGN, USD, GBP, EUR, AED, GHS, KES, ZAR" },
       { key: "defaultCurrency", label: "Default currency", type: "text", default: "NGN", group: "Online Giving" },
       { key: "amountsNgn", label: "Preset amounts — NGN", type: "text", default: "2000,5000,10000,25000,50000", group: "Online Giving", hint: "Comma-separated numbers" },
       { key: "amountsUsd", label: "Preset amounts — USD", type: "text", default: "10,25,50,100,250", group: "Online Giving", hint: "Comma-separated numbers" },
       { key: "amountsGbp", label: "Preset amounts — GBP", type: "text", default: "10,25,50,100,250", group: "Online Giving", hint: "Comma-separated numbers" },
+      { key: "amountsEur", label: "Preset amounts — EUR", type: "text", default: "10,25,50,100,250", group: "Online Giving", hint: "Comma-separated numbers" },
+      { key: "amountsAed", label: "Preset amounts — AED", type: "text", default: "25,50,100,250,500", group: "Online Giving", hint: "Comma-separated numbers" },
       { key: "giveFunds", label: "Fund options", type: "text", default: "Where the need is greatest,Deliverance Ministry,Widows & Orphans,Building the Sanctuary", group: "Online Giving", hint: "Comma-separated. The donor picks one; it is recorded with the gift." },
       { key: "giveButtonLabel", label: "Button Label", type: "text", default: "Give Now", group: "Online Giving" },
       { key: "giveButtonHref", label: "Fallback giving link", type: "url", default: "https://give.vogimprayerland.org/", group: "Online Giving", hint: "Only used if Flutterwave is not configured on the server." },
+      // Stablecoin gifts can't go through Flutterwave's hosted checkout (the
+      // checkout finds no payment methods for USDT/USDC/RLUSD and hangs), so
+      // they are received directly to the ministry's Treasury wallet addresses.
+      // The section stays hidden until at least one address is filled in.
+      { key: "stablecoinIntro", label: "Intro", type: "textarea", default: "Prefer to give in digital dollars? Send USDT, USDC, or RLUSD straight to the ministry's wallet — gifts arrive in minutes, from anywhere in the world.", group: "Stablecoin Giving" },
+      { key: "stablecoinNetwork", label: "Network", type: "text", default: "", group: "Stablecoin Giving", hint: "The blockchain network the wallet addresses live on, e.g. Polygon. Shown as a warning so donors don't send on the wrong network." },
+      { key: "stablecoinUsdtAddress", label: "USDT wallet address", type: "text", default: "", group: "Stablecoin Giving", hint: "Paste from Flutterwave dashboard → Treasury → USDT balance → wallet details. Leave empty to hide USDT." },
+      { key: "stablecoinUsdcAddress", label: "USDC wallet address", type: "text", default: "", group: "Stablecoin Giving", hint: "Paste from Flutterwave dashboard → Treasury → USDC balance → wallet details. Leave empty to hide USDC." },
+      { key: "stablecoinRlusdAddress", label: "RLUSD wallet address", type: "text", default: "", group: "Stablecoin Giving", hint: "Paste from Flutterwave dashboard → Treasury → RLUSD balance → wallet details. Leave empty to hide RLUSD." },
       { key: "pledgeEyebrow", label: "Pledge Eyebrow", type: "text", default: "Pledge", group: "Where Every Gift Goes" },
       { key: "pledgeTitle", label: "Pledge Title", type: "text", default: "Where every gift goes.", group: "Where Every Gift Goes" },
       { key: "area1Title", label: "Area 1 Title", type: "text", default: "Deliverance Ministry", group: "Where Every Gift Goes" },

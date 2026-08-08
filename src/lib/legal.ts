@@ -87,7 +87,7 @@ const REFUND: LegalDoc = {
         },
         {
           type: "note",
-          text: "No pastor, prophet, intercessor, or staff member of VOGIM will ever demand a private payment, a “deliverance fee”, gift cards, or cryptocurrency in exchange for prayer. If anyone contacts you claiming to represent this ministry and asks for such a payment, do not pay — report it to us immediately at {email} or {phone}. The only authorised giving channels are the giving page at {site}/give and {giveUrl}.",
+          text: "No pastor, prophet, intercessor, or staff member of VOGIM will ever demand a private payment, a “deliverance fee”, gift cards, or cryptocurrency in exchange for prayer. If anyone contacts you claiming to represent this ministry and asks for such a payment, do not pay — report it to us immediately at {email} or {phone}. The only authorised giving channels are the giving page at {site}/give and {giveUrl}; any stablecoin wallet addresses we accept gifts through are published only on {site}/give and will never be sent to you privately.",
         },
       ],
     },

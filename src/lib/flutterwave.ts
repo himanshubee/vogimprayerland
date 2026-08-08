@@ -30,8 +30,20 @@ export function isTestMode(): boolean {
 
 /* ------------------------------ Currencies ------------------------------ */
 
-export type CurrencyCode = "NGN" | "USD" | "GBP" | "EUR" | "GHS" | "KES" | "ZAR";
+export type CurrencyCode =
+  | "NGN"
+  | "USD"
+  | "GBP"
+  | "EUR"
+  | "AED"
+  | "GHS"
+  | "KES"
+  | "ZAR";
 
+// Stablecoins (USDT/USDC/RLUSD) are deliberately absent: the /v3/payments API
+// issues a link for them but the hosted checkout finds no payment methods and
+// hangs on a spinner. Stablecoin gifts go through the wallet addresses on
+// /give instead (see StablecoinGive).
 export const CURRENCIES: Record<
   CurrencyCode,
   { symbol: string; label: string; min: number }
@@ -40,6 +52,7 @@ export const CURRENCIES: Record<
   USD: { symbol: "$", label: "US Dollar", min: 1 },
   GBP: { symbol: "£", label: "Pound", min: 1 },
   EUR: { symbol: "€", label: "Euro", min: 1 },
+  AED: { symbol: "Dh", label: "UAE Dirham", min: 5 },
   GHS: { symbol: "₵", label: "Cedi", min: 1 },
   KES: { symbol: "KSh", label: "Shilling", min: 50 },
   ZAR: { symbol: "R", label: "Rand", min: 10 },

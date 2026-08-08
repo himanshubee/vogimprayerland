@@ -6,6 +6,7 @@ import { ArrowUpRight, HandHeart, Sprout, HomeIcon } from "lucide-react";
 import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
 import { GiveForm } from "@/components/GiveForm";
+import { StablecoinGive } from "@/components/StablecoinGive";
 import {
   CURRENCIES,
   isCurrency,
@@ -50,6 +51,8 @@ export default async function GivePage() {
     NGN: numbers(c.amountsNgn),
     USD: numbers(c.amountsUsd),
     GBP: numbers(c.amountsGbp),
+    EUR: numbers(c.amountsEur),
+    AED: numbers(c.amountsAed),
   };
   // Any other enabled currency falls back to the USD ladder so the chips are
   // never empty when a new code is added in the admin.
@@ -59,6 +62,14 @@ export default async function GivePage() {
 
   const defaultCurrency = (c.defaultCurrency || "NGN").toUpperCase();
   const giveEnabled = isFlutterwaveConfigured() && currencies.length > 0;
+
+  // Stablecoins are received directly to the ministry's Treasury wallets —
+  // the section only exists once an address has been filled in via the admin.
+  const stablecoins = [
+    { code: "USDT", address: c.stablecoinUsdtAddress.trim() },
+    { code: "USDC", address: c.stablecoinUsdcAddress.trim() },
+    { code: "RLUSD", address: c.stablecoinRlusdAddress.trim() },
+  ].filter((coin) => coin.address.length > 0);
 
   if (!giveEnabled) {
     // Loud, because the symptom is silent: the page renders the old external
@@ -141,6 +152,14 @@ export default async function GivePage() {
                 <ArrowUpRight size={16} />
               </Link>
             )}
+
+            {/* Wallet-address giving works whether or not the card gateway
+                is configured, so it lives outside the giveEnabled branch. */}
+            <StablecoinGive
+              intro={c.stablecoinIntro}
+              network={c.stablecoinNetwork.trim()}
+              coins={stablecoins}
+            />
           </Reveal>
 
           <Reveal delay={0.1}>
