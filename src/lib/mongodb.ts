@@ -19,8 +19,6 @@ import { MongoClient, type Db } from "mongodb";
  */
 
 const DB_NAME = () => process.env.MONGODB_DB || "vogim";
-<<<<<<< HEAD
-=======
 
 /**
  * Fail a dead connection in ten seconds rather than the driver's default
@@ -40,7 +38,6 @@ const SERVER_SELECTION_TIMEOUT_MS = 10_000;
  * own once the database comes back.
  */
 const RETRY_COOLDOWN_MS = 10_000;
->>>>>>> 34e03c3 (mongodb: connect lazily so a missing URI cannot break the build)
 
 // Cache the client across hot reloads in development so we don't open a new
 // connection on every request (and exhaust the Atlas connection pool).
@@ -49,39 +46,6 @@ declare global {
   var _mongoFailedAt: number | undefined;
 }
 
-<<<<<<< HEAD
-let clientPromise: Promise<MongoClient> | undefined;
-
-function connect(): Promise<MongoClient> {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    throw new Error(
-      "Missing MONGODB_URI environment variable. On the server it belongs in " +
-        ".env.production.local; locally, .env.local."
-    );
-  }
-
-  if (process.env.NODE_ENV === "development") {
-    global._mongoClientPromise ??= new MongoClient(uri).connect();
-    return global._mongoClientPromise;
-  }
-
-  clientPromise ??= new MongoClient(uri).connect();
-  return clientPromise;
-}
-
-export async function getDb(): Promise<Db> {
-  try {
-    const client = await connect();
-    return client.db(DB_NAME());
-  } catch (err) {
-    // A failed connection attempt must not be cached as a permanently rejected
-    // promise — the next request should be free to try again.
-    clientPromise = undefined;
-    global._mongoClientPromise = undefined;
-    throw err;
-  }
-=======
 const isDev = () => process.env.NODE_ENV === "development";
 
 /** Dev keeps its cache on `global` so hot reload doesn't reconnect each time. */
@@ -143,5 +107,4 @@ function connect(): Promise<MongoClient> {
 export async function getDb(): Promise<Db> {
   const client = await connect();
   return client.db(DB_NAME());
->>>>>>> 34e03c3 (mongodb: connect lazily so a missing URI cannot break the build)
 }
