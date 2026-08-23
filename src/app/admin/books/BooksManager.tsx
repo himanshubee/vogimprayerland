@@ -784,6 +784,20 @@ function PricesPanel({
   const belowMinimum =
     hasBase && Number(draft.basePrice) < CURRENCIES[draft.baseCurrency].min;
 
+  /** True when this currency is frozen at a typed figure rather than converted. */
+  const isPinned = (code: CurrencyCode) => Boolean(draft.overrides[code]?.trim());
+
+  /** What the currency *would* be worth if the pin were removed. */
+  const autoValue = (code: CurrencyCode) => {
+    const auto = computePrices(
+      Number(draft.basePrice) || 0,
+      draft.baseCurrency,
+      fx?.rates ?? null,
+      {}
+    )[code];
+    return auto ? formatPrice(auto, code) : "not sold";
+  };
+
   /** A pinned price the gateway would refuse — flagged before it reaches a shopper. */
   const underMin = (code: CurrencyCode) => {
     const raw = draft.overrides[code];
@@ -919,8 +933,10 @@ function PricesPanel({
         {showOverrides && (
           <>
             <p className="mt-2.5 text-[11px] text-midnight/45 leading-relaxed">
-              Fill one in to stop that currency being converted. Leave blank to
-              let it follow the base price.
+              A currency left <strong className="text-midnight/60">blank</strong>{" "}
+              follows the base price automatically. Type a number only to{" "}
+              <strong className="text-midnight/60">freeze</strong> that currency at
+              it — it will stop converting until you clear it again.
             </p>
             <div className="mt-3 space-y-2">
               {CURRENCY_CODES.map((code) => {
@@ -945,28 +961,55 @@ function PricesPanel({
                           </span>
                         </span>
                       ) : (
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          aria-label={`Fixed price in ${code}`}
-                          className={`${controlCls} flex-1 min-w-0`}
-                          value={draft.overrides[code] ?? ""}
-                          onChange={(e) =>
-                            setDraft({
-                              ...draft,
-                              overrides: {
-                                ...draft.overrides,
-                                [code]: e.target.value,
-                              },
-                            })
-                          }
-                          placeholder={
-                            preview[code] ? `auto: ${preview[code]}` : "not sold"
-                          }
-                        />
+                        <span className="relative flex-1 min-w-0">
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            aria-label={`Fixed price in ${code}`}
+                            className={`${controlCls} w-full ${
+                              isPinned(code)
+                                ? "border-gold bg-gold/5 pr-16"
+                                : ""
+                            }`}
+                            value={draft.overrides[code] ?? ""}
+                            onChange={(e) =>
+                              setDraft({
+                                ...draft,
+                                overrides: {
+                                  ...draft.overrides,
+                                  [code]: e.target.value,
+                                },
+                              })
+                            }
+                            placeholder={
+                              preview[code] ? `auto: ${preview[code]}` : "not sold"
+                            }
+                          />
+                          {isPinned(code) && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDraft({
+                                  ...draft,
+                                  overrides: { ...draft.overrides, [code]: "" },
+                                })
+                              }
+                              title={`Stop fixing ${code} and convert it from the base price again`}
+                              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-1 text-[9px] tracking-wider uppercase text-gold-deep hover:text-midnight transition-colors"
+                            >
+                              Auto
+                            </button>
+                          )}
+                        </span>
                       )}
                     </label>
+                    {!isBase && isPinned(code) && !underMin(code) && (
+                      <p className="mt-1 ml-[76px] text-[10px] text-gold-deep leading-relaxed">
+                        Fixed at this figure — not converted. Would be{" "}
+                        {autoValue(code)} automatically.
+                      </p>
+                    )}
                     {!isBase && underMin(code) && (
                       <p className="mt-1 ml-[76px] flex items-start gap-1.5 text-[10px] text-midnight-soft leading-relaxed">
                         <AlertTriangle size={11} className="shrink-0 mt-0.5" />
