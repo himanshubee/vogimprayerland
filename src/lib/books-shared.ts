@@ -114,8 +114,12 @@ export function isSellable(book: Book): boolean {
 
 /* ---------------------------- Automatic pricing --------------------------- */
 
-/** Used when a book has never had a base currency chosen. */
-export const DEFAULT_BASE_CURRENCY: CurrencyCode = "NGN";
+/**
+ * Books are priced in USD and everything else is converted from it — NGN
+ * included, with no special case for the home market. One base currency keeps
+ * a single number per book authoritative; the day's rate does the rest.
+ */
+export const DEFAULT_BASE_CURRENCY: CurrencyCode = "USD";
 
 /**
  * The increment each currency's converted price is rounded up to.

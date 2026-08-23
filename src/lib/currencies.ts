@@ -8,8 +8,8 @@
  */
 
 export type CurrencyCode =
-  | "NGN"
   | "USD"
+  | "NGN"
   | "GBP"
   | "EUR"
   | "AED"
@@ -21,12 +21,16 @@ export type CurrencyCode =
 // issues a link for them but the hosted checkout finds no payment methods and
 // hangs on a spinner. Stablecoin gifts go through the wallet addresses on
 // /give instead (see StablecoinGive).
+// Order matters and is deliberate: this object's key order drives the currency
+// pickers, the admin's base-currency dropdown, and the order prices are listed
+// in. USD leads because books are priced in USD and every other currency —
+// NGN included — is converted from it.
 export const CURRENCIES: Record<
   CurrencyCode,
   { symbol: string; label: string; min: number }
 > = {
-  NGN: { symbol: "₦", label: "Naira", min: 100 },
   USD: { symbol: "$", label: "US Dollar", min: 1 },
+  NGN: { symbol: "₦", label: "Naira", min: 100 },
   GBP: { symbol: "£", label: "Pound", min: 1 },
   EUR: { symbol: "€", label: "Euro", min: 1 },
   AED: { symbol: "Dh", label: "UAE Dirham", min: 5 },

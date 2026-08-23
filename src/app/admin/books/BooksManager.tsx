@@ -806,14 +806,15 @@ function PricesPanel({
           className={inputCls}
           value={draft.basePrice}
           onChange={(e) => setDraft({ ...draft, basePrice: e.target.value })}
-          placeholder="5000"
+          placeholder="4.99"
         />
       </div>
 
       <p className="mt-2.5 flex items-start gap-1.5 text-[11px] text-midnight/45 leading-relaxed">
         <Wand2 size={12} className="text-gold-deep shrink-0 mt-0.5" />
-        Type one price. Every other currency is converted automatically at the
-        day&rsquo;s exchange rate and rounded up to a tidy figure.
+        Type one price in USD. Every other currency &mdash; NGN included &mdash;
+        is converted automatically at the day&rsquo;s exchange rate and rounded up
+        to a tidy figure.
       </p>
 
       {/* WHAT THE SHOPPER WILL SEE */}

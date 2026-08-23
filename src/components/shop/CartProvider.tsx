@@ -54,7 +54,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({
   children,
-  defaultCurrency = "NGN",
+  defaultCurrency = "USD",
 }: {
   children: React.ReactNode;
   defaultCurrency?: string;
