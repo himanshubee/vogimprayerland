@@ -6,7 +6,15 @@ import { refreshRates } from "@/lib/fx";
 
 export const dynamic = "force-dynamic";
 
-/** The shop is cached (ISR) — refresh it whenever the catalogue changes. */
+/**
+ * The shop listing and book pages are cached (ISR) — refresh them whenever the
+ * catalogue or the exchange rates change, so an edited price is visible at
+ * once instead of after the revalidate window.
+ *
+ * /books/cart and /books/checkout are absent on purpose: both are
+ * force-dynamic, because the total a shopper is shown must always match what
+ * checkout re-prices from the database.
+ */
 export function revalidateShop(slug?: string) {
   revalidatePath("/books");
   if (slug) revalidatePath(`/books/${slug}`);

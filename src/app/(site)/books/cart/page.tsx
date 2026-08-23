@@ -9,7 +9,17 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export const revalidate = 300;
+/**
+ * Never cached.
+ *
+ * This page's only server-side job is to hand the basket the current prices,
+ * and the basket's total has to match what checkout (which is force-dynamic
+ * and re-prices from the database) will actually charge. An ISR window here —
+ * even a short one — means a price edit or an exchange-rate refresh can show a
+ * shopper one total and bill them another. It is a low-traffic, per-visitor,
+ * noindex page, so caching it buys nothing worth that risk.
+ */
+export const dynamic = "force-dynamic";
 
 export default async function CartPage() {
   // The basket itself lives in the browser; the server's job is to hand down
