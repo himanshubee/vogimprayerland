@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { isFlutterwaveConfigured, isTestMode } from "@/lib/flutterwave";
 import { isPaypalConfigured, isPaypalSandbox } from "@/lib/paypal";
 import { isPaystackConfigured, isPaystackTestMode } from "@/lib/paystack";
-import type { Provider } from "@/lib/gateways";
+import { resolveGatewayCurrencies, type Provider } from "@/lib/gateways";
 import { getShopCatalogue } from "@/lib/shop-catalogue";
 import { CheckoutClient } from "./CheckoutClient";
 
@@ -35,6 +35,11 @@ export default async function CheckoutPage() {
   // Current prices for whatever is sitting in the visitor's basket, so the
   // total they approve is the total the server will charge.
   const { live } = await getShopCatalogue();
+
+  // What each gateway can settle on THIS account. Narrowed per deployment by
+  // e.g. PAYSTACK_CURRENCIES=NGN, and passed down so the buyer is shown exactly
+  // the currency the server will charge in.
+  const gatewayCurrencies = resolveGatewayCurrencies(process.env);
 
   if (!Object.values(configured).some(Boolean)) {
     // Loud, because the symptom is quiet: the checkout renders but no method
@@ -68,7 +73,12 @@ export default async function CheckoutPage() {
               </div>
             }
           >
-            <CheckoutClient live={live} configured={configured} sandbox={sandbox} />
+            <CheckoutClient
+              live={live}
+              configured={configured}
+              sandbox={sandbox}
+              gatewayCurrencies={gatewayCurrencies}
+            />
           </Suspense>
         </div>
       </section>

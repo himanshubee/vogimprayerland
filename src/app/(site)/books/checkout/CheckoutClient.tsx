@@ -16,9 +16,9 @@ import {
 import { useLiveCart, type LiveBook } from "@/components/shop/useLiveCart";
 import { formatPrice } from "@/lib/books-shared";
 import {
-  GATEWAYS,
-  gateway,
-  supportsCurrency,
+  gatewayOptions,
+  type GatewayCurrencies,
+  type GatewayOption,
   type Provider,
 } from "@/lib/gateways";
 
@@ -30,31 +30,43 @@ type Props = {
   configured: Record<Provider, boolean>;
   /** Gateways currently pointed at a sandbox rather than real money. */
   sandbox: Record<Provider, boolean>;
+  /** What each gateway can settle on THIS account, narrowed by env if needed. */
+  gatewayCurrencies: GatewayCurrencies;
 };
 
 const labelCls =
   "block text-[11px] tracking-[0.28em] uppercase text-midnight/60 mb-1";
 
-export function CheckoutClient({ live, configured, sandbox }: Props) {
+export function CheckoutClient({
+  live,
+  configured,
+  sandbox,
+  gatewayCurrencies,
+}: Props) {
   const search = useSearchParams();
-  const { lines, blocked, subtotal, currency, ready, isEmpty } = useLiveCart(live);
+  const { lines, blocked, subtotal, currency, ready, isEmpty, priceable, totalIn } =
+    useLiveCart(live);
 
   const [preferred, setPreferred] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Every gateway that has credentials, whether or not it can take the chosen
-  // currency — the ones that can't are still shown, greyed, with the reason.
-  const offered = GATEWAYS.filter((g) => configured[g.id]);
-  const usable = offered.filter((g) => supportsCurrency(g.id, currency));
+  // Every configured gateway, each with the currency it will actually charge
+  // in — the shopper's own where possible, otherwise the nearest one that
+  // gateway can settle, converted from the same base price.
+  const options = gatewayOptions(configured, gatewayCurrencies, currency, priceable);
+  const usable = options.filter((o) => o.currency !== null);
 
-  // Switching to a currency a gateway cannot take (PayPal and NGN, say) must
-  // not leave a dead method selected. Derived rather than synced in an effect,
-  // so the currency and the method can never disagree for even one render.
-  const provider: Provider | null =
-    preferred && usable.some((g) => g.id === preferred)
-      ? preferred
-      : (usable[0]?.id ?? null);
+  // A gateway that shares no currency with the basket must not stay selected.
+  // Derived rather than synced in an effect, so the currency and the method can
+  // never disagree for even one render.
+  const selected: GatewayOption | null =
+    usable.find((o) => o.id === preferred) ?? usable[0] ?? null;
+  const provider: Provider | null = selected?.id ?? null;
+
+  /** What the buyer will actually be charged, in the gateway's own currency. */
+  const chargeCurrency = selected?.currency ?? currency;
+  const chargeTotal = selected?.currency ? totalIn(selected.currency) : subtotal;
 
   // The buyer bounced off PayPal's page without approving.
   const cancelled = search.get("cancelled") === "1";
@@ -110,7 +122,9 @@ export function CheckoutClient({ live, configured, sandbox }: Props) {
       // The basket is deliberately NOT cleared here — if the buyer abandons the
       // gateway, they come back to an intact basket. The receipt page clears it
       // once the order is actually paid.
-      window.location.href = payload.link;
+      // assign() rather than `location.href = …`: identical navigation, but the
+      // compiler lint reads a property write on a global as a mutation.
+      window.location.assign(payload.link);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Something went wrong. Please try again."
@@ -219,24 +233,32 @@ export function CheckoutClient({ live, configured, sandbox }: Props) {
           </p>
         ) : (
           <div className="mt-5 grid sm:grid-cols-2 gap-4">
-            {offered.map((g) => {
-              const canTake = supportsCurrency(g.id, currency);
-              return (
-                <MethodButton
-                  key={g.id}
-                  selected={provider === g.id}
-                  onSelect={() => canTake && setPreferred(g.id)}
-                  disabled={!canTake}
-                  title={g.label}
-                  body={
-                    canTake
-                      ? g.blurb
-                      : `${g.label} cannot take ${currency}. It accepts ${g.currencies.join(", ")}.`
-                  }
-                  icon={g.id === "paypal" ? <PaypalMark /> : <CreditCard size={20} />}
-                />
-              );
-            })}
+            {options.map((o) => (
+              <MethodButton
+                key={o.id}
+                selected={provider === o.id}
+                onSelect={() => o.currency && setPreferred(o.id)}
+                disabled={!o.currency}
+                title={o.label}
+                body={
+                  o.currency
+                    ? o.blurb
+                    : `${o.label} cannot take any currency your basket is priced in.`
+                }
+                amount={
+                  o.currency ? formatPrice(totalIn(o.currency), o.currency) : null
+                }
+                amountCurrency={o.currency}
+                // Say so plainly when the charge differs from what is on screen,
+                // rather than surprising the buyer on the gateway's own page.
+                note={
+                  o.converted && o.currency
+                    ? `charged in ${o.currency}, converted from ${currency}`
+                    : null
+                }
+                icon={o.id === "paypal" ? <PaypalMark /> : <CreditCard size={20} />}
+              />
+            ))}
           </div>
         )}
 
@@ -252,8 +274,8 @@ export function CheckoutClient({ live, configured, sandbox }: Props) {
         {provider && sandbox[provider] && (
           <p className="mt-7 border border-dashed border-gold/60 bg-gold/5 px-4 py-3 text-xs text-midnight/70">
             <strong className="text-midnight">Test mode.</strong>{" "}
-            {gateway(provider).label} is running against its sandbox — no real
-            money moves.
+            {selected?.label} is running against its sandbox — no real money
+            moves.
           </p>
         )}
 
@@ -278,17 +300,26 @@ export function CheckoutClient({ live, configured, sandbox }: Props) {
                 </>
               ) : (
                 <>
-                  Pay {formatPrice(subtotal, currency)} {currency}
+                  Pay {formatPrice(chargeTotal, chargeCurrency)} {chargeCurrency}
                   <ArrowUpRight size={16} />
                 </>
               )}
             </button>
 
-            <p className="mt-5 flex items-center gap-2 text-xs text-midnight/50">
-              <Lock size={13} className="text-gold-deep shrink-0" />
-              You finish securely on{" "}
-              {provider ? gateway(provider).label : "the payment provider"}
-              &rsquo;s own checkout. Card details never touch this site.
+            <p className="mt-5 flex items-start gap-2 text-xs text-midnight/50">
+              <Lock size={13} className="text-gold-deep shrink-0 mt-0.5" />
+              <span>
+                You finish securely on {selected?.label ?? "the payment provider"}
+                &rsquo;s own checkout. Card details never touch this site.
+                {selected?.converted && (
+                  <>
+                    {" "}
+                    {selected.label} settles in {chargeCurrency}, so your basket
+                    of {formatPrice(subtotal, currency)} {currency} is charged as{" "}
+                    {formatPrice(chargeTotal, chargeCurrency)} {chargeCurrency}.
+                  </>
+                )}
+              </span>
             </p>
           </>
         )}
@@ -375,6 +406,9 @@ function MethodButton({
   disabled = false,
   title,
   body,
+  amount,
+  amountCurrency,
+  note,
   icon,
 }: {
   selected: boolean;
@@ -382,6 +416,11 @@ function MethodButton({
   disabled?: boolean;
   title: string;
   body: string;
+  /** What this gateway will charge, already formatted. */
+  amount?: string | null;
+  amountCurrency?: string | null;
+  /** Shown when the charge currency differs from the one on screen. */
+  note?: string | null;
   icon: React.ReactNode;
 }) {
   return (
@@ -402,12 +441,28 @@ function MethodButton({
         <span className="text-gold-deep">{icon}</span>
         <span className="font-display text-lg">{title}</span>
         {selected && !disabled && (
-          <span className="ml-auto h-2 w-2 rounded-full bg-gold" />
+          <span className="ml-auto h-2 w-2 rounded-full bg-gold shrink-0" />
         )}
       </span>
+
+      {amount && (
+        <span className="mt-2.5 block font-display text-xl text-midnight tabular-nums">
+          {amount}
+          <span className="ml-1.5 text-[10px] tracking-[0.2em] uppercase text-midnight/45">
+            {amountCurrency}
+          </span>
+        </span>
+      )}
+
       <span className="mt-2 block text-xs text-midnight/60 leading-relaxed">
         {body}
       </span>
+
+      {note && (
+        <span className="mt-1.5 block text-[11px] text-gold-deep leading-relaxed">
+          {note}
+        </span>
+      )}
     </button>
   );
 }

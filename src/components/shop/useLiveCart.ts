@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import { useCart } from "./CartProvider";
 import { roundMoney, type BookPrices } from "@/lib/books-shared";
+import { priceableCurrencies } from "@/lib/gateways";
+import type { CurrencyCode } from "@/lib/currencies";
 
 /**
  * Price the basket from the live catalogue rather than from what was cached
@@ -53,6 +55,13 @@ export type LiveCart = {
   currency: string;
   ready: boolean;
   isEmpty: boolean;
+  /** Currencies every line in the basket has a price in. */
+  priceable: CurrencyCode[];
+  /**
+   * The basket total in any currency it can be priced in — how a gateway that
+   * cannot settle the displayed currency shows what it will actually charge.
+   */
+  totalIn: (currency: string) => number;
 };
 
 export function useLiveCart(live: Record<string, LiveBook>): LiveCart {
@@ -83,6 +92,21 @@ export function useLiveCart(live: Record<string, LiveBook>): LiveCart {
       .filter((l) => l.available && l.unitPrice > 0)
       .reduce((sum, l) => sum + l.lineTotal, 0);
 
+    // Only lines still in the catalogue can be converted — a book that has
+    // gone cannot be priced in anything and would otherwise empty the list.
+    const present = items
+      .map((item) => live[item.bookId]?.prices)
+      .filter((p): p is BookPrices => Boolean(p));
+
+    const totalIn = (target: string) =>
+      roundMoney(
+        items.reduce((sum, item) => {
+          const prices = live[item.bookId]?.prices ?? item.prices;
+          const unit = Number(prices[target as keyof BookPrices] ?? 0);
+          return sum + unit * item.quantity;
+        }, 0)
+      );
+
     return {
       lines,
       blocked,
@@ -90,6 +114,8 @@ export function useLiveCart(live: Record<string, LiveBook>): LiveCart {
       currency,
       ready,
       isEmpty: ready && lines.length === 0,
+      priceable: priceableCurrencies(present),
+      totalIn,
     };
   }, [items, currency, live, ready]);
 }

@@ -14,9 +14,11 @@ import {
   isPaystackConfigured,
 } from "@/lib/paystack";
 import {
-  gateway,
+  gatewayLabel,
   isProvider,
-  supportsCurrency,
+  priceableCurrencies,
+  resolveGatewayCurrencies,
+  settlementCurrency,
   type Provider,
 } from "@/lib/gateways";
 import { getSellableBooksByIds, roundMoney, type Book } from "@/lib/books";
@@ -116,16 +118,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unsupported currency." }, { status: 400 });
   }
 
-  const info = gateway(provider);
-
-  if (!supportsCurrency(provider, currency)) {
-    return NextResponse.json(
-      {
-        error: `${info.label} cannot take ${currency}. Please choose another payment method, or switch to ${info.currencies.slice(0, 3).join(", ")}.`,
-      },
-      { status: 400 }
-    );
-  }
+  const label = gatewayLabel(provider);
 
   const CONFIGURED: Record<Provider, boolean> = {
     flutterwave: isFlutterwaveConfigured(),
@@ -135,7 +128,7 @@ export async function POST(req: NextRequest) {
   if (!CONFIGURED[provider]) {
     return NextResponse.json(
       {
-        error: `${info.label} is not available right now. Please choose another payment method.`,
+        error: `${label} is not available right now. Please choose another payment method.`,
       },
       { status: 503 }
     );
@@ -175,14 +168,52 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { items, total, missing } = priceLines(cart, books, currency);
+  // A book that has left the catalogue entirely — unpublished, deleted, or its
+  // PDF removed. Reported before currency is considered, because no choice of
+  // currency can bring it back.
+  const gone = [...cart.keys()].filter((id) => !books.has(id));
+  if (gone.length) {
+    return NextResponse.json(
+      {
+        error: `${gone.length === 1 ? "A book" : `${gone.length} books`} in your basket ${
+          gone.length === 1 ? "is" : "are"
+        } no longer available. Please remove ${gone.length === 1 ? "it" : "them"} and try again.`,
+        unavailable: gone,
+      },
+      { status: 409 }
+    );
+  }
+
+  /**
+   * Which currency this gateway will actually charge in.
+   *
+   * The shopper's own currency when the gateway can settle it, otherwise the
+   * nearest one it can — the same derivation the checkout page used to show
+   * them the figure, so the amount they approved is the amount charged.
+   */
+  const settlement = settlementCurrency(
+    resolveGatewayCurrencies(process.env)[provider],
+    currency,
+    priceableCurrencies([...books.values()].map((b) => b.prices))
+  );
+
+  if (!settlement) {
+    return NextResponse.json(
+      {
+        error: `${label} cannot settle any currency your basket is priced in. Please choose another payment method.`,
+      },
+      { status: 400 }
+    );
+  }
+
+  const { items, total, missing } = priceLines(cart, books, settlement);
 
   if (missing.length) {
     return NextResponse.json(
       {
         error: `${missing.join(", ")} ${
           missing.length === 1 ? "is" : "are"
-        } no longer available in ${currency}. Please remove it from your basket or choose another currency.`,
+        } not priced in ${settlement}. Please choose another payment method or currency.`,
         unavailable: missing,
       },
       { status: 409 }
@@ -196,11 +227,11 @@ export async function POST(req: NextRequest) {
   // here with an explanation rather than bouncing the buyer off a gateway error
   // page. Reachable when a book carries a manually pinned price under the
   // minimum — converted prices are already floored at it.
-  const min = CURRENCIES[currency].min;
+  const min = CURRENCIES[settlement].min;
   if (total < min) {
     return NextResponse.json(
       {
-        error: `The smallest order we can process is ${CURRENCIES[currency].symbol}${min} ${currency}. Please add another book, or switch currency.`,
+        error: `The smallest order ${label} can process is ${CURRENCIES[settlement].symbol}${min} ${settlement}. Please add another book, or choose another payment method.`,
       },
       { status: 400 }
     );
@@ -209,7 +240,9 @@ export async function POST(req: NextRequest) {
   const ref = newOrderRef();
   const order = {
     provider,
-    currency,
+    // The currency the money actually moves in — what the gateway charged and
+    // what the receipt and admin must show.
+    currency: settlement,
     items,
     total,
     name,
@@ -231,7 +264,7 @@ export async function POST(req: NextRequest) {
     if (provider === "paypal") {
       const created = await createPaypalOrder({
         reference: ref,
-        currency,
+        currency: settlement,
         total,
         items: items.map((i) => ({
           name: i.title,
@@ -253,7 +286,7 @@ export async function POST(req: NextRequest) {
       const link = await initializeTransaction({
         reference: ref,
         amount: total,
-        currency,
+        currency: settlement,
         email,
         // Paystack appends ?reference= &trxref= to this.
         callbackUrl: `${SITE_URL}/books/thank-you/`,
@@ -273,7 +306,7 @@ export async function POST(req: NextRequest) {
     const link = await createPaymentLink({
       txRef: ref,
       amount: total,
-      currency,
+      currency: settlement,
       redirectUrl: `${SITE_URL}/books/thank-you/`,
       customer: { email, name, phonenumber: order.phone || undefined },
       title: "VOGIM Prayer Land — Books",
@@ -286,7 +319,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ link, reference: ref }, { status: 201 });
   } catch (err) {
-    console.error(`[shop/checkout] ${info.label} failed:`, err);
+    console.error(`[shop/checkout] ${label} failed:`, err);
 
     const gatewayError =
       err instanceof PaystackError ||
@@ -300,7 +333,7 @@ export async function POST(req: NextRequest) {
     if (gatewayError && !unreachable) {
       return NextResponse.json(
         {
-          error: `${info.label} could not start this payment: ${
+          error: `${label} could not start this payment: ${
             (err as Error).message
           }`,
         },
@@ -310,7 +343,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        error: `We could not reach ${info.label} just now. Please try again in a moment, or choose another payment method.`,
+        error: `We could not reach ${label} just now. Please try again in a moment, or choose another payment method.`,
       },
       { status: 502 }
     );
