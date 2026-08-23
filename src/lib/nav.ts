@@ -28,6 +28,7 @@ export const NAV_LINKS: NavLink[] = [
     ],
   },
   { label: "Articles", href: "/blog" },
+  { label: "Books", href: "/books" },
   { label: "Zoom", href: "/zoom" },
   {
     label: "Media",

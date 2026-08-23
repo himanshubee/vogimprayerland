@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllPublishedSlugs } from "@/lib/posts";
+import { listPublishedBooks } from "@/lib/books";
 import { PAGE_SCHEMAS, getPageModifiedMap } from "@/lib/page-content";
 import { LEGAL_DOCS } from "@/lib/legal";
 
@@ -20,6 +21,7 @@ const STATIC_PATHS = [
   "prayer-request",
   "deliverance-request",
   "blog",
+  "books",
   "zoom",
   "media",
   "gallery",
@@ -70,5 +72,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB unreachable at build time — ship the static sitemap only.
   }
 
-  return [...staticEntries, ...postEntries];
+  // Book pages. listPublishedBooks swallows its own errors and returns [], so
+  // an unreachable DB costs the shop entries but never the whole sitemap.
+  const bookEntries: MetadataRoute.Sitemap = (await listPublishedBooks()).map((b) => ({
+    url: `${SITE_URL}/books/${b.slug}/`,
+    lastModified: new Date(b.updatedAt),
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
+  return [...staticEntries, ...postEntries, ...bookEntries];
 }

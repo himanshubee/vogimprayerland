@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { Logo } from "./Logo";
+import { CartBadge } from "./shop/CartBadge";
 import { NAV_LINKS, type NavLink } from "@/lib/nav";
 
 type Announcement = { enabled: boolean; left: string; right: string };
@@ -100,20 +101,23 @@ export function Navbar({
             })}
           </ul>
 
-          <Link
-            href="/deliverance-request"
-            className="hidden lg:inline-flex btn-gold"
-          >
-            Request Prayer
-          </Link>
+          <div className="flex items-center gap-1">
+            <CartBadge />
+            <Link
+              href="/deliverance-request"
+              className="hidden lg:inline-flex btn-gold"
+            >
+              Request Prayer
+            </Link>
 
-          <button
-            onClick={() => setOpen((v) => !v)}
-            className="lg:hidden p-2 text-midnight"
-            aria-label="Open menu"
-          >
-            {open ? <X size={22} /> : <Menu size={22} />}
-          </button>
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="lg:hidden p-2 text-midnight"
+              aria-label="Open menu"
+            >
+              {open ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </nav>
 
         {/* Mobile menu */}

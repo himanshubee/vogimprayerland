@@ -1,0 +1,446 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Check,
+  Clock,
+  Mail,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
+import { AdminTabs } from "@/components/admin/AdminTabs";
+import type { OrderStatus, OrderView } from "@/lib/book-orders";
+
+const TABS: (OrderStatus | "all")[] = ["all", "paid", "pending", "failed", "cancelled"];
+
+const STATUS_STYLE: Record<OrderStatus, string> = {
+  paid: "bg-emerald-50 text-emerald-700 border-emerald-300",
+  pending: "bg-gold/10 text-gold-deep border-gold/50",
+  failed: "bg-midnight-soft/5 text-midnight-soft border-midnight-soft/40",
+  cancelled: "bg-midnight/5 text-midnight/45 border-midnight/20",
+};
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function OrdersClient({
+  initial,
+  testMode,
+}: {
+  initial: OrderView[];
+  testMode: boolean;
+}) {
+  const router = useRouter();
+  const [items, setItems] = useState(initial);
+  const [tab, setTab] = useState<OrderStatus | "all">("all");
+  const [query, setQuery] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
+  const [open, setOpen] = useState<OrderView | null>(null);
+
+  function note(message: string) {
+    setFlash(message);
+    setTimeout(() => setFlash(null), 4000);
+  }
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { all: items.length };
+    for (const o of items) c[o.status] = (c[o.status] ?? 0) + 1;
+    return c;
+  }, [items]);
+
+  /** Revenue kept per currency — a mixed-currency total would be a lie. */
+  const totals = useMemo(() => {
+    const by = new Map<string, { amount: number; count: number }>();
+    for (const o of items) {
+      if (o.status !== "paid") continue;
+      const cur = by.get(o.currency) ?? { amount: 0, count: 0 };
+      cur.amount += o.total;
+      cur.count += 1;
+      by.set(o.currency, cur);
+    }
+    return [...by.entries()].sort((a, b) => b[1].amount - a[1].amount);
+  }, [items]);
+
+  const booksSold = useMemo(
+    () =>
+      items
+        .filter((o) => o.status === "paid")
+        .reduce((n, o) => n + o.items.reduce((m, i) => m + i.quantity, 0), 0),
+    [items]
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return items.filter((o) => {
+      if (tab !== "all" && o.status !== tab) return false;
+      if (!q) return true;
+      return [
+        o.name,
+        o.email,
+        o.phone,
+        o.ref,
+        o.gatewayRef,
+        ...o.items.map((i) => i.title),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(q);
+    });
+  }, [items, tab, query]);
+
+  async function refresh() {
+    setBusy(true);
+    const data = await fetch("/api/book-orders/")
+      .then((r) => r.json())
+      .catch(() => null);
+    if (data?.items) setItems(data.items);
+    setBusy(false);
+  }
+
+  async function reconcile() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/book-orders/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reconcile" }),
+      });
+      const data = await res.json();
+      if (data?.report) {
+        const r = data.report;
+        note(
+          `Checked ${r.checked} pending order${r.checked === 1 ? "" : "s"} — ${r.settled} settled, ${r.stillPending} never paid, ${r.errors} error${r.errors === 1 ? "" : "s"}.`
+        );
+      }
+      await refresh();
+      router.refresh();
+    } catch {
+      note("The sweep could not be completed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resend(order: OrderView) {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/book-orders/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "resend", ref: order.ref }),
+      });
+      const data = await res.json();
+      note(data.message || data.error || "Could not send that email.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-ivory-dark text-ink">
+      <header className="sticky top-0 z-20 bg-midnight text-white">
+        <div className="mx-auto max-w-6xl px-5 sm:px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-5">
+            <div>
+              <p className="eyebrow text-gold leading-none">VOGIM Admin</p>
+              <h1 className="font-display text-xl sm:text-2xl mt-1 leading-none">
+                Book orders
+              </h1>
+            </div>
+            <AdminTabs />
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/books"
+              className="text-[11px] tracking-[0.18em] uppercase text-white/60 hover:text-gold px-3 py-2 transition-colors"
+            >
+              Catalogue
+            </Link>
+            <button
+              onClick={reconcile}
+              disabled={busy}
+              title="Ask both gateways about every order still pending, and settle any that were actually paid"
+              className="btn-gold !py-2 !px-4 !text-[11px] disabled:opacity-60"
+            >
+              <RefreshCw size={14} className={busy ? "animate-spin" : ""} />
+              Reconcile
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {flash && (
+        <div className="bg-gold/15 border-b border-gold/40">
+          <p className="mx-auto max-w-6xl px-5 sm:px-6 py-2.5 text-xs text-midnight">
+            {flash}
+          </p>
+        </div>
+      )}
+
+      {testMode && (
+        <div className="bg-midnight-soft/10 border-b border-midnight-soft/30">
+          <p className="mx-auto max-w-6xl px-5 sm:px-6 py-2.5 text-xs text-midnight">
+            <strong>Test mode.</strong> Flutterwave is running against its sandbox
+            — these are not real transactions.
+          </p>
+        </div>
+      )}
+
+      <main className="mx-auto max-w-6xl px-5 sm:px-6 py-8">
+        {/* TOTALS */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {totals.length === 0 ? (
+            <div className="bg-white border border-midnight/12 p-5">
+              <p className="text-[11px] tracking-[0.2em] uppercase text-midnight/45">
+                Received
+              </p>
+              <p className="font-display text-3xl text-midnight/30 mt-1.5">—</p>
+            </div>
+          ) : (
+            totals.map(([currency, t]) => (
+              <div key={currency} className="bg-white border border-midnight/12 p-5">
+                <p className="text-[11px] tracking-[0.2em] uppercase text-midnight/45">
+                  {currency} received
+                </p>
+                <p className="font-display text-3xl text-midnight mt-1.5 tabular-nums">
+                  {t.amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                </p>
+                <p className="text-xs text-midnight/45 mt-1">
+                  {t.count} order{t.count === 1 ? "" : "s"}
+                </p>
+              </div>
+            ))
+          )}
+          <div className="bg-white border border-midnight/12 p-5">
+            <p className="text-[11px] tracking-[0.2em] uppercase text-midnight/45">
+              Books sold
+            </p>
+            <p className="font-display text-3xl text-midnight mt-1.5 tabular-nums">
+              {booksSold}
+            </p>
+          </div>
+        </div>
+
+        {/* FILTERS */}
+        <div className="flex flex-wrap items-center gap-3 mb-5">
+          <div className="flex flex-wrap gap-1">
+            {TABS.map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-3 py-1.5 border text-[11px] tracking-[0.16em] uppercase transition-colors ${
+                  tab === t
+                    ? "border-gold bg-gold text-midnight"
+                    : "border-midnight/15 text-midnight/55 hover:border-gold"
+                }`}
+              >
+                {t} {counts[t] ? `(${counts[t]})` : ""}
+              </button>
+            ))}
+          </div>
+
+          <label className="relative ml-auto">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-midnight/35"
+            />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search name, email, book, reference…"
+              className="w-64 bg-white border border-midnight/15 pl-9 pr-3 py-2 text-sm outline-none focus:border-gold transition-colors"
+            />
+          </label>
+        </div>
+
+        {/* TABLE */}
+        {filtered.length === 0 ? (
+          <div className="bg-white border border-midnight/12 px-8 py-16 text-center">
+            <Clock className="mx-auto text-midnight/25" size={30} />
+            <p className="mt-4 text-sm text-midnight/55">
+              {items.length === 0
+                ? "No book orders yet."
+                : "No orders match that filter."}
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white border border-midnight/12 overflow-x-auto">
+            <table className="w-full text-sm min-w-[720px]">
+              <thead>
+                <tr className="border-b border-midnight/12 text-left">
+                  {["Customer", "Books", "Total", "Method", "Status", "When", ""].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-midnight/45 font-medium"
+                      >
+                        {h}
+                      </th>
+                    )
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((o) => (
+                  <tr
+                    key={o.ref}
+                    className="border-b border-midnight/8 last:border-0 hover:bg-ivory-dark/60 transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <p className="text-midnight">{o.name || "—"}</p>
+                      <p className="text-xs text-midnight/45">{o.email}</p>
+                    </td>
+                    <td className="px-4 py-3 max-w-[220px]">
+                      <p className="text-midnight/80 text-xs leading-relaxed">
+                        {o.items
+                          .map((i) =>
+                            i.quantity > 1 ? `${i.title} ×${i.quantity}` : i.title
+                          )
+                          .join(", ") || "—"}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="text-midnight tabular-nums">{o.totalLabel}</span>
+                      <span className="text-xs text-midnight/40 ml-1">
+                        {o.currency}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-midnight/60 whitespace-nowrap">
+                      {o.provider === "paypal" ? "PayPal" : o.paymentType || "Card"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block px-2 py-0.5 border text-[10px] tracking-[0.14em] uppercase ${STATUS_STYLE[o.status]}`}
+                      >
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-midnight/50 whitespace-nowrap">
+                      {fmtDate(o.paidAt ?? o.createdAt)}
+                    </td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => setOpen(o)}
+                        className="text-[11px] tracking-[0.14em] uppercase text-gold-deep hover:text-midnight transition-colors"
+                      >
+                        Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </main>
+
+      {/* DETAIL DRAWER */}
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-maroon/80 backdrop-blur-sm p-0 sm:p-6"
+          onClick={() => setOpen(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full sm:max-w-lg bg-white max-h-[92vh] overflow-y-auto shadow-2xl"
+          >
+            <div className="sticky top-0 bg-midnight text-white px-6 py-4 flex items-start justify-between gap-4">
+              <div>
+                <p className="eyebrow text-gold leading-none">Order</p>
+                <p className="font-display text-2xl mt-1.5 leading-none">
+                  {open.totalLabel}{" "}
+                  <span className="text-sm text-white/50">{open.currency}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setOpen(null)}
+                aria-label="Close"
+                className="text-white/60 hover:text-gold transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="px-6 py-5">
+              <ul className="divide-y divide-midnight/10 border-b border-midnight/10 mb-4">
+                {open.items.map((i) => (
+                  <li key={i.bookId} className="flex justify-between gap-4 py-2.5 text-sm">
+                    <span className="text-midnight">
+                      {i.title}
+                      {i.quantity > 1 && (
+                        <span className="text-midnight/45"> × {i.quantity}</span>
+                      )}
+                    </span>
+                    <span className="text-midnight/60 tabular-nums shrink-0">
+                      {i.unitPrice * i.quantity}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <dl className="divide-y divide-midnight/10 text-sm">
+                {[
+                  ["Name", open.name],
+                  ["Email", open.email],
+                  ["Phone", open.phone],
+                  ["Location", open.country],
+                  ["Reference", open.ref],
+                  ["Gateway ref", open.gatewayRef],
+                  ["Paid with", open.provider === "paypal" ? "PayPal" : "Flutterwave"],
+                  ["Method", open.paymentType],
+                  ["Settled via", open.settledVia],
+                  ["Status", open.status],
+                  ["Downloads", String(open.downloadCount)],
+                  ["Links emailed", open.deliveryEmailSent ? "Yes" : "No"],
+                  ["Created", fmtDate(open.createdAt)],
+                  ["Paid", open.paidAt ? fmtDate(open.paidAt) : "—"],
+                  ["Problem", open.failureReason],
+                ]
+                  .filter(([, v]) => v)
+                  .map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-6 py-2.5">
+                      <dt className="text-[11px] tracking-[0.18em] uppercase text-midnight/45 shrink-0">
+                        {k}
+                      </dt>
+                      <dd className="text-midnight/85 text-right break-all">{v}</dd>
+                    </div>
+                  ))}
+              </dl>
+
+              {open.status === "paid" && (
+                <>
+                  <button
+                    onClick={() => resend(open)}
+                    disabled={busy}
+                    className="btn-gold mt-6 w-full justify-center !py-2.5 !text-[11px] disabled:opacity-60"
+                  >
+                    <Mail size={14} /> Re-send download links
+                  </button>
+                  <p className="mt-2.5 flex items-start gap-2 text-[11px] text-midnight/45 leading-relaxed">
+                    <Check size={12} className="text-gold-deep shrink-0 mt-0.5" />
+                    Issues fresh links to {open.email}. Needs SMTP configured on the
+                    server; otherwise send the customer to /books/library, which
+                    shows the links on screen.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

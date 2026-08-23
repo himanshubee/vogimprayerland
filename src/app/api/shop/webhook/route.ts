@@ -1,32 +1,23 @@
 import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { settleDonation } from "@/lib/donations";
-import { isBookRef } from "@/lib/book-orders";
-import { settleBookCharge } from "@/app/api/shop/webhook/route";
+import { settleFlutterwaveOrder } from "@/lib/book-orders";
 import { FlutterwaveError } from "@/lib/flutterwave";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Flutterwave webhook — the authoritative confirmation of a gift.
+ * Flutterwave webhook for book orders.
  *
- * Flutterwave allows only ONE webhook URL per account, and this is it. The
- * bookshop shares the same account, so a charge whose reference is a book
- * order (VOGIM-BOOK-…) is handed to the shop's settler instead of the
- * donations one. Without that dispatch, every book sale would arrive here,
- * find no matching donation, and be logged as "not_found" while the buyer
- * waited for a download that never unlocked.
+ * Flutterwave only lets one webhook URL be configured per account, and that
+ * slot is already taken by /api/give/webhook — which is why that handler now
+ * forwards book references here rather than this route needing to be
+ * registered. This route exists so the shop can be pointed at its own URL if
+ * the giving and bookshop accounts are ever separated.
  *
- * In Flutterwave's dashboard (Settings → Webhooks) set the URL to
- *   https://www.vogimprayerland.org/api/give/webhook/
- * — the trailing slash is REQUIRED, because next.config.ts sets
- * `trailingSlash: true` and the slash-less path answers with a 308 redirect
- * that Flutterwave's sender will not follow. Set the "secret hash" field to the
- * value of FLW_SECRET_HASH. V3 sends that hash verbatim in the `verif-hash`
- * header; anything that doesn't match it is discarded.
- *
- * We never trust the payload's own status — the transaction id is re-verified
- * against Flutterwave's API before a gift is marked successful.
+ * Authentication is the same shared secret (FLW_SECRET_HASH, sent verbatim in
+ * the `verif-hash` header), and as with giving we never trust the payload's
+ * own status — the transaction id is re-verified against Flutterwave's API
+ * before an order is marked paid.
  */
 
 function hashMatches(received: string | null, expected: string): boolean {
@@ -40,12 +31,12 @@ function hashMatches(received: string | null, expected: string): boolean {
 export async function POST(req: NextRequest) {
   const expected = process.env.FLW_SECRET_HASH?.trim() || "";
   if (!expected) {
-    console.error("[give/webhook] FLW_SECRET_HASH is not set — rejecting.");
+    console.error("[shop/webhook] FLW_SECRET_HASH is not set — rejecting.");
     return NextResponse.json({ error: "Not configured" }, { status: 503 });
   }
 
   if (!hashMatches(req.headers.get("verif-hash"), expected)) {
-    console.warn("[give/webhook] rejected: bad or missing verif-hash.");
+    console.warn("[shop/webhook] rejected: bad or missing verif-hash.");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -64,23 +55,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, ignored: event || "unknown" });
   }
 
-  // A book sale, not a gift — settle it against the bookshop's orders.
-  if (isBookRef(payload.data?.tx_ref ?? "")) {
-    return settleBookCharge(transactionId, payload.data?.tx_ref);
-  }
+  return settleBookCharge(transactionId, payload.data?.tx_ref);
+}
 
+/**
+ * Shared with /api/give/webhook, which forwards book references here so a
+ * single configured Flutterwave URL serves both flows.
+ */
+export async function settleBookCharge(
+  transactionId: string | number,
+  txRef?: string
+): Promise<NextResponse> {
   try {
-    const result = await settleDonation(transactionId, "webhook");
-    if (result.outcome !== "successful" && result.outcome !== "already_settled") {
+    const result = await settleFlutterwaveOrder(transactionId, "webhook");
+    if (result.outcome !== "paid" && result.outcome !== "already_settled") {
       console.warn(
-        `[give/webhook] ${payload.data?.tx_ref ?? transactionId}: ${result.outcome} — ${result.reason}`
+        `[shop/webhook] ${txRef ?? transactionId}: ${result.outcome} — ${result.reason}`
       );
     }
     // Always 200 once authenticated — a retry cannot fix a mismatch, and the
     // record is already flagged for reconciliation.
     return NextResponse.json({ ok: true, outcome: result.outcome });
   } catch (err) {
-    console.error("[give/webhook] settle failed:", err);
+    console.error("[shop/webhook] settle failed:", err);
     if (err instanceof FlutterwaveError && !err.retryable) {
       // A bad key or malformed request will fail identically forever — take it
       // off Flutterwave's retry queue and let the log raise the alarm.

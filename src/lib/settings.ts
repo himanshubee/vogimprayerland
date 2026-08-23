@@ -105,6 +105,28 @@ const DOC_ID = "site";
 
 type SettingsDoc = Partial<SiteSettings> & { _id: string };
 
+/**
+ * The bookshop was added after this site's nav had already been saved to the
+ * database, and a stored nav wins over the defaults — so without this the
+ * Books link would be invisible on exactly the sites that are already live.
+ * Adding it here means the link appears on deploy; the admin can then move or
+ * remove it in /admin/settings like any other entry, and that edit sticks
+ * because a saved nav that mentions /books is left alone.
+ */
+function ensureBooksLink(nav: NavLink[]): NavLink[] {
+  const mentionsBooks = nav.some(
+    (l) =>
+      l.href.startsWith("/books") ||
+      l.children?.some((c) => c.href.startsWith("/books"))
+  );
+  if (mentionsBooks) return nav;
+
+  const books: NavLink = { label: "Books", href: "/books" };
+  const at = nav.findIndex((l) => l.href === "/blog");
+  if (at === -1) return [...nav, books];
+  return [...nav.slice(0, at + 1), books, ...nav.slice(at + 1)];
+}
+
 /** Shallow-merge a stored doc over the defaults so any field that was never
  *  edited falls back to its default rather than coming back undefined. */
 function merge(doc: Partial<SiteSettings> | null): SiteSettings {
@@ -118,7 +140,7 @@ function merge(doc: Partial<SiteSettings> | null): SiteSettings {
     serviceTimes: doc.serviceTimes?.length
       ? doc.serviceTimes
       : DEFAULT_SETTINGS.serviceTimes,
-    nav: doc.nav?.length ? doc.nav : DEFAULT_SETTINGS.nav,
+    nav: ensureBooksLink(doc.nav?.length ? doc.nav : DEFAULT_SETTINGS.nav),
     footerCol1: doc.footerCol1?.length ? doc.footerCol1 : DEFAULT_SETTINGS.footerCol1,
     footerCol2: doc.footerCol2?.length ? doc.footerCol2 : DEFAULT_SETTINGS.footerCol2,
   };
