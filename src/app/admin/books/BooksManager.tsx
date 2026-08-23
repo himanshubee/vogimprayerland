@@ -34,8 +34,9 @@ import {
 } from "@/lib/books-shared";
 import type { FxRates } from "@/lib/fx";
 
-const inputCls =
-  "w-full bg-white border border-midnight/15 px-3 py-2 text-sm outline-none focus:border-gold transition-colors";
+const controlCls =
+  "bg-white border border-midnight/15 px-3 py-2 text-sm outline-none focus:border-gold transition-colors";
+const inputCls = `w-full ${controlCls}`;
 const labelCls =
   "block text-[11px] tracking-[0.2em] uppercase text-midnight/55 mb-1.5";
 
@@ -780,6 +781,15 @@ function PricesPanel({
   );
 
   const hasBase = Number(draft.basePrice) > 0;
+  const belowMinimum =
+    hasBase && Number(draft.basePrice) < CURRENCIES[draft.baseCurrency].min;
+
+  /** A pinned price the gateway would refuse — flagged before it reaches a shopper. */
+  const underMin = (code: CurrencyCode) => {
+    const raw = draft.overrides[code];
+    const n = Number(raw);
+    return Boolean(raw?.trim()) && n > 0 && n < CURRENCIES[code].min;
+  };
 
   return (
     <div className="bg-white border border-midnight/12 p-5">
@@ -791,7 +801,8 @@ function PricesPanel({
           onChange={(e) =>
             setDraft({ ...draft, baseCurrency: e.target.value as CurrencyCode })
           }
-          className={`${inputCls} w-28 shrink-0`}
+          aria-label="Base currency"
+          className={`${controlCls} w-24 shrink-0`}
         >
           {CURRENCY_CODES.map((code) => (
             <option key={code} value={code}>
@@ -803,12 +814,22 @@ function PricesPanel({
           type="number"
           min={0}
           step="0.01"
-          className={inputCls}
+          aria-label={`Price in ${draft.baseCurrency}`}
+          className={`${controlCls} flex-1 min-w-0 text-base`}
           value={draft.basePrice}
           onChange={(e) => setDraft({ ...draft, basePrice: e.target.value })}
           placeholder="4.99"
         />
       </div>
+
+      {belowMinimum && (
+        <p className="mt-2.5 flex items-start gap-1.5 text-[11px] text-midnight-soft leading-relaxed">
+          <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+          The smallest amount the payment gateway will take in{" "}
+          {draft.baseCurrency} is{" "}
+          {formatPrice(CURRENCIES[draft.baseCurrency].min, draft.baseCurrency)}.
+        </p>
+      )}
 
       <p className="mt-2.5 flex items-start gap-1.5 text-[11px] text-midnight/45 leading-relaxed">
         <Wand2 size={12} className="text-gold-deep shrink-0 mt-0.5" />
@@ -902,29 +923,61 @@ function PricesPanel({
               let it follow the base price.
             </p>
             <div className="mt-3 space-y-2">
-              {CURRENCY_CODES.filter((c) => c !== draft.baseCurrency).map((code) => (
-                <label key={code} className="flex items-center gap-3">
-                  <span className="w-16 shrink-0 text-xs text-midnight/70">
-                    {CURRENCIES[code].symbol} {code}
-                  </span>
-                  <input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    className={inputCls}
-                    value={draft.overrides[code] ?? ""}
-                    onChange={(e) =>
-                      setDraft({
-                        ...draft,
-                        overrides: { ...draft.overrides, [code]: e.target.value },
-                      })
-                    }
-                    placeholder={
-                      preview[code] ? `auto: ${preview[code]}` : "not sold"
-                    }
-                  />
-                </label>
-              ))}
+              {CURRENCY_CODES.map((code) => {
+                const isBase = code === draft.baseCurrency;
+                return (
+                  <div key={code}>
+                    <label className="flex items-center gap-3">
+                      <span className="w-16 shrink-0 text-xs text-midnight/70">
+                        {CURRENCIES[code].symbol} {code}
+                      </span>
+                      {isBase ? (
+                        // The base currency's price is the field at the top of
+                        // this panel. Showing it here read-only keeps the list
+                        // complete without creating two inputs that could
+                        // disagree about what the book costs.
+                        <span
+                          className={`${controlCls} flex-1 min-w-0 flex items-center justify-between text-midnight/45`}
+                        >
+                          <span>{draft.basePrice || "—"}</span>
+                          <span className="text-[9px] tracking-wider uppercase">
+                            base price, set above
+                          </span>
+                        </span>
+                      ) : (
+                        <input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          aria-label={`Fixed price in ${code}`}
+                          className={`${controlCls} flex-1 min-w-0`}
+                          value={draft.overrides[code] ?? ""}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              overrides: {
+                                ...draft.overrides,
+                                [code]: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder={
+                            preview[code] ? `auto: ${preview[code]}` : "not sold"
+                          }
+                        />
+                      )}
+                    </label>
+                    {!isBase && underMin(code) && (
+                      <p className="mt-1 ml-[76px] flex items-start gap-1.5 text-[10px] text-midnight-soft leading-relaxed">
+                        <AlertTriangle size={11} className="shrink-0 mt-0.5" />
+                        Below the {formatPrice(CURRENCIES[code].min, code)} minimum
+                        the gateway accepts — this order would be refused at
+                        payment.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </>
         )}

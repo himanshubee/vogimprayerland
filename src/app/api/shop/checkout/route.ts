@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CURRENCIES } from "@/lib/currencies";
 import {
   SITE_URL,
   createPaymentLink,
@@ -166,6 +167,20 @@ export async function POST(req: NextRequest) {
   }
   if (!items.length || total <= 0) {
     return NextResponse.json({ error: "Your basket is empty." }, { status: 400 });
+  }
+
+  // Below the gateway's floor the payment link is refused outright, so catch it
+  // here with an explanation rather than bouncing the buyer off a gateway error
+  // page. Reachable when a book carries a manually pinned price under the
+  // minimum — converted prices are already floored at it.
+  const min = CURRENCIES[currency].min;
+  if (total < min) {
+    return NextResponse.json(
+      {
+        error: `The smallest order we can process is ${CURRENCIES[currency].symbol}${min} ${currency}. Please add another book, or switch currency.`,
+      },
+      { status: 400 }
+    );
   }
 
   const ref = newOrderRef();
