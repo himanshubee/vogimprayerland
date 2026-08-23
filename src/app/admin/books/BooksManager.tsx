@@ -60,16 +60,9 @@ type Draft = {
   featured: boolean;
   basePrice: string;
   baseCurrency: CurrencyCode;
-  /** Blank = let the rate table decide this currency. */
-  overrides: Record<string, string>;
 };
 
 function toDraft(book?: Book): Draft {
-  const overrides: Record<string, string> = {};
-  for (const code of CURRENCY_CODES) {
-    const v = book?.priceOverrides?.[code];
-    overrides[code] = v ? String(v) : "";
-  }
   return {
     id: book?.id ?? null,
     title: book?.title ?? "",
@@ -84,18 +77,10 @@ function toDraft(book?: Book): Draft {
     featured: Boolean(book?.featured),
     basePrice: book?.basePrice ? String(book.basePrice) : "",
     baseCurrency: book?.baseCurrency ?? DEFAULT_BASE_CURRENCY,
-    overrides,
   };
 }
 
 function toPayload(draft: Draft) {
-  const priceOverrides: BookPrices = {};
-  for (const [code, raw] of Object.entries(draft.overrides)) {
-    const n = Number(raw);
-    if (raw.trim() && Number.isFinite(n) && n > 0) {
-      priceOverrides[code as CurrencyCode] = n;
-    }
-  }
   return {
     title: draft.title,
     subtitle: draft.subtitle,
@@ -109,7 +94,6 @@ function toPayload(draft: Draft) {
     featured: draft.featured,
     basePrice: Number(draft.basePrice) || 0,
     baseCurrency: draft.baseCurrency,
-    priceOverrides,
   };
 }
 
@@ -761,49 +745,17 @@ function PricesPanel({
   setDraft: (d: Draft) => void;
   fx: FxRates | null;
 }) {
-  const [showOverrides, setShowOverrides] = useState(
-    Object.values(draft.overrides).some((v) => v.trim())
-  );
-
-  const overrides: BookPrices = {};
-  for (const [code, raw] of Object.entries(draft.overrides)) {
-    const n = Number(raw);
-    if (raw.trim() && n > 0) overrides[code as CurrencyCode] = n;
-  }
-
   // Exactly the calculation the shop will run, so what the admin sees here is
   // what a shopper sees — no second implementation to drift out of step.
   const preview = computePrices(
     Number(draft.basePrice) || 0,
     draft.baseCurrency,
-    fx?.rates ?? null,
-    overrides
+    fx?.rates ?? null
   );
 
   const hasBase = Number(draft.basePrice) > 0;
   const belowMinimum =
     hasBase && Number(draft.basePrice) < CURRENCIES[draft.baseCurrency].min;
-
-  /** True when this currency is frozen at a typed figure rather than converted. */
-  const isPinned = (code: CurrencyCode) => Boolean(draft.overrides[code]?.trim());
-
-  /** What the currency *would* be worth if the pin were removed. */
-  const autoValue = (code: CurrencyCode) => {
-    const auto = computePrices(
-      Number(draft.basePrice) || 0,
-      draft.baseCurrency,
-      fx?.rates ?? null,
-      {}
-    )[code];
-    return auto ? formatPrice(auto, code) : "not sold";
-  };
-
-  /** A pinned price the gateway would refuse — flagged before it reaches a shopper. */
-  const underMin = (code: CurrencyCode) => {
-    const raw = draft.overrides[code];
-    const n = Number(raw);
-    return Boolean(raw?.trim()) && n > 0 && n < CURRENCIES[code].min;
-  };
 
   return (
     <div className="bg-white border border-midnight/12 p-5">
@@ -847,9 +799,8 @@ function PricesPanel({
 
       <p className="mt-2.5 flex items-start gap-1.5 text-[11px] text-midnight/45 leading-relaxed">
         <Wand2 size={12} className="text-gold-deep shrink-0 mt-0.5" />
-        Type one price in USD. Every other currency &mdash; NGN included &mdash;
-        is converted automatically at the day&rsquo;s exchange rate and rounded up
-        to a tidy figure.
+        This is the only price you set. Every other currency below is worked out
+        from it at today&rsquo;s exchange rate and rounded up to a tidy figure.
       </p>
 
       {/* WHAT THE SHOPPER WILL SEE */}
@@ -871,7 +822,6 @@ function PricesPanel({
             {CURRENCY_CODES.map((code) => {
               const amount = preview[code];
               const isBase = code === draft.baseCurrency;
-              const pinned = Boolean(overrides[code]);
               return (
                 <li
                   key={code}
@@ -890,11 +840,6 @@ function PricesPanel({
                     {isBase && (
                       <span className="ml-1.5 text-[9px] tracking-wider uppercase text-midnight/40">
                         base
-                      </span>
-                    )}
-                    {pinned && !isBase && (
-                      <span className="ml-1.5 text-[9px] tracking-wider uppercase text-midnight/40">
-                        fixed
                       </span>
                     )}
                   </span>
@@ -919,112 +864,6 @@ function PricesPanel({
           </p>
         </div>
       )}
-
-      {/* MANUAL PINS — the escape hatch, deliberately secondary */}
-      <div className="mt-4 border-t border-midnight/10 pt-3">
-        <button
-          type="button"
-          onClick={() => setShowOverrides((v) => !v)}
-          className="text-[11px] text-gold-deep hover:text-midnight transition-colors"
-        >
-          {showOverrides ? "Hide" : "Set"} a fixed price for a currency
-        </button>
-
-        {showOverrides && (
-          <>
-            <p className="mt-2.5 text-[11px] text-midnight/45 leading-relaxed">
-              A currency left <strong className="text-midnight/60">blank</strong>{" "}
-              follows the base price automatically. Type a number only to{" "}
-              <strong className="text-midnight/60">freeze</strong> that currency at
-              it — it will stop converting until you clear it again.
-            </p>
-            <div className="mt-3 space-y-2">
-              {CURRENCY_CODES.map((code) => {
-                const isBase = code === draft.baseCurrency;
-                return (
-                  <div key={code}>
-                    <label className="flex items-center gap-3">
-                      <span className="w-16 shrink-0 text-xs text-midnight/70">
-                        {CURRENCIES[code].symbol} {code}
-                      </span>
-                      {isBase ? (
-                        // The base currency's price is the field at the top of
-                        // this panel. Showing it here read-only keeps the list
-                        // complete without creating two inputs that could
-                        // disagree about what the book costs.
-                        <span
-                          className={`${controlCls} flex-1 min-w-0 flex items-center justify-between text-midnight/45`}
-                        >
-                          <span>{draft.basePrice || "—"}</span>
-                          <span className="text-[9px] tracking-wider uppercase">
-                            base price, set above
-                          </span>
-                        </span>
-                      ) : (
-                        <span className="relative flex-1 min-w-0">
-                          <input
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            aria-label={`Fixed price in ${code}`}
-                            className={`${controlCls} w-full ${
-                              isPinned(code)
-                                ? "border-gold bg-gold/5 pr-16"
-                                : ""
-                            }`}
-                            value={draft.overrides[code] ?? ""}
-                            onChange={(e) =>
-                              setDraft({
-                                ...draft,
-                                overrides: {
-                                  ...draft.overrides,
-                                  [code]: e.target.value,
-                                },
-                              })
-                            }
-                            placeholder={
-                              preview[code] ? `auto: ${preview[code]}` : "not sold"
-                            }
-                          />
-                          {isPinned(code) && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setDraft({
-                                  ...draft,
-                                  overrides: { ...draft.overrides, [code]: "" },
-                                })
-                              }
-                              title={`Stop fixing ${code} and convert it from the base price again`}
-                              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-1 text-[9px] tracking-wider uppercase text-gold-deep hover:text-midnight transition-colors"
-                            >
-                              Auto
-                            </button>
-                          )}
-                        </span>
-                      )}
-                    </label>
-                    {!isBase && isPinned(code) && !underMin(code) && (
-                      <p className="mt-1 ml-[76px] text-[10px] text-gold-deep leading-relaxed">
-                        Fixed at this figure — not converted. Would be{" "}
-                        {autoValue(code)} automatically.
-                      </p>
-                    )}
-                    {!isBase && underMin(code) && (
-                      <p className="mt-1 ml-[76px] flex items-start gap-1.5 text-[10px] text-midnight-soft leading-relaxed">
-                        <AlertTriangle size={11} className="shrink-0 mt-0.5" />
-                        Below the {formatPrice(CURRENCIES[code].min, code)} minimum
-                        the gateway accepts — this order would be refused at
-                        payment.
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
     </div>
   );
 }

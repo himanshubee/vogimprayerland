@@ -25,10 +25,9 @@ import { CURRENCIES, type CurrencyCode } from "@/lib/currencies";
  * /api/shop/download with a signed token proving a paid order (see
  * lib/book-tokens.ts).
  *
- * Prices are stored per currency rather than converted from a base price, so
- * the ministry decides exactly what each market pays and no exchange-rate
- * service sits in the path of a sale. A currency the admin leaves blank simply
- * isn't offered for that book.
+ * A book carries exactly one price — `basePrice` in `baseCurrency`. Every other
+ * currency is converted from it at the day's cached rate (see lib/fx.ts) and
+ * rounded up, so there is only ever one number per book to keep correct.
  *
  * Types and pure helpers live in lib/books-shared.ts, which the shop's client
  * components import — this module pulls in the MongoDB driver and must never
@@ -58,8 +57,8 @@ type BookDoc = {
   coverImage?: string | null;
   basePrice?: number;
   baseCurrency?: CurrencyCode;
+  /** Both written by older versions. Migrated on read, cleared on next save. */
   priceOverrides?: BookPrices;
-  /** Written by the pre-auto-pricing version. Migrated on read, never written. */
   prices?: BookPrices;
   pages?: number;
   category?: string;
@@ -74,43 +73,40 @@ type BookDoc = {
 };
 
 /**
- * Recover a base price for a book written before automatic pricing existed.
+ * Recover the base price for a book written by an earlier version.
  *
- * Those books carry a hand-typed price per currency. Every one of them is
- * carried across as an override, so such a book keeps charging exactly what it
- * charged yesterday — switching the site to auto-pricing must not silently
- * re-price the back catalogue. Clearing the overrides in the admin is what
- * opts an old book into conversion.
+ * Two older shapes exist. Books from before automatic pricing carry a
+ * hand-typed price per currency in `prices`; books from the brief
+ * manual-override era additionally carry `priceOverrides`. Neither is honoured
+ * any more — a book is one base price and everything else converts — so both
+ * are only mined for a sensible base figure and then ignored. They are cleared
+ * from the document the next time the book is saved.
  */
 function pricingOf(d: BookDoc): {
   basePrice: number;
   baseCurrency: CurrencyCode;
-  overrides: BookPrices;
 } {
-  const overrides = cleanPrices(d.priceOverrides);
   const baseCurrency =
     d.baseCurrency && d.baseCurrency in CURRENCIES
       ? d.baseCurrency
       : DEFAULT_BASE_CURRENCY;
 
   if (Number(d.basePrice) > 0) {
-    return { basePrice: Number(d.basePrice), baseCurrency, overrides };
+    return { basePrice: Number(d.basePrice), baseCurrency };
   }
 
-  const legacy = cleanPrices(d.prices);
+  // No base price yet — take one from whatever the old shape recorded, so an
+  // existing book keeps a sensible figure instead of falling off the shop.
+  const legacy = { ...cleanPrices(d.prices), ...cleanPrices(d.priceOverrides) };
   const codes = Object.keys(legacy) as CurrencyCode[];
-  if (!codes.length) return { basePrice: 0, baseCurrency, overrides };
+  if (!codes.length) return { basePrice: 0, baseCurrency };
 
   const legacyBase = legacy[baseCurrency] ? baseCurrency : codes[0];
-  return {
-    basePrice: legacy[legacyBase] as number,
-    baseCurrency: legacyBase,
-    overrides: { ...legacy, ...overrides },
-  };
+  return { basePrice: legacy[legacyBase] as number, baseCurrency: legacyBase };
 }
 
 function serialize(d: BookDoc, rates: Record<string, number> | null): Book {
-  const { basePrice, baseCurrency, overrides } = pricingOf(d);
+  const { basePrice, baseCurrency } = pricingOf(d);
   return {
     id: String(d._id),
     slug: d.slug,
@@ -121,8 +117,7 @@ function serialize(d: BookDoc, rates: Record<string, number> | null): Book {
     coverImage: d.coverImage ?? null,
     basePrice,
     baseCurrency,
-    priceOverrides: overrides,
-    prices: computePrices(basePrice, baseCurrency, rates, overrides),
+    prices: computePrices(basePrice, baseCurrency, rates),
     pages: d.pages ?? 0,
     category: d.category ?? "",
     status: d.status ?? "draft",
@@ -231,8 +226,6 @@ export type BookInput = {
   /** The one figure the ministry types; every other currency is derived. */
   basePrice?: number;
   baseCurrency?: string;
-  /** Optional manual pins that win over the converted figure. */
-  priceOverrides?: BookPrices;
   pages?: number;
   category?: string;
   status?: BookStatus;
@@ -265,9 +258,10 @@ function normalize(input: BookInput) {
       input.baseCurrency && input.baseCurrency.toUpperCase() in CURRENCIES
         ? (input.baseCurrency.toUpperCase() as CurrencyCode)
         : DEFAULT_BASE_CURRENCY,
-    priceOverrides: cleanPrices(input.priceOverrides),
-    // Drop any hand-typed map left over from before auto-pricing: once a book
-    // is saved through this path, the base price is the single source of truth.
+    // Clear both legacy price shapes: once a book is saved through this path
+    // the base price is the single source of truth and every other currency is
+    // converted from it.
+    priceOverrides: {},
     prices: {},
     pages: Math.max(0, Math.min(10_000, Math.round(Number(input.pages) || 0))),
     category: str(input.category, 80),

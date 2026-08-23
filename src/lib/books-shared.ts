@@ -33,8 +33,6 @@ export type Book = {
   /** What the ministry actually typed, in `baseCurrency`. */
   basePrice: number;
   baseCurrency: CurrencyCode;
-  /** Manual pins that win over the converted figure, per currency. */
-  priceOverrides: BookPrices;
   /**
    * Every currency this book can be bought in, derived from `basePrice` at
    * the current exchange rates. This is what the whole shop renders and what
@@ -155,16 +153,19 @@ export function roundUpToStep(amount: number, currency: CurrencyCode): number {
 /**
  * Derive what this book costs in every supported currency.
  *
- * Precedence per currency: a manual override wins; otherwise the base currency
- * is exactly what was typed; otherwise the figure is converted and rounded up.
- * A currency is left out entirely when no rate is available for it — the shop
- * then says "not sold in X" rather than showing a price built on a guess.
+ * One price in, every price out. The base currency is exactly the figure that
+ * was typed; every other currency is converted at the day's rate and rounded
+ * up. A currency is left out entirely when no rate is available for it — the
+ * shop then says "not sold in X" rather than showing a price built on a guess.
+ *
+ * There is deliberately no per-currency override. A price the ministry can
+ * pin by hand is a price that silently stops tracking the base one, and in
+ * practice that only ever produced stale or invalid figures.
  */
 export function computePrices(
   basePrice: number,
   baseCurrency: CurrencyCode,
-  rates: Record<string, number> | null | undefined,
-  overrides: BookPrices = {}
+  rates: Record<string, number> | null | undefined
 ): BookPrices {
   const out: BookPrices = {};
   const base = roundMoney(Number(basePrice));
@@ -173,12 +174,6 @@ export function computePrices(
   const baseRate = rates?.[baseCurrency];
 
   for (const code of Object.keys(CURRENCIES) as CurrencyCode[]) {
-    const pinned = Number(overrides[code] ?? 0);
-    if (pinned > 0) {
-      out[code] = roundMoney(pinned);
-      continue;
-    }
-
     if (code === baseCurrency) {
       out[code] = base;
       continue;
