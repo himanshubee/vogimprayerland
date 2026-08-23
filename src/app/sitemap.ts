@@ -33,8 +33,6 @@ const STATIC_PATHS = [
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
-
   // Map each static path to its CMS page key (if any) so the sitemap reflects
   // the real last-edited time of editable marketing pages.
   const pathToKey = new Map(
@@ -46,10 +44,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((p) => {
     const key = pathToKey.get(p);
-    const mod = key && modifiedMap[key] ? new Date(modifiedMap[key]) : now;
+    const mod = key && modifiedMap[key] ? new Date(modifiedMap[key]) : undefined;
     const isLegal = legalPaths.has(p);
     return {
       url: `${SITE_URL}/${p ? `${p}/` : ""}`,
+      // Only claim a date we actually know. Stamping every static page with
+      // "now" on each deploy is a lie Google learns to ignore, and it takes
+      // the real dates on the articles down with it.
       lastModified: mod,
       changeFrequency: isLegal
         ? "yearly"
@@ -82,5 +83,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticEntries, ...postEntries, ...bookEntries];
+  // Several WordPress "pages" were imported as posts under slugs that are also
+  // hand-built routes here — /prayer-request/, /gallery/, /blog/ and friends.
+  // The hand-built route is what actually serves, so the post row is a second
+  // copy of a URL already listed. First entry wins.
+  const seen = new Set<string>();
+  return [...staticEntries, ...postEntries, ...bookEntries].filter((e) => {
+    if (seen.has(e.url)) return false;
+    seen.add(e.url);
+    return true;
+  });
 }

@@ -7,12 +7,33 @@ import { getPublishedPosts, countPublishedPosts } from "@/lib/posts";
 import Adsense from "@/components/Adsense";
 
 export const revalidate = 300;
-export const metadata = {
-  alternates: { canonical: "/blog/" },
-  title: "Articles & Prayer Points — VOGIM Prayer Land",
-  description:
-    "Deliverance prayer points, teachings, and faith articles from VOGIM Deliverance Ministries.",
-};
+
+const TITLE = "Articles & Prayer Points — VOGIM Prayer Land";
+const DESCRIPTION =
+  "Deliverance prayer points, teachings, and faith articles from VOGIM Deliverance Ministries.";
+
+/**
+ * Each archive page points its canonical at itself, not at page 1.
+ *
+ * With 500+ articles this listing runs to more than forty pages, and Previous/
+ * Next links are the only path a crawler has to the older ones. Canonicalising
+ * them all to /blog/ declared every one of those pages a duplicate of the
+ * first, which is an instruction to stop following the chain — and everything
+ * past page 1 is then reachable only from the sitemap.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page } = await searchParams;
+  const current = Math.max(1, Number(page) || 1);
+  return {
+    title: current > 1 ? `${TITLE} — Page ${current}` : TITLE,
+    description: DESCRIPTION,
+    alternates: { canonical: current > 1 ? `/blog/?page=${current}` : "/blog/" },
+  };
+}
 
 const PER_PAGE = 12;
 
