@@ -3,12 +3,17 @@ import { Readable } from "stream";
 import { getDb } from "@/lib/mongodb";
 import {
   cleanPrices,
+  computePrices,
+  roundMoney,
   isSellable,
   slugifyBook,
+  DEFAULT_BASE_CURRENCY,
   type Book,
   type BookPrices,
   type BookStatus,
 } from "@/lib/books-shared";
+import { getRates } from "@/lib/fx";
+import { CURRENCIES, type CurrencyCode } from "@/lib/currencies";
 
 /**
  * The bookshop catalogue — database layer (server only).
@@ -51,6 +56,10 @@ type BookDoc = {
   author?: string;
   description?: string;
   coverImage?: string | null;
+  basePrice?: number;
+  baseCurrency?: CurrencyCode;
+  priceOverrides?: BookPrices;
+  /** Written by the pre-auto-pricing version. Migrated on read, never written. */
   prices?: BookPrices;
   pages?: number;
   category?: string;
@@ -64,7 +73,44 @@ type BookDoc = {
   updatedAt?: Date;
 };
 
-function serialize(d: BookDoc): Book {
+/**
+ * Recover a base price for a book written before automatic pricing existed.
+ *
+ * Those books carry a hand-typed price per currency. Every one of them is
+ * carried across as an override, so such a book keeps charging exactly what it
+ * charged yesterday — switching the site to auto-pricing must not silently
+ * re-price the back catalogue. Clearing the overrides in the admin is what
+ * opts an old book into conversion.
+ */
+function pricingOf(d: BookDoc): {
+  basePrice: number;
+  baseCurrency: CurrencyCode;
+  overrides: BookPrices;
+} {
+  const overrides = cleanPrices(d.priceOverrides);
+  const baseCurrency =
+    d.baseCurrency && d.baseCurrency in CURRENCIES
+      ? d.baseCurrency
+      : DEFAULT_BASE_CURRENCY;
+
+  if (Number(d.basePrice) > 0) {
+    return { basePrice: Number(d.basePrice), baseCurrency, overrides };
+  }
+
+  const legacy = cleanPrices(d.prices);
+  const codes = Object.keys(legacy) as CurrencyCode[];
+  if (!codes.length) return { basePrice: 0, baseCurrency, overrides };
+
+  const legacyBase = legacy[baseCurrency] ? baseCurrency : codes[0];
+  return {
+    basePrice: legacy[legacyBase] as number,
+    baseCurrency: legacyBase,
+    overrides: { ...legacy, ...overrides },
+  };
+}
+
+function serialize(d: BookDoc, rates: Record<string, number> | null): Book {
+  const { basePrice, baseCurrency, overrides } = pricingOf(d);
   return {
     id: String(d._id),
     slug: d.slug,
@@ -73,7 +119,10 @@ function serialize(d: BookDoc): Book {
     author: d.author ?? "",
     description: d.description ?? "",
     coverImage: d.coverImage ?? null,
-    prices: cleanPrices(d.prices),
+    basePrice,
+    baseCurrency,
+    priceOverrides: overrides,
+    prices: computePrices(basePrice, baseCurrency, rates, overrides),
     pages: d.pages ?? 0,
     category: d.category ?? "",
     status: d.status ?? "draft",
@@ -99,7 +148,10 @@ export async function listPublishedBooks(): Promise<Book[]> {
       .sort({ order: 1, createdAt: -1 })
       .limit(300)
       .toArray();
-    return docs.map(serialize).filter(isSellable);
+    // One rate lookup for the whole listing, so every card on the page is
+    // priced from the same table.
+    const rates = await getRates();
+    return docs.map((d) => serialize(d, rates?.rates ?? null)).filter(isSellable);
   } catch (err) {
     // A shop that 500s is worse than a shop that is briefly empty.
     console.error("[books] list failed:", err);
@@ -111,7 +163,8 @@ export async function getBookBySlug(slug: string): Promise<Book | null> {
   const db = await getDb();
   const doc = await db.collection<BookDoc>(COLLECTION).findOne({ slug });
   if (!doc) return null;
-  const book = serialize(doc);
+  const rates = await getRates();
+  const book = serialize(doc, rates?.rates ?? null);
   return isSellable(book) ? book : null;
 }
 
@@ -124,7 +177,8 @@ export async function listBooksAdmin(): Promise<Book[]> {
     .sort({ order: 1, createdAt: -1 })
     .limit(500)
     .toArray();
-  return docs.map(serialize);
+  const rates = await getRates();
+  return docs.map((d) => serialize(d, rates?.rates ?? null));
 }
 
 export async function getBookById(id: string): Promise<Book | null> {
@@ -133,7 +187,9 @@ export async function getBookById(id: string): Promise<Book | null> {
   const doc = await db
     .collection<BookDoc>(COLLECTION)
     .findOne({ _id: new ObjectId(id) });
-  return doc ? serialize(doc) : null;
+  if (!doc) return null;
+  const rates = await getRates();
+  return serialize(doc, rates?.rates ?? null);
 }
 
 /**
@@ -153,8 +209,11 @@ export async function getSellableBooksByIds(
     .find({ _id: { $in: objectIds }, status: "published" })
     .toArray();
 
+  // The same cached table the shop rendered from, so the price a shopper saw
+  // is the price the order is created at.
+  const rates = await getRates();
   for (const doc of docs) {
-    const book = serialize(doc);
+    const book = serialize(doc, rates?.rates ?? null);
     if (isSellable(book)) map.set(book.id, book);
   }
   return map;
@@ -169,7 +228,11 @@ export type BookInput = {
   author?: string;
   description?: string;
   coverImage?: string | null;
-  prices?: BookPrices;
+  /** The one figure the ministry types; every other currency is derived. */
+  basePrice?: number;
+  baseCurrency?: string;
+  /** Optional manual pins that win over the converted figure. */
+  priceOverrides?: BookPrices;
   pages?: number;
   category?: string;
   status?: BookStatus;
@@ -197,7 +260,15 @@ function normalize(input: BookInput) {
     author: str(input.author, 200),
     description: String(input.description ?? "").slice(0, 40_000),
     coverImage: input.coverImage ? str(input.coverImage, 600) : null,
-    prices: cleanPrices(input.prices),
+    basePrice: Math.max(0, roundMoney(Number(input.basePrice) || 0)),
+    baseCurrency:
+      input.baseCurrency && input.baseCurrency.toUpperCase() in CURRENCIES
+        ? (input.baseCurrency.toUpperCase() as CurrencyCode)
+        : DEFAULT_BASE_CURRENCY,
+    priceOverrides: cleanPrices(input.priceOverrides),
+    // Drop any hand-typed map left over from before auto-pricing: once a book
+    // is saved through this path, the base price is the single source of truth.
+    prices: {},
     pages: Math.max(0, Math.min(10_000, Math.round(Number(input.pages) || 0))),
     category: str(input.category, 80),
     status: input.status === "published" ? ("published" as const) : ("draft" as const),
@@ -223,7 +294,8 @@ export async function createBook(input: BookInput): Promise<Book> {
     updatedAt: now,
   };
   await db.collection<BookDoc>(COLLECTION).insertOne(doc);
-  return serialize(doc);
+  const rates = await getRates();
+  return serialize(doc, rates?.rates ?? null);
 }
 
 export async function updateBook(

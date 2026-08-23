@@ -30,6 +30,16 @@ export type Book = {
   author: string;
   description: string; // HTML (authored in the same TinyMCE as posts)
   coverImage: string | null;
+  /** What the ministry actually typed, in `baseCurrency`. */
+  basePrice: number;
+  baseCurrency: CurrencyCode;
+  /** Manual pins that win over the converted figure, per currency. */
+  priceOverrides: BookPrices;
+  /**
+   * Every currency this book can be bought in, derived from `basePrice` at
+   * the current exchange rates. This is what the whole shop renders and what
+   * checkout prices against — never recompute it in a component.
+   */
   prices: BookPrices;
   pages: number;
   category: string;
@@ -100,4 +110,83 @@ export function currenciesFor(book: Book): CurrencyCode[] {
  */
 export function isSellable(book: Book): boolean {
   return book.status === "published" && book.hasPdf && currenciesFor(book).length > 0;
+}
+
+/* ---------------------------- Automatic pricing --------------------------- */
+
+/** Used when a book has never had a base currency chosen. */
+export const DEFAULT_BASE_CURRENCY: CurrencyCode = "NGN";
+
+/**
+ * The increment each currency's converted price is rounded up to.
+ *
+ * Two reasons this matters more than it looks. Tidiness: a shop showing
+ * "₦7,847.23" reads like a machine did it. And stability: rates drift a
+ * fraction of a percent every day, so an unrounded price would visibly change
+ * between one visit and the next — rounding to a step means the displayed
+ * price only moves when the rate moves enough to matter.
+ */
+export const PRICE_STEPS: Record<CurrencyCode, number> = {
+  NGN: 100,
+  KES: 50,
+  GHS: 1,
+  ZAR: 5,
+  AED: 1,
+  USD: 0.5,
+  GBP: 0.5,
+  EUR: 0.5,
+};
+
+/**
+ * Round *up* to the currency's step. Up, never down, so conversion rounding
+ * can never quietly sell a book for less than the ministry intended.
+ */
+export function roundUpToStep(amount: number, currency: CurrencyCode): number {
+  const step = PRICE_STEPS[currency] ?? 0.01;
+  // The epsilon stops an exact multiple (5.0 / 0.5 = 10.000000000000002)
+  // from being pushed up a whole extra step by floating-point noise.
+  return roundMoney(Math.ceil(amount / step - 1e-9) * step);
+}
+
+/**
+ * Derive what this book costs in every supported currency.
+ *
+ * Precedence per currency: a manual override wins; otherwise the base currency
+ * is exactly what was typed; otherwise the figure is converted and rounded up.
+ * A currency is left out entirely when no rate is available for it — the shop
+ * then says "not sold in X" rather than showing a price built on a guess.
+ */
+export function computePrices(
+  basePrice: number,
+  baseCurrency: CurrencyCode,
+  rates: Record<string, number> | null | undefined,
+  overrides: BookPrices = {}
+): BookPrices {
+  const out: BookPrices = {};
+  const base = roundMoney(Number(basePrice));
+  if (!(base > 0)) return out;
+
+  const baseRate = rates?.[baseCurrency];
+
+  for (const code of Object.keys(CURRENCIES) as CurrencyCode[]) {
+    const pinned = Number(overrides[code] ?? 0);
+    if (pinned > 0) {
+      out[code] = roundMoney(pinned);
+      continue;
+    }
+
+    if (code === baseCurrency) {
+      out[code] = base;
+      continue;
+    }
+
+    const rate = rates?.[code];
+    if (!rates || !baseRate || !rate) continue;
+
+    const converted = (base / baseRate) * rate;
+    // Never drop below what the gateway will accept for that currency.
+    out[code] = Math.max(roundUpToStep(converted, code), CURRENCIES[code].min);
+  }
+
+  return out;
 }

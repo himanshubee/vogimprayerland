@@ -15,18 +15,24 @@ import {
   Loader2,
   Plus,
   Receipt,
+  RefreshCw,
   Trash2,
   Upload,
+  Wand2,
   X,
 } from "lucide-react";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { TinyEditor } from "@/components/admin/TinyEditor";
 import { CURRENCIES, type CurrencyCode } from "@/lib/currencies";
 import {
+  DEFAULT_BASE_CURRENCY,
   PAYPAL_CURRENCIES,
+  computePrices,
+  formatPrice,
   type Book,
   type BookPrices,
 } from "@/lib/books-shared";
+import type { FxRates } from "@/lib/fx";
 
 const inputCls =
   "w-full bg-white border border-midnight/15 px-3 py-2 text-sm outline-none focus:border-gold transition-colors";
@@ -51,14 +57,17 @@ type Draft = {
   coverImage: string | null;
   status: "published" | "draft";
   featured: boolean;
-  prices: Record<string, string>;
+  basePrice: string;
+  baseCurrency: CurrencyCode;
+  /** Blank = let the rate table decide this currency. */
+  overrides: Record<string, string>;
 };
 
 function toDraft(book?: Book): Draft {
-  const prices: Record<string, string> = {};
+  const overrides: Record<string, string> = {};
   for (const code of CURRENCY_CODES) {
-    const v = book?.prices[code];
-    prices[code] = v ? String(v) : "";
+    const v = book?.priceOverrides?.[code];
+    overrides[code] = v ? String(v) : "";
   }
   return {
     id: book?.id ?? null,
@@ -72,16 +81,18 @@ function toDraft(book?: Book): Draft {
     coverImage: book?.coverImage ?? null,
     status: book?.status ?? "draft",
     featured: Boolean(book?.featured),
-    prices,
+    basePrice: book?.basePrice ? String(book.basePrice) : "",
+    baseCurrency: book?.baseCurrency ?? DEFAULT_BASE_CURRENCY,
+    overrides,
   };
 }
 
 function toPayload(draft: Draft) {
-  const prices: BookPrices = {};
-  for (const [code, raw] of Object.entries(draft.prices)) {
+  const priceOverrides: BookPrices = {};
+  for (const [code, raw] of Object.entries(draft.overrides)) {
     const n = Number(raw);
     if (raw.trim() && Number.isFinite(n) && n > 0) {
-      prices[code as CurrencyCode] = n;
+      priceOverrides[code as CurrencyCode] = n;
     }
   }
   return {
@@ -95,11 +106,19 @@ function toPayload(draft: Draft) {
     coverImage: draft.coverImage,
     status: draft.status,
     featured: draft.featured,
-    prices,
+    basePrice: Number(draft.basePrice) || 0,
+    baseCurrency: draft.baseCurrency,
+    priceOverrides,
   };
 }
 
-export function BooksManager({ initial }: { initial: Book[] }) {
+export function BooksManager({
+  initial,
+  fx,
+}: {
+  initial: Book[];
+  fx: FxRates | null;
+}) {
   const router = useRouter();
   const [items, setItems] = useState<Book[]>(initial);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -299,7 +318,8 @@ export function BooksManager({ initial }: { initial: Book[] }) {
                 router.refresh();
               }}
             />
-            <PricesPanel draft={draft} setDraft={setDraft} />
+            <PricesPanel draft={draft} setDraft={setDraft} fx={fx} />
+            <RatesPanel fx={fx} />
           </div>
         </div>
       </Shell>
@@ -337,8 +357,8 @@ export function BooksManager({ initial }: { initial: Book[] }) {
           <BookOpen className="mx-auto text-gold-deep" size={32} />
           <h2 className="font-display text-2xl text-midnight mt-4">No books yet</h2>
           <p className="mt-3 text-sm text-midnight/60 max-w-sm mx-auto">
-            Create a book, upload its cover and PDF, set a price in each currency
-            you want to sell in, then publish it.
+            Create a book, upload its cover and PDF, set one price — every other
+            currency converts automatically — then publish it.
           </p>
           <button
             onClick={() => setDraft(toDraft())}
@@ -410,12 +430,10 @@ export function BooksManager({ initial }: { initial: Book[] }) {
                       }`}
                     >
                       {priced
-                        ? Object.entries(book.prices)
-                            .map(
-                              ([code, amount]) =>
-                                `${CURRENCIES[code as CurrencyCode]?.symbol ?? ""}${amount} ${code}`
-                            )
-                            .join("  ·  ")
+                        ? `${formatPrice(book.basePrice, book.baseCurrency)} ${book.baseCurrency}` +
+                          (Object.keys(book.prices).length > 1
+                            ? `  ·  +${Object.keys(book.prices).length - 1} converted`
+                            : "")
                         : "No price set"}
                     </span>
                   </div>
@@ -736,56 +754,255 @@ function PdfPanel({
 function PricesPanel({
   draft,
   setDraft,
+  fx,
 }: {
   draft: Draft;
   setDraft: (d: Draft) => void;
+  fx: FxRates | null;
 }) {
+  const [showOverrides, setShowOverrides] = useState(
+    Object.values(draft.overrides).some((v) => v.trim())
+  );
+
+  const overrides: BookPrices = {};
+  for (const [code, raw] of Object.entries(draft.overrides)) {
+    const n = Number(raw);
+    if (raw.trim() && n > 0) overrides[code as CurrencyCode] = n;
+  }
+
+  // Exactly the calculation the shop will run, so what the admin sees here is
+  // what a shopper sees — no second implementation to drift out of step.
+  const preview = computePrices(
+    Number(draft.basePrice) || 0,
+    draft.baseCurrency,
+    fx?.rates ?? null,
+    overrides
+  );
+
+  const hasBase = Number(draft.basePrice) > 0;
+
   return (
     <div className="bg-white border border-midnight/12 p-5">
-      <p className={labelCls}>Price per currency</p>
-      <p className="text-[11px] text-midnight/45 leading-relaxed mb-4">
-        Leave a currency blank and the book simply isn&rsquo;t sold in it.
-      </p>
+      <p className={labelCls}>Price</p>
 
-      <div className="space-y-2.5">
-        {CURRENCY_CODES.map((code) => {
-          const paypal = PAYPAL_CURRENCIES.includes(code);
-          return (
-            <label key={code} className="flex items-center gap-3">
-              <span className="w-24 shrink-0 text-xs text-midnight/70">
-                {CURRENCIES[code].symbol} {code}
-                {paypal && (
-                  <span
-                    title="PayPal can take this currency"
-                    className="ml-1 text-[9px] tracking-wider uppercase text-gold-deep"
-                  >
-                    PP
-                  </span>
-                )}
-              </span>
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                className={inputCls}
-                value={draft.prices[code] ?? ""}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    prices: { ...draft.prices, [code]: e.target.value },
-                  })
-                }
-                placeholder="—"
-              />
-            </label>
-          );
-        })}
+      <div className="flex gap-2">
+        <select
+          value={draft.baseCurrency}
+          onChange={(e) =>
+            setDraft({ ...draft, baseCurrency: e.target.value as CurrencyCode })
+          }
+          className={`${inputCls} w-28 shrink-0`}
+        >
+          {CURRENCY_CODES.map((code) => (
+            <option key={code} value={code}>
+              {CURRENCIES[code].symbol} {code}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          min={0}
+          step="0.01"
+          className={inputCls}
+          value={draft.basePrice}
+          onChange={(e) => setDraft({ ...draft, basePrice: e.target.value })}
+          placeholder="5000"
+        />
       </div>
 
-      <p className="mt-4 text-[11px] text-midnight/40 leading-relaxed">
-        <span className="text-gold-deep">PP</span> marks the currencies PayPal
-        accepts. A book priced only in NGN can still be bought — by card, bank
-        transfer or mobile money through Flutterwave.
+      <p className="mt-2.5 flex items-start gap-1.5 text-[11px] text-midnight/45 leading-relaxed">
+        <Wand2 size={12} className="text-gold-deep shrink-0 mt-0.5" />
+        Type one price. Every other currency is converted automatically at the
+        day&rsquo;s exchange rate and rounded up to a tidy figure.
+      </p>
+
+      {/* WHAT THE SHOPPER WILL SEE */}
+      {hasBase && (
+        <div className="mt-5 border-t border-midnight/10 pt-4">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-midnight/45 mb-2.5">
+            Shoppers will pay
+          </p>
+
+          {!fx && (
+            <p className="mb-3 flex items-start gap-1.5 text-[11px] text-midnight-soft leading-relaxed">
+              <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+              No exchange rates available, so this book can only be sold in{" "}
+              {draft.baseCurrency} until rates are fetched.
+            </p>
+          )}
+
+          <ul className="space-y-1">
+            {CURRENCY_CODES.map((code) => {
+              const amount = preview[code];
+              const isBase = code === draft.baseCurrency;
+              const pinned = Boolean(overrides[code]);
+              return (
+                <li
+                  key={code}
+                  className="flex items-baseline justify-between gap-3 text-xs"
+                >
+                  <span className="text-midnight/50">
+                    {code}
+                    {PAYPAL_CURRENCIES.includes(code) && (
+                      <span
+                        title="PayPal can take this currency"
+                        className="ml-1.5 text-[9px] tracking-wider uppercase text-gold-deep"
+                      >
+                        PP
+                      </span>
+                    )}
+                    {isBase && (
+                      <span className="ml-1.5 text-[9px] tracking-wider uppercase text-midnight/40">
+                        base
+                      </span>
+                    )}
+                    {pinned && !isBase && (
+                      <span className="ml-1.5 text-[9px] tracking-wider uppercase text-midnight/40">
+                        fixed
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className={
+                      amount
+                        ? "text-midnight tabular-nums"
+                        : "text-midnight/30 tabular-nums"
+                    }
+                  >
+                    {amount ? formatPrice(amount, code) : "not sold"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="mt-3 text-[10px] text-midnight/35 leading-relaxed">
+            <span className="text-gold-deep">PP</span> marks the currencies
+            PayPal accepts. The rest are still buyable by card, bank transfer or
+            mobile money.
+          </p>
+        </div>
+      )}
+
+      {/* MANUAL PINS — the escape hatch, deliberately secondary */}
+      <div className="mt-4 border-t border-midnight/10 pt-3">
+        <button
+          type="button"
+          onClick={() => setShowOverrides((v) => !v)}
+          className="text-[11px] text-gold-deep hover:text-midnight transition-colors"
+        >
+          {showOverrides ? "Hide" : "Set"} a fixed price for a currency
+        </button>
+
+        {showOverrides && (
+          <>
+            <p className="mt-2.5 text-[11px] text-midnight/45 leading-relaxed">
+              Fill one in to stop that currency being converted. Leave blank to
+              let it follow the base price.
+            </p>
+            <div className="mt-3 space-y-2">
+              {CURRENCY_CODES.filter((c) => c !== draft.baseCurrency).map((code) => (
+                <label key={code} className="flex items-center gap-3">
+                  <span className="w-16 shrink-0 text-xs text-midnight/70">
+                    {CURRENCIES[code].symbol} {code}
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    className={inputCls}
+                    value={draft.overrides[code] ?? ""}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        overrides: { ...draft.overrides, [code]: e.target.value },
+                      })
+                    }
+                    placeholder={
+                      preview[code] ? `auto: ${preview[code]}` : "not sold"
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Rate freshness plus a manual refresh — every price on the site rides on this. */
+function RatesPanel({ fx }: { fx: FxRates | null }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function refresh() {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/books/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "refresh-rates" }),
+      });
+      const data = await res.json();
+      setMessage(res.ok ? "Rates updated." : data?.error || "Could not update rates.");
+      if (res.ok) router.refresh();
+    } catch {
+      setMessage("Could not reach the rate service.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="bg-white border border-midnight/12 p-5">
+      <p className={labelCls}>Exchange rates</p>
+
+      {fx ? (
+        <>
+          <p className="text-xs text-midnight/65 leading-relaxed">
+            Updated{" "}
+            {new Date(fx.fetchedAt).toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+            <span className="text-midnight/40"> · {fx.source}</span>
+          </p>
+          {fx.stale && (
+            <p className="mt-2 flex items-start gap-1.5 text-[11px] text-midnight-soft leading-relaxed">
+              <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+              These rates are over a day old — the rate service could not be
+              reached. Prices are still being converted from them.
+            </p>
+          )}
+        </>
+      ) : (
+        <p className="flex items-start gap-1.5 text-[11px] text-midnight-soft leading-relaxed">
+          <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+          No rates available. Books are being sold in their base currency only.
+        </p>
+      )}
+
+      <button
+        type="button"
+        onClick={refresh}
+        disabled={busy}
+        className="mt-3 w-full border border-midnight/20 px-3 py-2 text-[11px] tracking-[0.16em] uppercase text-midnight/70 hover:border-gold hover:text-gold-deep transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
+      >
+        <RefreshCw size={13} className={busy ? "animate-spin" : ""} />
+        Update rates now
+      </button>
+
+      {message && <p className="mt-2 text-[11px] text-midnight/60">{message}</p>}
+
+      <p className="mt-2.5 text-[10px] text-midnight/35 leading-relaxed">
+        Refreshed automatically about twice a day. Rates are cached, so nothing
+        is fetched while a shopper is browsing.
       </p>
     </div>
   );

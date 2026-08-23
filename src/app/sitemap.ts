@@ -22,6 +22,7 @@ const STATIC_PATHS = [
   "deliverance-request",
   "blog",
   "books",
+  "war-against-marine-kingdom",
   "zoom",
   "media",
   "gallery",

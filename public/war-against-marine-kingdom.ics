@@ -1,0 +1,52 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//VOGIM Prayer Land//War Against Marine Kingdom//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:War Against Marine Kingdom
+BEGIN:VEVENT
+UID:marine-kingdom-20260925@vogimprayerland.org
+DTSTAMP:20260823T000000Z
+DTSTART:20260925T180000Z
+DTEND:20260925T210000Z
+SUMMARY:War Against Marine Kingdom - Night 01: Exposing the Marine Covenant
+DESCRIPTION:Prophetic Deliverance Crusade - live on Zoom. Zoom ID 788 5810 191. Free to attend. https://www.vogimprayerland.org/war-against-marine-kingdom/
+LOCATION:Zoom - ID 788 5810 191
+URL:https://www.vogimprayerland.org/war-against-marine-kingdom/
+BEGIN:VALARM
+TRIGGER:-PT30M
+ACTION:DISPLAY
+DESCRIPTION:War Against Marine Kingdom starts in 30 minutes
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:marine-kingdom-20260926@vogimprayerland.org
+DTSTAMP:20260823T000000Z
+DTSTART:20260926T180000Z
+DTEND:20260926T210000Z
+SUMMARY:War Against Marine Kingdom - Night 02: Breaking Spiritual Marriage & Altars
+DESCRIPTION:Prophetic Deliverance Crusade - live on Zoom. Zoom ID 788 5810 191. Free to attend. https://www.vogimprayerland.org/war-against-marine-kingdom/
+LOCATION:Zoom - ID 788 5810 191
+URL:https://www.vogimprayerland.org/war-against-marine-kingdom/
+BEGIN:VALARM
+TRIGGER:-PT30M
+ACTION:DISPLAY
+DESCRIPTION:War Against Marine Kingdom starts in 30 minutes
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:marine-kingdom-20260927@vogimprayerland.org
+DTSTAMP:20260823T000000Z
+DTSTART:20260927T180000Z
+DTEND:20260927T210000Z
+SUMMARY:War Against Marine Kingdom - Night 03: Total Deliverance & Restoration
+DESCRIPTION:Prophetic Deliverance Crusade - live on Zoom. Zoom ID 788 5810 191. Free to attend. https://www.vogimprayerland.org/war-against-marine-kingdom/
+LOCATION:Zoom - ID 788 5810 191
+URL:https://www.vogimprayerland.org/war-against-marine-kingdom/
+BEGIN:VALARM
+TRIGGER:-PT30M
+ACTION:DISPLAY
+DESCRIPTION:War Against Marine Kingdom starts in 30 minutes
+END:VALARM
+END:VEVENT
+END:VCALENDAR

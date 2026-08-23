@@ -263,29 +263,41 @@ export function CheckoutClient({
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={loading || blocked || noMethod}
-          className="btn-gold mt-8 w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <>
-              Redirecting <Loader2 size={16} className="animate-spin" />
-            </>
-          ) : (
-            <>
-              Pay {formatPrice(subtotal, currency)} {currency}
-              <ArrowUpRight size={16} />
-            </>
-          )}
-        </button>
+        {/* With no gateway configured there is nothing to submit to. Showing a
+            "Pay ₦x" button and a "you finish securely on Flutterwave" note under
+            a notice saying payment is unavailable reads as a broken page —
+            offer the way to reach the ministry instead. */}
+        {noMethod ? (
+          <Link href="/contact/" className="btn-gold mt-8 w-full sm:w-auto justify-center">
+            Contact the ministry <ArrowUpRight size={16} />
+          </Link>
+        ) : (
+          <>
+            <button
+              type="submit"
+              disabled={loading || blocked}
+              className="btn-gold mt-8 w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  Redirecting <Loader2 size={16} className="animate-spin" />
+                </>
+              ) : (
+                <>
+                  Pay {formatPrice(subtotal, currency)} {currency}
+                  <ArrowUpRight size={16} />
+                </>
+              )}
+            </button>
 
-        <p className="mt-5 flex items-center gap-2 text-xs text-midnight/50">
-          <Lock size={13} className="text-gold-deep shrink-0" />
-          You finish securely on{" "}
-          {provider === "paypal" ? "PayPal" : "Flutterwave"}&rsquo;s own checkout.
-          Card details never touch this site.
-        </p>
+            <p className="mt-5 flex items-center gap-2 text-xs text-midnight/50">
+              <Lock size={13} className="text-gold-deep shrink-0" />
+              You finish securely on{" "}
+              {provider === "paypal" ? "PayPal" : "Flutterwave"}&rsquo;s own
+              checkout. Card details never touch this site.
+            </p>
+          </>
+        )}
       </form>
 
       {/* ORDER SUMMARY */}
