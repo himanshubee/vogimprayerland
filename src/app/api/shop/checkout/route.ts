@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CURRENCIES } from "@/lib/currencies";
 import {
+  FlutterwaveError,
   SITE_URL,
   createPaymentLink,
   isCurrency,
   isFlutterwaveConfigured,
 } from "@/lib/flutterwave";
-import { createPaypalOrder, isPaypalConfigured } from "@/lib/paypal";
-import { initializeTransaction, isPaystackConfigured } from "@/lib/paystack";
+import { PaypalError, createPaypalOrder, isPaypalConfigured } from "@/lib/paypal";
+import {
+  PaystackError,
+  initializeTransaction,
+  isPaystackConfigured,
+} from "@/lib/paystack";
 import {
   gateway,
   isProvider,
@@ -156,7 +161,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Your basket is empty." }, { status: 400 });
   }
 
-  const books = await getSellableBooksByIds([...cart.keys()]);
+  let books: Map<string, Book>;
+  try {
+    books = await getSellableBooksByIds([...cart.keys()]);
+  } catch (err) {
+    // Outside a try this escaped as an HTML 500, which the browser could not
+    // parse — so the buyer saw the client's generic fallback instead of a
+    // reason. Every failure past this point returns JSON.
+    console.error("[shop/checkout] could not load the catalogue:", err);
+    return NextResponse.json(
+      { error: "We could not reach our catalogue just now. Please try again in a moment." },
+      { status: 503 }
+    );
+  }
+
   const { items, total, missing } = priceLines(cart, books, currency);
 
   if (missing.length) {
@@ -268,11 +286,31 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ link, reference: ref }, { status: 201 });
   } catch (err) {
-    console.error(`[shop/checkout] ${provider} failed:`, err);
+    console.error(`[shop/checkout] ${info.label} failed:`, err);
+
+    const gatewayError =
+      err instanceof PaystackError ||
+      err instanceof FlutterwaveError ||
+      err instanceof PaypalError;
+
+    // A gateway that answered with a complaint is telling us something useful;
+    // one we could not reach at all is a transient network problem.
+    const unreachable = gatewayError && (err as { status: number }).status === 0;
+
+    if (gatewayError && !unreachable) {
+      return NextResponse.json(
+        {
+          error: `${info.label} could not start this payment: ${
+            (err as Error).message
+          }`,
+        },
+        { status: 502 }
+      );
+    }
+
     return NextResponse.json(
       {
-        error:
-          "We could not reach the payment provider. Please try again in a moment.",
+        error: `We could not reach ${info.label} just now. Please try again in a moment, or choose another payment method.`,
       },
       { status: 502 }
     );
