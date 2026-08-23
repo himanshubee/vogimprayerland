@@ -13,6 +13,9 @@ import {
   isFlutterwaveConfigured,
   isTestMode,
 } from "@/lib/flutterwave";
+import { isPaystackConfigured, isPaystackTestMode } from "@/lib/paystack";
+import { isPaypalConfigured, isPaypalSandbox } from "@/lib/paypal";
+import { resolveGatewayCurrencies, type Provider } from "@/lib/gateways";
 
 export async function generateMetadata(): Promise<Metadata> {
   return getPageMeta("give");
@@ -61,7 +64,21 @@ export default async function GivePage() {
   }
 
   const defaultCurrency = (c.defaultCurrency || "NGN").toUpperCase();
-  const giveEnabled = isFlutterwaveConfigured() && currencies.length > 0;
+  // Which gateways can take a gift, and which are pointed at a sandbox.
+  const configured: Record<Provider, boolean> = {
+    flutterwave: isFlutterwaveConfigured(),
+    paystack: isPaystackConfigured(),
+    paypal: isPaypalConfigured(),
+  };
+  const sandbox: Record<Provider, boolean> = {
+    flutterwave: isTestMode(),
+    paystack: isPaystackTestMode(),
+    paypal: isPaypalSandbox(),
+  };
+  const gatewayCurrencies = resolveGatewayCurrencies(process.env);
+
+  const giveEnabled =
+    Object.values(configured).some(Boolean) && currencies.length > 0;
 
   // Stablecoins are received directly to the ministry's Treasury wallets —
   // the section only exists once an address has been filled in via the admin.
@@ -78,8 +95,8 @@ export default async function GivePage() {
     // prerendered, so the decision is baked in at build time.
     console.error(
       `[give] On-site giving is DISABLED — ${
-        !isFlutterwaveConfigured()
-          ? "FLW_SECRET_KEY is not set"
+        !Object.values(configured).some(Boolean)
+          ? "no payment gateway is configured (FLW_SECRET_KEY / PAYSTACK_SECRET_KEY / PAYPAL_CLIENT_ID+PAYPAL_SECRET)"
           : `no valid currencies in "${c.giveCurrencies}"`
       }. Falling back to ${c.giveButtonHref}`
     );
@@ -136,7 +153,9 @@ export default async function GivePage() {
                 funds={strings(c.giveFunds)}
                 submitLabel={c.giveButtonLabel}
                 defaultCurrency={defaultCurrency}
-                testMode={isTestMode()}
+                configured={configured}
+                sandbox={sandbox}
+                gatewayCurrencies={gatewayCurrencies}
                 fallbackHref={c.giveButtonHref}
               />
             ) : (

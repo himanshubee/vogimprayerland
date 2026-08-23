@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { settlePaypalOrder } from "@/lib/book-orders";
+import { isBookRef, settlePaypalOrder } from "@/lib/book-orders";
+import { settlePaypalDonation } from "@/lib/donations";
 import { PaypalError, verifyPaypalWebhook } from "@/lib/paypal";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,9 @@ export const dynamic = "force-dynamic";
  * signature — unlike Flutterwave there is no shared secret to compare. As
  * everywhere else, the payload's own claims are not trusted: the order is
  * re-read from PayPal before anything is marked paid.
+ *
+ * One webhook URL serves both flows. A reference beginning VOGIM-BOOK- is a
+ * book order; anything else is a gift.
  */
 
 export async function POST(req: NextRequest) {
@@ -73,11 +77,21 @@ export async function POST(req: NextRequest) {
 
   const ref = resource.invoice_id || resource.custom_id || undefined;
 
+  // Without our reference the kind is unknowable, so treat it as a book order:
+  // that path can still find the row by PayPal's own order id.
+  const isBook = !ref || isBookRef(ref);
+
   try {
-    const result = await settlePaypalOrder(orderId, "webhook", ref);
-    if (result.outcome !== "paid" && result.outcome !== "already_settled") {
+    const result = isBook
+      ? await settlePaypalOrder(orderId, "webhook", ref)
+      : await settlePaypalDonation(orderId, "webhook", ref);
+    const settled =
+      result.outcome === "already_settled" ||
+      (isBook ? result.outcome === "paid" : result.outcome === "successful");
+    if (!settled) {
       console.warn(
-        `[shop/paypal/webhook] ${ref ?? orderId}: ${result.outcome} — ${result.reason}`
+        `[shop/paypal/webhook] ${ref ?? orderId}: ${result.outcome}` +
+          ("reason" in result ? ` — ${result.reason}` : "")
       );
     }
     // Always 200 once authenticated — a retry cannot fix a mismatch, and the

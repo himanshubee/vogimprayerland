@@ -6,6 +6,8 @@ import {
   formatAmount,
   getDonation,
   settleDonation,
+  settlePaypalDonation,
+  settlePaystackDonation,
   type DonationDoc,
 } from "@/lib/donations";
 
@@ -35,11 +37,94 @@ type View = {
  * The query string is *not* trusted — the gift is confirmed by verifying the
  * transaction id against Flutterwave's API (see settleDonation).
  */
+/** The same four outcomes, however the gift was taken. */
+function fromResult(
+  result: Awaited<ReturnType<typeof settleDonation>>,
+  ref: string
+): View {
+  if (result.outcome === "successful" || result.outcome === "already_settled") {
+    return {
+      tone: "success",
+      heading: { lead: "Your gift has been", accent: "received." },
+      message:
+        "Thank you for sowing into the work of this ministry. A confirmation has been sent to your email, and our team is standing with you in prayer.",
+      donation: result.donation,
+    };
+  }
+  if (result.outcome === "mismatch") {
+    return {
+      tone: "pending",
+      heading: { lead: "We are checking", accent: "your gift." },
+      message:
+        "Your payment went through, but the details did not match our record exactly. Our team has been alerted and will confirm it with you personally — please keep your reference below.",
+      donation: result.donation,
+    };
+  }
+  if (result.outcome === "failed") {
+    return {
+      tone: "error",
+      heading: { lead: "The payment did", accent: "not go through." },
+      message:
+        "No money has left your account. You are welcome to try again, or reach us directly if the problem continues.",
+      donation: result.donation,
+    };
+  }
+  return {
+    tone: "pending",
+    heading: { lead: "We could not", accent: "confirm this yet." },
+    message:
+      "We could not match this transaction to a gift on our side. If your account has been debited, please contact us with the reference below and we will resolve it.",
+    donation: result.donation,
+  };
+}
+
+/** The gateway could not be reached at all — the gift may still have gone through. */
+function unreachable(donation: DonationDoc | null): View {
+  return {
+    tone: "pending",
+    heading: { lead: "Your gift is", accent: "being confirmed." },
+    message:
+      "We could not reach the payment provider to confirm this right now. If your account was debited, the gift will still be recorded — our team checks every transaction. Please keep your reference below.",
+    donation,
+  };
+}
+
 async function resolve(sp: Search): Promise<View> {
   const status = one(sp.status).toLowerCase();
-  const txRef = one(sp.tx_ref);
+  const txRef = one(sp.tx_ref) || one(sp.ref);
   const transactionId = one(sp.transaction_id);
 
+  // ── PayPal ────────────────────────────────────────────────────────────
+  // "token" is PayPal's order id on the return URL.
+  const paypalOrderId = one(sp.token);
+  if (paypalOrderId) {
+    try {
+      const result = await settlePaypalDonation(
+        paypalOrderId,
+        "redirect",
+        txRef || undefined
+      );
+      return fromResult(result, txRef);
+    } catch (err) {
+      console.error("[give/thank-you] paypal settle failed:", err);
+      return unreachable(txRef ? await getDonation(txRef).catch(() => null) : null);
+    }
+  }
+
+  // ── Paystack ──────────────────────────────────────────────────────────
+  // Paystack returns ?reference= and ?trxref=, both our own reference.
+  const paystackRef = one(sp.reference) || one(sp.trxref);
+  if (paystackRef) {
+    try {
+      const result = await settlePaystackDonation(paystackRef, "redirect");
+      return fromResult(result, paystackRef);
+    } catch (err) {
+      console.error("[give/thank-you] paystack settle failed:", err);
+      return unreachable(await getDonation(paystackRef).catch(() => null));
+    }
+  }
+
+  // ── Flutterwave ───────────────────────────────────────────────────────
   if (transactionId) {
     try {
       const result = await settleDonation(transactionId, "redirect");

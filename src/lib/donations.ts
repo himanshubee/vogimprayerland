@@ -9,6 +9,9 @@ import {
   type CurrencyCode,
   type VerifiedTransaction,
 } from "@/lib/flutterwave";
+import { verifyTransaction as verifyPaystack } from "@/lib/paystack";
+import { capturePaypalOrder } from "@/lib/paypal";
+import { gatewayLabel, type Provider } from "@/lib/gateways";
 
 /**
  * Donation records for gifts taken through Flutterwave.
@@ -24,12 +27,17 @@ const COLLECTION = "donations";
 
 export type DonationStatus = "pending" | "successful" | "failed" | "cancelled";
 
+export type { Provider } from "@/lib/gateways";
+
 /** Which callback settled the gift. "reconcile" = an admin sweep caught it. */
 export type SettledVia = "redirect" | "webhook" | "reconcile";
 
 export type DonationDoc = {
   _id: string; // tx_ref — our own reference, unique per attempt
   status: DonationStatus;
+  /** Which gateway the gift was taken through. Absent on pre-multi-gateway
+   *  rows, which were all Flutterwave. */
+  provider?: Provider;
   amount: number;
   currency: CurrencyCode;
   fund: string;
@@ -41,9 +49,12 @@ export type DonationDoc = {
   createdAt: Date;
   updatedAt: Date;
   paidAt?: Date;
-  /** Flutterwave's side of the record, filled in on settlement. */
+  /** The gateway's side of the record, filled in on settlement. */
   flwId?: number;
   flwRef?: string;
+  paystackId?: number;
+  paypalOrderId?: string;
+  paypalCaptureId?: string;
   chargedAmount?: number;
   paymentType?: string;
   settledVia?: SettledVia;
@@ -53,6 +64,7 @@ export type DonationDoc = {
 };
 
 export type NewDonation = {
+  provider: Provider;
   amount: number;
   currency: CurrencyCode;
   fund: string;
@@ -90,6 +102,7 @@ export async function createPendingDonation(
   await db.collection<DonationDoc>(COLLECTION).insertOne({
     _id: txRef,
     status: "pending",
+    provider: input.provider,
     amount: input.amount,
     currency: input.currency,
     fund: input.fund,
@@ -159,19 +172,35 @@ export async function settleDonationByReference(
   return settleVerified(tx, via);
 }
 
-async function settleVerified(
-  tx: VerifiedTransaction,
+/**
+ * Settle a gift against whatever the gateway reported, once the two agree.
+ *
+ * Gateway-neutral on purpose: each gateway's client is asked its own way, then
+ * hands the same four facts here — status, amount, currency, and the fields to
+ * record. A gift is only ever marked successful when the *verified*
+ * transaction matches what we stored before checkout, so a tampered redirect
+ * URL cannot fake one.
+ */
+async function settleAgainst(
+  ref: string,
+  verified: {
+    status: string;
+    amount: number;
+    currency: string;
+    label: string;
+    fields: Partial<DonationDoc>;
+  },
   via: SettledVia
 ): Promise<SettleResult> {
   const db = await getDb();
   const donations = db.collection<DonationDoc>(COLLECTION);
-  const existing = await donations.findOne({ _id: tx.txRef });
+  const existing = await donations.findOne({ _id: ref });
 
   if (!existing) {
     return {
       outcome: "not_found",
       donation: null,
-      reason: `No local record for reference ${tx.txRef}.`,
+      reason: `No local record for reference ${ref}.`,
     };
   }
 
@@ -181,65 +210,63 @@ async function settleVerified(
   }
 
   const now = new Date();
+  const ok = verified.status === "successful";
 
-  if (tx.status !== "successful") {
+  if (!ok) {
+    const cancelled = /cancel|void|abandon/i.test(verified.status);
     await donations.updateOne(
-      { _id: tx.txRef },
+      { _id: ref },
       {
         $set: {
-          status: tx.status === "cancelled" ? "cancelled" : "failed",
+          status: cancelled ? "cancelled" : "failed",
           updatedAt: now,
-          flwId: tx.id,
-          flwRef: tx.flwRef,
           settledVia: via,
-          failureReason: `Flutterwave reported status “${tx.status}”.`,
+          failureReason: `${verified.label} reported status “${verified.status}”.`,
+          ...verified.fields,
         },
       }
     );
     return {
       outcome: "failed",
-      donation: await donations.findOne({ _id: tx.txRef }),
-      reason: `The payment was not completed (${tx.status}).`,
+      donation: await donations.findOne({ _id: ref }),
+      reason: `The payment was not completed (${verified.status}).`,
     };
   }
 
-  // Successful at Flutterwave — but only honour it if it matches what we asked for.
-  if (tx.currency !== existing.currency) {
-    const reason = `Currency mismatch: expected ${existing.currency}, received ${tx.currency}.`;
+  // Successful — but only honour it if it matches what we asked for.
+  if (verified.currency && verified.currency !== existing.currency) {
+    const reason = `Currency mismatch: expected ${existing.currency}, received ${verified.currency}.`;
     await donations.updateOne(
-      { _id: tx.txRef },
-      { $set: { updatedAt: now, flwId: tx.id, flwRef: tx.flwRef, failureReason: reason } }
+      { _id: ref },
+      { $set: { updatedAt: now, ...verified.fields, failureReason: reason } }
     );
     return { outcome: "mismatch", donation: existing, reason };
   }
 
-  if (tx.amount + 0.001 < existing.amount) {
-    const reason = `Amount mismatch: expected ${existing.amount}, received ${tx.amount}.`;
+  if (verified.amount + 0.001 < existing.amount) {
+    const reason = `Amount mismatch: expected ${existing.amount}, received ${verified.amount}.`;
     await donations.updateOne(
-      { _id: tx.txRef },
-      { $set: { updatedAt: now, flwId: tx.id, flwRef: tx.flwRef, failureReason: reason } }
+      { _id: ref },
+      { $set: { updatedAt: now, ...verified.fields, failureReason: reason } }
     );
     return { outcome: "mismatch", donation: existing, reason };
   }
 
   await donations.updateOne(
-    { _id: tx.txRef },
+    { _id: ref },
     {
       $set: {
         status: "successful",
         updatedAt: now,
         paidAt: now,
-        flwId: tx.id,
-        flwRef: tx.flwRef,
-        chargedAmount: tx.chargedAmount,
-        paymentType: tx.paymentType,
         settledVia: via,
+        ...verified.fields,
       },
       $unset: { failureReason: "" },
     }
   );
 
-  const donation = (await donations.findOne({ _id: tx.txRef })) as DonationDoc;
+  const donation = (await donations.findOne({ _id: ref })) as DonationDoc;
 
   // Post-settlement side effects must never break the donor's confirmation.
   await notifyAndLink(donation).catch((err) =>
@@ -247,6 +274,109 @@ async function settleVerified(
   );
 
   return { outcome: "successful", donation };
+}
+
+async function settleVerified(
+  tx: VerifiedTransaction,
+  via: SettledVia
+): Promise<SettleResult> {
+  return settleAgainst(
+    tx.txRef,
+    {
+      status: tx.status,
+      amount: tx.amount,
+      currency: tx.currency,
+      label: "Flutterwave",
+      fields: {
+        flwId: tx.id,
+        flwRef: tx.flwRef,
+        chargedAmount: tx.chargedAmount,
+        paymentType: tx.paymentType,
+      },
+    },
+    via
+  );
+}
+
+/* ---- Paystack ---- */
+
+/** Settle by *our* reference, which is what Paystack verification keys on. */
+export async function settlePaystackDonation(
+  ref: string,
+  via: SettledVia
+): Promise<SettleResult> {
+  const tx = await verifyPaystack(ref);
+  if (!tx) {
+    return {
+      outcome: "not_found",
+      donation: null,
+      reason: "Paystack has no transaction for that reference.",
+    };
+  }
+  return settleAgainst(
+    tx.reference,
+    {
+      // Paystack says "success"; the shared settler speaks "successful".
+      status: tx.status === "success" ? "successful" : tx.status,
+      amount: tx.amount,
+      currency: tx.currency,
+      label: "Paystack",
+      fields: {
+        paystackId: tx.id,
+        chargedAmount: tx.amount,
+        paymentType: tx.channel || "paystack",
+      },
+    },
+    via
+  );
+}
+
+/* ---- PayPal ---- */
+
+/**
+ * Capture the PayPal order and settle ours. `ref` is our own reference when we
+ * have it; PayPal also echoes it back as invoice_id, which is the fallback
+ * when the donor returns without it in the query string.
+ */
+export async function settlePaypalDonation(
+  paypalOrderId: string,
+  via: SettledVia,
+  ref?: string
+): Promise<SettleResult> {
+  const captured = await capturePaypalOrder(paypalOrderId);
+  if (!captured) {
+    return {
+      outcome: "not_found",
+      donation: null,
+      reason: "PayPal has no record of that order.",
+    };
+  }
+
+  const reference = ref || captured.reference;
+  if (!reference) {
+    return {
+      outcome: "not_found",
+      donation: null,
+      reason: `No reference on PayPal order ${paypalOrderId}.`,
+    };
+  }
+
+  return settleAgainst(
+    reference,
+    {
+      status: captured.status === "COMPLETED" ? "successful" : captured.status,
+      amount: captured.amount,
+      currency: captured.currency,
+      label: "PayPal",
+      fields: {
+        paypalOrderId: captured.id,
+        paypalCaptureId: captured.captureId,
+        chargedAmount: captured.amount,
+        paymentType: "paypal",
+      },
+    },
+    via
+  );
 }
 
 /** CRM contact + timeline entry, and an email to the ministry inbox. */
@@ -260,7 +390,8 @@ async function notifyAndLink(d: DonationDoc) {
     amount: `${pretty} ${d.currency}`,
     fund: d.fund,
     reference: d._id,
-    "flutterwave id": String(d.flwId ?? ""),
+    "paid with": gatewayLabel(d.provider ?? "flutterwave"),
+    "gateway reference": String(d.flwId ?? d.paystackId ?? d.paypalCaptureId ?? ""),
     "payment method": d.paymentType ?? "",
     message: `Gift of ${pretty} — ${d.fund}`,
   };
@@ -283,6 +414,8 @@ async function notifyAndLink(d: DonationDoc) {
 export type DonationView = {
   ref: string;
   status: DonationStatus;
+  provider: Provider;
+  providerLabel: string;
   amount: number;
   currency: string;
   amountLabel: string;
@@ -296,6 +429,8 @@ export type DonationView = {
   paidAt: string | null;
   flwId: number | null;
   flwRef: string;
+  /** Whichever gateway reference exists, for searching in the admin. */
+  gatewayRef: string;
   chargedAmount: number | null;
   paymentType: string;
   settledVia: string;
@@ -306,9 +441,12 @@ const iso = (d: Date | string | undefined) =>
   d ? (d instanceof Date ? d : new Date(d)).toISOString() : null;
 
 function view(d: DonationDoc): DonationView {
+  const provider: Provider = d.provider ?? "flutterwave";
   return {
     ref: d._id,
     status: d.status,
+    provider,
+    providerLabel: gatewayLabel(provider),
     amount: d.amount,
     currency: d.currency,
     amountLabel: formatAmount(d.amount, d.currency),
@@ -321,6 +459,12 @@ function view(d: DonationDoc): DonationView {
     createdAt: iso(d.createdAt) ?? new Date(0).toISOString(),
     paidAt: iso(d.paidAt),
     flwId: d.flwId ?? null,
+    gatewayRef:
+      d.paypalCaptureId ||
+      d.flwRef ||
+      (d.paystackId ? String(d.paystackId) : "") ||
+      d.paypalOrderId ||
+      "",
     flwRef: d.flwRef ?? "",
     chargedAmount: d.chargedAmount ?? null,
     paymentType: d.paymentType ?? "",
@@ -380,7 +524,19 @@ export async function reconcilePendingDonations(
 
   for (const d of pending) {
     try {
-      const result = await settleDonationByReference(d._id, "reconcile");
+      const provider: Provider = d.provider ?? "flutterwave";
+      const result =
+        provider === "paystack"
+          ? await settlePaystackDonation(d._id, "reconcile")
+          : provider === "paypal"
+            ? d.paypalOrderId
+              ? await settlePaypalDonation(d.paypalOrderId, "reconcile", d._id)
+              : ({
+                  outcome: "not_found",
+                  donation: null,
+                  reason: "No PayPal order id.",
+                } as SettleResult)
+            : await settleDonationByReference(d._id, "reconcile");
       if (result.outcome === "successful" || result.outcome === "already_settled") {
         report.settled += 1;
       } else if (result.outcome === "not_found") {

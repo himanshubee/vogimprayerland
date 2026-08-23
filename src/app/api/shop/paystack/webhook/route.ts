@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { settlePaystackOrder } from "@/lib/book-orders";
+import { isBookRef, settlePaystackOrder } from "@/lib/book-orders";
+import { settlePaystackDonation } from "@/lib/donations";
 import { PaystackError, verifyPaystackWebhook } from "@/lib/paystack";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,11 @@ export const dynamic = "force-dynamic";
  * with HMAC-SHA512 using the secret key we already hold. As everywhere else,
  * the payload's own claims are not trusted — the transaction is re-verified
  * against Paystack's API before anything is marked paid.
+ *
+ * Paystack allows one webhook URL per account, so this single route serves
+ * both flows. A reference beginning VOGIM-BOOK- is a book order; anything else
+ * is a gift. Without that dispatch every donation would arrive here, find no
+ * matching order, and be logged as "not_found" while the donor waited.
  */
 
 export async function POST(req: NextRequest) {
@@ -45,11 +51,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, ignored: event || "unknown" });
   }
 
+  const isBook = isBookRef(reference);
+
   try {
-    const result = await settlePaystackOrder(reference, "webhook");
-    if (result.outcome !== "paid" && result.outcome !== "already_settled") {
+    const result = isBook
+      ? await settlePaystackOrder(reference, "webhook")
+      : await settlePaystackDonation(reference, "webhook");
+    const settled =
+      result.outcome === "already_settled" ||
+      (isBook ? result.outcome === "paid" : result.outcome === "successful");
+    if (!settled) {
       console.warn(
-        `[shop/paystack/webhook] ${reference}: ${result.outcome} — ${result.reason}`
+        `[shop/paystack/webhook] ${reference}: ${result.outcome}` +
+          ("reason" in result ? ` — ${result.reason}` : "")
       );
     }
     // Always 200 once authenticated — a retry cannot fix a mismatch, and the

@@ -82,7 +82,17 @@ export function DonationsClient({
     return items.filter((d) => {
       if (tab !== "all" && d.status !== tab) return false;
       if (!q) return true;
-      return [d.name, d.email, d.phone, d.fund, d.ref, d.flwRef, String(d.flwId ?? "")]
+      return [
+        d.name,
+        d.email,
+        d.phone,
+        d.fund,
+        d.ref,
+        d.providerLabel,
+        d.gatewayRef,
+        d.flwRef,
+        String(d.flwId ?? ""),
+      ]
         .join(" ")
         .toLowerCase()
         .includes(q);
@@ -403,7 +413,8 @@ export function DonationsClient({
                   ["Confirmed via", open.settledVia],
                   ["Charged", open.chargedAmount ? String(open.chargedAmount) : ""],
                   ["Our reference", open.ref],
-                  ["Flutterwave ID", open.flwId ? String(open.flwId) : ""],
+                  ["Paid with", open.providerLabel],
+                  ["Gateway reference", open.gatewayRef],
                   ["Flutterwave ref", open.flwRef],
                   ["Problem", open.failureReason],
                 ] as [string, string][]

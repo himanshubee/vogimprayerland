@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowUpRight, Loader2, Lock, Plus, X } from "lucide-react";
+import { ArrowUpRight, CreditCard, Loader2, Lock, Plus, X } from "lucide-react";
+import { CURRENCIES, type CurrencyCode } from "@/lib/currencies";
+import {
+  gatewayOptions,
+  type GatewayCurrencies,
+  type GatewayOption,
+  type Provider,
+} from "@/lib/gateways";
 
 type Props = {
   currencies: { code: string; symbol: string; min: number }[];
@@ -11,8 +18,13 @@ type Props = {
   funds: string[];
   submitLabel: string;
   defaultCurrency: string;
-  testMode: boolean;
-  /** Where to send the donor if the gateway is unavailable server-side. */
+  /** Which gateways have credentials on the server. */
+  configured: Record<Provider, boolean>;
+  /** Gateways pointed at a sandbox rather than real money. */
+  sandbox: Record<Provider, boolean>;
+  /** What each gateway can settle on this account. */
+  gatewayCurrencies: GatewayCurrencies;
+  /** Where to send the donor if no gateway is available server-side. */
   fallbackHref: string;
 };
 
@@ -29,7 +41,9 @@ export function GiveForm({
   funds,
   submitLabel,
   defaultCurrency,
-  testMode,
+  configured,
+  sandbox,
+  gatewayCurrencies,
   fallbackHref,
 }: Props) {
   const reduce = useReducedMotion();
@@ -43,6 +57,7 @@ export function GiveForm({
   const [open, setOpen] = useState(false);
   const [fund, setFund] = useState(funds[0] ?? "");
   const [showExtras, setShowExtras] = useState(false);
+  const [preferred, setPreferred] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -52,6 +67,17 @@ export function GiveForm({
     [currencies, currency]
   );
   const amounts = presets[currency] ?? [];
+
+  // A gift can be converted at the day's rate, so every currency is reachable.
+  const options = gatewayOptions(
+    configured,
+    gatewayCurrencies,
+    currency,
+    Object.keys(CURRENCIES) as CurrencyCode[]
+  );
+  const usable = options.filter((o) => o.currency !== null);
+  const selected: GatewayOption | null =
+    usable.find((o) => o.id === preferred) ?? usable[0] ?? null;
   const amount = choice === OTHER ? Number(custom) : Number(choice);
   const valid = Number.isFinite(amount) && amount >= (active?.min ?? 1);
   const pretty = `${active?.symbol ?? ""}${
@@ -117,6 +143,7 @@ export function GiveForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          provider: selected?.id ?? "flutterwave",
           amount,
           currency,
           fund,
@@ -133,7 +160,7 @@ export function GiveForm({
       // The gateway is not configured on the server. Never dead-end a donor —
       // hand them to the ministry's hosted giving page instead.
       if (res.status === 503 && fallbackHref) {
-        window.location.href = fallbackHref;
+        window.location.assign(fallbackHref);
         return;
       }
 
@@ -142,8 +169,10 @@ export function GiveForm({
           payload.error || "We could not start your gift. Please try again."
         );
       }
-      // Hand off to Flutterwave's hosted checkout.
-      window.location.href = payload.link;
+      // Hand off to the gateway's hosted checkout. assign() rather than
+      // `location.href = …`: identical navigation, but the compiler lint reads
+      // a property write on a global as a mutation.
+      window.location.assign(payload.link);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Something went wrong. Please try again."
@@ -403,6 +432,45 @@ export function GiveForm({
                   </button>
                 )}
 
+                {/* HOW TO GIVE — only methods that can actually take this gift.
+                    One is not a choice, so the picker only appears when there
+                    is something to choose between. */}
+                {usable.length > 1 && (
+                  <>
+                    <span className={`${labelCls} mt-7 mb-2`}>How would you like to give?</span>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {usable.map((o) => {
+                        const isOn = selected?.id === o.id;
+                        return (
+                          <button
+                            key={o.id}
+                            type="button"
+                            onClick={() => setPreferred(o.id)}
+                            aria-pressed={isOn}
+                            className={`text-left border px-3.5 py-3 transition-colors ${
+                              isOn
+                                ? "border-gold bg-gold/10"
+                                : "border-midnight/20 hover:border-gold"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2 text-midnight">
+                              <span className="text-gold-deep">
+                                {o.id === "paypal" ? <PaypalMark /> : <CreditCard size={16} />}
+                              </span>
+                              <span className="text-sm font-medium">{o.label}</span>
+                            </span>
+                            {o.converted && o.currency && (
+                              <span className="mt-1 block text-[10px] text-gold-deep leading-snug">
+                                charged in {o.currency}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+
                 {error && (
                   <p
                     role="alert"
@@ -412,16 +480,16 @@ export function GiveForm({
                   </p>
                 )}
 
-                {testMode && (
+                {selected && sandbox[selected.id] && (
                   <p className="mt-6 border border-dashed border-gold/60 bg-gold/5 px-4 py-3 text-xs text-midnight/70">
                     <strong className="text-midnight">Test mode.</strong> Running
-                    against Flutterwave&rsquo;s sandbox — no real money moves.
+                    against {selected.label}&rsquo;s sandbox — no real money moves.
                   </p>
                 )}
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !selected}
                   className="btn-gold mt-7 w-full justify-center disabled:opacity-60"
                 >
                   {loading ? (
@@ -435,9 +503,19 @@ export function GiveForm({
                   )}
                 </button>
 
-                <p className="mt-4 flex items-center justify-center gap-2 text-[11px] text-midnight/50 text-center">
-                  <Lock size={12} className="text-gold-deep shrink-0" />
-                  You&rsquo;ll finish securely on Flutterwave&rsquo;s checkout.
+                <p className="mt-4 flex items-start justify-center gap-2 text-[11px] text-midnight/50 text-center">
+                  <Lock size={12} className="text-gold-deep shrink-0 mt-0.5" />
+                  <span>
+                    You&rsquo;ll finish securely on{" "}
+                    {selected?.label ?? "the payment provider"}&rsquo;s checkout.
+                    {selected?.converted && selected.currency && (
+                      <>
+                        {" "}
+                        {selected.label} settles in {selected.currency}, so your
+                        gift is converted at today&rsquo;s rate.
+                      </>
+                    )}
+                  </span>
                 </p>
               </form>
             </motion.div>
@@ -445,5 +523,18 @@ export function GiveForm({
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+/** PayPal's monogram, drawn inline so no third-party asset is fetched. */
+function PaypalMark() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M7.3 21.3H4.1c-.4 0-.7-.4-.6-.8L6.3 3.2c.1-.4.4-.7.9-.7h6.2c3.3 0 5.5 1.7 5 5.1-.5 3.6-3.2 5.4-6.6 5.4H9.5c-.4 0-.8.3-.9.8l-.6 6.8c0 .4-.3.7-.7.7z" />
+      <path
+        d="M18.9 8.8c.6.9.7 2 .5 3.3-.5 3.6-3.2 5.4-6.6 5.4h-1.3c-.4 0-.8.3-.9.8l-.9 5.1c0 .3-.3.6-.6.6h-2.7c-.4 0-.6-.3-.6-.7l.5-3.1"
+        opacity="0.55"
+      />
+    </svg>
   );
 }
