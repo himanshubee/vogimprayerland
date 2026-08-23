@@ -37,11 +37,19 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-# .env.local / .env.production are tracked on purpose — they hold the shared,
-# non-secret config the server needs after `git pull`.
-# Real secrets belong in .env.production.local, which is NEVER committed and is
-# left untouched by `git pull` and `git reset --hard` during deploy.
+# env files — NONE are committed.
+#
+# .env.local and .env.production used to be tracked so `git pull` would carry
+# shared config to the server. That was fine while they held only non-secret
+# values, but real credentials drifted into them (database password, admin
+# password, gateway keys) and were pushed to GitHub. Nothing with a value in it
+# is tracked any more.
+#
+# All configuration now lives in .env.production.local on the server, which is
+# never committed and survives `git pull` and `git reset --hard` during deploy.
+# .env.example is the only committed env file: keys and documentation, no values.
+.env.local
+.env.production
 .env.production.local
 .env.development.local
 
