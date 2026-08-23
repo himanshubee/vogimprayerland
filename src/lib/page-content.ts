@@ -522,6 +522,77 @@ export const PAGE_SCHEMAS: PageSchema[] = [
       { key: "galleryCtaLabel", label: "Gallery CTA label", type: "text", default: "Request a custom recording", group: "Gallery" },
     ],
   },
+  {
+    // The crusade page is evergreen: it sells the event beforehand and hosts
+    // the recordings and testimonies afterwards. Everything that only exists
+    // after the crusade — the videos, the audio, the testimonies — defaults to
+    // empty and its section stays hidden until the ministry fills it in here,
+    // so nothing is ever claimed on the page before it is true.
+    key: "war-against-marine-kingdom",
+    label: "Crusade — Marine Kingdom",
+    path: "/war-against-marine-kingdom",
+    seoTitle: "War Against the Marine Kingdom — Prophetic Deliverance Crusade",
+    seoDescription:
+      "Three nights of prophetic warfare to break covenants with water spirits, dissolve spiritual marriages and reclaim destinies. 25–27 September 2026, 7PM WAT, live on Zoom. Free to attend.",
+    fields: [
+      { key: "heroEyebrow", label: "Hero eyebrow — before the crusade", type: "text", default: "Prophetic Deliverance Crusade · Live on Zoom", group: "Hero" },
+      { key: "heroEyebrowLive", label: "Hero eyebrow — while it runs", type: "text", default: "Live now · The crusade is on", group: "Hero" },
+      { key: "heroEyebrowAfter", label: "Hero eyebrow — afterwards", type: "text", default: "Prophetic Deliverance Crusade · 25–27 September 2026", group: "Hero" },
+      { key: "heroTitle", label: "Hero title", type: "textarea", default: "War against the\n_marine kingdom_", group: "Hero", hint: "New line = line break · _wrap_ for gold italic" },
+      { key: "heroIntro", label: "Hero intro — before & during", type: "textarea", default: "Three nights of prophetic warfare to break covenants with water spirits, dissolve spiritual marriages, and reclaim destinies held captive under marine altars.", group: "Hero" },
+      { key: "heroIntroAfter", label: "Hero intro — afterwards", type: "textarea", default: "Three nights of prophetic warfare — now yours to watch again, to listen to, and to send on to whoever still needs the covenant broken.", group: "Hero" },
+      { key: "heroImage", label: "Hero background image", type: "image", default: "https://img.vogimprayerland.org/1780648526688-worship.jpg", group: "Hero" },
+      { key: "heroScripture", label: "Scripture", type: "textarea", default: "He shall slay the dragon that is in the sea.", group: "Hero" },
+      { key: "heroScriptureRef", label: "Scripture reference", type: "text", default: "Isaiah 27:1", group: "Hero" },
+
+      { key: "liveTitle", label: "Live strip title", type: "text", default: "The room is open", group: "Live Now" },
+      { key: "liveBody", label: "Live strip body", type: "textarea", default: "We gather at 7:00 PM WAT each of the three nights. Come in, and bring someone with you.", group: "Live Now" },
+      { key: "liveButtonLabel", label: "Live button label", type: "text", default: "Join on Zoom now", group: "Live Now" },
+      { key: "liveButtonHref", label: "Live button link", type: "url", default: "https://us06web.zoom.us/j/7885810191?pwd=7RhsFPIzCcnZuKkwos0r7bhhmyS9ec.1", group: "Live Now" },
+
+      { key: "replayEyebrow", label: "Eyebrow", type: "text", default: "Watch & listen again", group: "Watch & Listen" },
+      { key: "replayTitle", label: "Title", type: "textarea", default: "Every night,\n_kept for you_", group: "Watch & Listen" },
+      { key: "replayIntro", label: "Intro", type: "textarea", default: "The recordings of the crusade — watch them here, or take the audio with you.", group: "Watch & Listen" },
+      { key: "night1Video", label: "Night 1 — video link", type: "url", default: "", group: "Watch & Listen", hint: "YouTube, Vimeo or a direct .mp4. Leave empty to hide." },
+      { key: "night1Audio", label: "Night 1 — audio link", type: "url", default: "", group: "Watch & Listen", hint: "A direct .mp3 plays on the page; anything else becomes a link." },
+      { key: "night2Video", label: "Night 2 — video link", type: "url", default: "", group: "Watch & Listen" },
+      { key: "night2Audio", label: "Night 2 — audio link", type: "url", default: "", group: "Watch & Listen" },
+      { key: "night3Video", label: "Night 3 — video link", type: "url", default: "", group: "Watch & Listen" },
+      { key: "night3Audio", label: "Night 3 — audio link", type: "url", default: "", group: "Watch & Listen" },
+      { key: "replayNote", label: "Note under the recordings", type: "textarea", default: "", group: "Watch & Listen", hint: "Optional — e.g. “Recorded live on Zoom.”" },
+
+      { key: "testimoniesEyebrow", label: "Eyebrow", type: "text", default: "Testimonies", group: "Testimonies" },
+      { key: "testimoniesTitle", label: "Title", type: "textarea", default: "What the waters\n_had to release_", group: "Testimonies" },
+      { key: "testimoniesIntro", label: "Intro", type: "textarea", default: "Sent in after the crusade by those who stood through all three nights.", group: "Testimonies" },
+      { key: "testimony1Text", label: "Testimony 1", type: "textarea", default: "", group: "Testimonies", hint: "Leave every testimony empty until they come in — the section stays hidden." },
+      { key: "testimony1Name", label: "Testimony 1 — name", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony1Place", label: "Testimony 1 — place", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony2Text", label: "Testimony 2", type: "textarea", default: "", group: "Testimonies" },
+      { key: "testimony2Name", label: "Testimony 2 — name", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony2Place", label: "Testimony 2 — place", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony3Text", label: "Testimony 3", type: "textarea", default: "", group: "Testimonies" },
+      { key: "testimony3Name", label: "Testimony 3 — name", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony3Place", label: "Testimony 3 — place", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony4Text", label: "Testimony 4", type: "textarea", default: "", group: "Testimonies" },
+      { key: "testimony4Name", label: "Testimony 4 — name", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony4Place", label: "Testimony 4 — place", type: "text", default: "", group: "Testimonies" },
+      { key: "testimonyVideo", label: "Video testimony link", type: "url", default: "", group: "Testimonies", hint: "Optional — a recorded testimony or a reel of several." },
+      { key: "testimonyVideoLabel", label: "Video testimony caption", type: "text", default: "Testimonies from the crusade", group: "Testimonies" },
+
+      { key: "flyerEyebrow", label: "Eyebrow", type: "text", default: "The flyer", group: "The Flyer" },
+      { key: "flyerTitle", label: "Title — before & during", type: "textarea", default: "Send this to someone\n_the waters are holding_", group: "The Flyer" },
+      { key: "flyerBody", label: "Body — before & during", type: "textarea", default: "One page, ready to print or forward. Post it in your church WhatsApp group, pin it on a notice board, hand it to a neighbour. Every copy that travels is a seat someone did not know was free.", group: "The Flyer" },
+      { key: "flyerTitleAfter", label: "Title — afterwards", type: "textarea", default: "The flyer that\n_went out_", group: "The Flyer" },
+      { key: "flyerBodyAfter", label: "Body — afterwards", type: "textarea", default: "The awareness flyer for the crusade, kept here for the record — and for anyone gathering people for the next one.", group: "The Flyer" },
+
+      { key: "nightsEyebrow", label: "Eyebrow", type: "text", default: "Three nights", group: "Three Nights" },
+      { key: "nightsTitle", label: "Title — before & during", type: "textarea", default: "The altar descends\n_night by night_", group: "Three Nights" },
+      { key: "nightsTitleAfter", label: "Title — afterwards", type: "textarea", default: "What the Lord did\n_night by night_", group: "Three Nights" },
+
+      { key: "closingQuote", label: "Closing quote", type: "textarea", default: "Fought from victory — never against a human being.", group: "Closing" },
+      { key: "closingRef", label: "Closing reference", type: "text", default: "Ephesians 6:12", group: "Closing" },
+    ],
+  },
 ];
 
 export function getSchema(key: string): PageSchema | null {

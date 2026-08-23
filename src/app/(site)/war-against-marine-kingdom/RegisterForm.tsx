@@ -11,10 +11,42 @@ import { ArrowUpRight, CalendarPlus, Check, Loader2 } from "lucide-react";
  * form on the site uses — so a registrant lands in the admin dashboard, is
  * emailed to the ministry inbox, and becomes a CRM contact automatically. The
  * team reads and exports them from /admin, which is password-protected.
+ *
+ * The same form serves the page after the crusade too: once the dates are
+ * past, reserving a seat is meaningless, so it switches to collecting people
+ * who want the next crusade first. Only the words and the intent change — the
+ * fields, validation and destination are identical.
  */
 
 const PROGRAM = "War Against the Marine Kingdom";
 const ZOOM_ID = "788 5810 191";
+
+export type RegisterMode = "register" | "notify";
+
+const COPY = {
+  register: {
+    intent: "Crusade Registration",
+    message: `Registered for ${PROGRAM} — three nights from 25 Sep 2026, 7PM WAT`,
+    eyebrow: "Register to join live",
+    title: "Reserve your seat",
+    body: "Entry is free. We will send the Zoom link and the WhatsApp group invite to the details below.",
+    submit: "Reserve my seat",
+    pending: "Reserving",
+    sentTitle: "Your seat is",
+    sentAccent: "reserved",
+  },
+  notify: {
+    intent: "Crusade Interest",
+    message: `Wants to hear about the next crusade — after ${PROGRAM} (Sep 2026)`,
+    eyebrow: "The next crusade",
+    title: "Be told first",
+    body: "These three nights are past, but the war is not over. Leave your details and the dates, the flyer and the Zoom link for the next crusade will reach you before anyone else.",
+    submit: "Keep me posted",
+    pending: "Saving",
+    sentTitle: "We have",
+    sentAccent: "your details",
+  },
+} as const;
 
 type Errors = { name?: boolean; email?: boolean; phone?: boolean };
 
@@ -24,7 +56,8 @@ const validPhone = (v: string) => v.replace(/[^0-9]/g, "").length >= 7;
 const labelCls =
   "block text-[11px] tracking-[0.28em] uppercase text-midnight/60 mb-1";
 
-export function RegisterForm() {
+export function RegisterForm({ mode = "register" }: { mode?: RegisterMode }) {
+  const copy = COPY[mode];
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
@@ -55,13 +88,13 @@ export function RegisterForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          intent: "Crusade Registration",
+          intent: copy.intent,
           fields: {
             name,
             email,
             phone,
             program: PROGRAM,
-            message: `Registered for ${PROGRAM} — three nights from 25 Sep 2026, 7PM WAT`,
+            message: copy.message,
           },
         }),
       });
@@ -87,24 +120,45 @@ export function RegisterForm() {
           <Check size={24} />
         </div>
         <h3 className="font-display text-3xl text-midnight">
-          Your seat is <span className="italic text-gold-deep">reserved</span>
+          {copy.sentTitle}{" "}
+          <span className="italic text-gold-deep">{copy.sentAccent}</span>
         </h3>
-        <p className="mt-4 text-midnight/70 max-w-md mx-auto leading-relaxed">
-          See you on <strong className="text-midnight">Friday 25 September, 7:00 PM WAT</strong>{" "}
-          — Zoom ID <strong className="text-midnight">{ZOOM_ID}</strong>. Watch your
-          email and WhatsApp for the join link.
-        </p>
 
-        <a
-          href="/war-against-marine-kingdom.ics"
-          download="war-against-marine-kingdom.ics"
-          className="btn-ghost text-midnight border-midnight/30 mt-8 justify-center"
-        >
-          <CalendarPlus size={15} /> Add all three nights to my calendar
-        </a>
+        {mode === "register" ? (
+          <>
+            <p className="mt-4 text-midnight/70 max-w-md mx-auto leading-relaxed">
+              See you on{" "}
+              <strong className="text-midnight">
+                Friday 25 September, 7:00 PM WAT
+              </strong>{" "}
+              — Zoom ID <strong className="text-midnight">{ZOOM_ID}</strong>.
+              Watch your email and WhatsApp for the join link.
+            </p>
+            <a
+              href="/war-against-marine-kingdom.ics"
+              download="war-against-marine-kingdom.ics"
+              className="btn-ghost text-midnight border-midnight/30 mt-8 justify-center"
+            >
+              <CalendarPlus size={15} /> Add all three nights to my calendar
+            </a>
+          </>
+        ) : (
+          <>
+            <p className="mt-4 text-midnight/70 max-w-md mx-auto leading-relaxed">
+              As soon as the next crusade is set, the dates and the Zoom link
+              come to you first. In the meantime, the doors are open every week.
+            </p>
+            <Link
+              href="/zoom/"
+              className="btn-ghost text-midnight border-midnight/30 mt-8 justify-center"
+            >
+              <ArrowUpRight size={15} /> Join our weekly Zoom services
+            </Link>
+          </>
+        )}
 
         <p className="mt-6 text-xs text-midnight/50">
-          Need prayer before the crusade?{" "}
+          Need prayer{mode === "register" ? " before the crusade" : ""}?{" "}
           <Link href="/prayer-request/" className="text-gold-deep u-link">
             Send a prayer request
           </Link>
@@ -117,15 +171,12 @@ export function RegisterForm() {
     <form onSubmit={onSubmit} noValidate className="border border-midnight/15 bg-ivory p-8 sm:p-10">
       <p className="eyebrow text-gold-deep">
         <span className="gold-rule mr-3" />
-        Register to join live
+        {copy.eyebrow}
       </p>
       <h3 className="font-display text-3xl text-midnight mt-4 leading-tight">
-        Reserve your seat
+        {copy.title}
       </h3>
-      <p className="mt-3 text-sm text-midnight/65 leading-relaxed">
-        Entry is free. We will send the Zoom link and the WhatsApp group invite
-        to the details below.
-      </p>
+      <p className="mt-3 text-sm text-midnight/65 leading-relaxed">{copy.body}</p>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         <label className="block sm:col-span-2">
@@ -201,11 +252,11 @@ export function RegisterForm() {
       >
         {loading ? (
           <>
-            Reserving <Loader2 size={16} className="animate-spin" />
+            {copy.pending} <Loader2 size={16} className="animate-spin" />
           </>
         ) : (
           <>
-            Reserve my seat <ArrowUpRight size={16} />
+            {copy.submit} <ArrowUpRight size={16} />
           </>
         )}
       </button>
