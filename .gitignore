@@ -16,6 +16,9 @@
 .env
 .env.*
 !.env.example
+.env.local
+.env.production
+
 
 # next.js
 /.next/
