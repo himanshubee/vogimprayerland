@@ -8,11 +8,11 @@ import type { BookPrices } from "@/lib/books-shared";
  * describe each option. Whether a gateway is *configured* is a server question
  * and is passed down as a prop.
  *
- * Every gateway is always offered. A gateway that cannot settle the currency
- * the shopper is browsing in charges in one it can instead, converted from the
- * same base price — see settlementCurrency below. Greying options out meant a
- * shopper looking at naira saw PayPal disabled, and one looking at dollars was
- * offered a Paystack account with no dollar channel.
+ * Which methods a shopper sees depends on the currency they are browsing in and
+ * on each gateway's conversion policy (ALLOWS_CONVERSION below). PayPal
+ * converts, so it is always offered and always charges dollars. Paystack does
+ * not, so it appears only when the shopper is already paying in naira rather
+ * than surprising them with a converted charge.
  */
 
 export type Provider = "flutterwave" | "paystack" | "paypal";
@@ -32,18 +32,48 @@ export type GatewayInfo = {
 };
 
 /**
- * Defaults reflect what each gateway supports as a product. An individual
- * merchant account is often narrower — a Nigerian Paystack account has no
- * dollar channel until it is enabled — so each list can be narrowed per
- * deployment with an env var (see resolveGatewayCurrencies).
+ * Whether a gateway may charge in a currency other than the one on screen.
+ *
+ * PayPal converts: it is the option international buyers reach for, and a
+ * dollar charge is what they expect anyway. Paystack does not: it is the local
+ * Nigerian method, and offering it to someone shopping in dollars only to bill
+ * them naira is a surprise, so it simply doesn't appear unless they are already
+ * paying in a currency it settles.
+ */
+const ALLOWS_CONVERSION: Record<Provider, boolean> = {
+  flutterwave: true,
+  paystack: false,
+  paypal: true,
+};
+
+/**
+ * What each gateway can settle *as a product*. This is the ceiling: an env
+ * override may pick from this list but can never add to it, so a typo cannot
+ * invent support and produce a rejected charge.
+ */
+const SUPPORTED: Record<Provider, CurrencyCode[]> = {
+  flutterwave: ["NGN", "USD", "GBP", "EUR", "AED", "GHS", "KES", "ZAR"],
+  paystack: ["NGN", "USD", "GHS", "ZAR", "KES"],
+  // PayPal settles no African currency at all — sending it NGN returns
+  // 422 CURRENCY_NOT_SUPPORTED.
+  paypal: ["USD", "GBP", "EUR"],
+};
+
+/**
+ * What this ministry's accounts are actually enabled for, which is narrower
+ * than the ceiling above:
+ *
+ *  - Paystack has no dollar channel, so a USD charge fails with "No active
+ *    channel to process transaction". Naira only.
+ *  - PayPal is set to dollars only, rather than also offering GBP/EUR.
+ *
+ * Change these with PAYSTACK_CURRENCIES / PAYPAL_CURRENCIES /
+ * FLUTTERWAVE_CURRENCIES once an account gains a channel — no code change.
  */
 export const DEFAULT_GATEWAY_CURRENCIES: Record<Provider, CurrencyCode[]> = {
-  // Settles everything the shop prices in.
-  flutterwave: ["NGN", "USD", "GBP", "EUR", "AED", "GHS", "KES", "ZAR"],
-  // NGN first: it is the home market and the channel most likely enabled.
-  paystack: ["NGN", "USD", "GHS", "ZAR", "KES"],
-  // PayPal does no African currencies at all.
-  paypal: ["USD", "GBP", "EUR"],
+  flutterwave: SUPPORTED.flutterwave,
+  paystack: ["NGN"],
+  paypal: ["USD"],
 };
 
 const META: Record<Provider, Omit<GatewayInfo, "currencies">> = {
@@ -94,28 +124,22 @@ export type GatewayCurrencies = Record<Provider, CurrencyCode[]>;
 export function resolveGatewayCurrencies(
   env: Record<string, string | undefined>
 ): GatewayCurrencies {
-  const parse = (
-    raw: string | undefined,
-    fallback: CurrencyCode[]
-  ): CurrencyCode[] => {
+  const parse = (id: Provider, raw: string | undefined): CurrencyCode[] => {
     const wanted = String(raw ?? "")
       .split(",")
       .map((c) => c.trim().toUpperCase())
       .filter(Boolean);
-    if (!wanted.length) return fallback;
-    // Intersect rather than replace: an env var can only ever narrow what the
-    // gateway genuinely supports, never invent support it does not have.
-    const narrowed = fallback.filter((c) => wanted.includes(c));
-    return narrowed.length ? narrowed : fallback;
+    if (!wanted.length) return DEFAULT_GATEWAY_CURRENCIES[id];
+    // Checked against what the gateway genuinely supports, so an override can
+    // widen beyond this deployment's default but never beyond reality.
+    const allowed = SUPPORTED[id].filter((c) => wanted.includes(c));
+    return allowed.length ? allowed : DEFAULT_GATEWAY_CURRENCIES[id];
   };
 
   return {
-    flutterwave: parse(
-      env.FLUTTERWAVE_CURRENCIES,
-      DEFAULT_GATEWAY_CURRENCIES.flutterwave
-    ),
-    paystack: parse(env.PAYSTACK_CURRENCIES, DEFAULT_GATEWAY_CURRENCIES.paystack),
-    paypal: parse(env.PAYPAL_CURRENCIES, DEFAULT_GATEWAY_CURRENCIES.paypal),
+    flutterwave: parse("flutterwave", env.FLUTTERWAVE_CURRENCIES),
+    paystack: parse("paystack", env.PAYSTACK_CURRENCIES),
+    paypal: parse("paypal", env.PAYPAL_CURRENCIES),
   };
 }
 
@@ -149,7 +173,8 @@ export function priceableCurrencies(lines: BookPrices[]): CurrencyCode[] {
 export function settlementCurrency(
   supported: CurrencyCode[],
   display: string,
-  priceable: CurrencyCode[]
+  priceable: CurrencyCode[],
+  allowConversion = true
 ): CurrencyCode | null {
   if (
     (supported as string[]).includes(display) &&
@@ -157,8 +182,12 @@ export function settlementCurrency(
   ) {
     return display as CurrencyCode;
   }
+  // A gateway that does not convert is simply not on offer here.
+  if (!allowConversion) return null;
   return supported.find((c) => priceable.includes(c)) ?? null;
 }
+
+export const allowsConversion = (id: Provider): boolean => ALLOWS_CONVERSION[id];
 
 /** Everything the checkout needs to render one payment method. */
 export type GatewayOption = {
@@ -178,7 +207,12 @@ export function gatewayOptions(
   priceable: CurrencyCode[]
 ): GatewayOption[] {
   return PROVIDER_ORDER.filter((id) => configured[id]).map((id) => {
-    const currency = settlementCurrency(currencies[id], display, priceable);
+    const currency = settlementCurrency(
+      currencies[id],
+      display,
+      priceable,
+      ALLOWS_CONVERSION[id]
+    );
     return {
       id,
       label: META[id].label,

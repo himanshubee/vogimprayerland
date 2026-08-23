@@ -233,18 +233,16 @@ export function CheckoutClient({
           </p>
         ) : (
           <div className="mt-5 grid sm:grid-cols-2 gap-4">
-            {options.map((o) => (
+            {/* Only methods that can actually take this basket. A gateway that
+                does not convert (Paystack) simply isn't listed outside the
+                currencies it settles, rather than sitting there greyed out. */}
+            {usable.map((o) => (
               <MethodButton
                 key={o.id}
                 selected={provider === o.id}
-                onSelect={() => o.currency && setPreferred(o.id)}
-                disabled={!o.currency}
+                onSelect={() => setPreferred(o.id)}
                 title={o.label}
-                body={
-                  o.currency
-                    ? o.blurb
-                    : `${o.label} cannot take any currency your basket is priced in.`
-                }
+                body={o.blurb}
                 amount={
                   o.currency ? formatPrice(totalIn(o.currency), o.currency) : null
                 }
