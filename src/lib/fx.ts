@@ -31,6 +31,9 @@ const TTL_MS = 12 * 60 * 60 * 1000;
 /** How long the in-process copy is trusted before re-reading MongoDB. */
 const MEMO_MS = 5 * 60 * 1000;
 
+/** A stalled rate service must not hold up a page render — rates are optional. */
+const REQUEST_TIMEOUT_MS = 8_000;
+
 export type FxRates = {
   /** Units of each currency per 1 USD. */
   rates: Record<string, number>;
@@ -58,6 +61,7 @@ const PROVIDERS: Provider[] = [
     fetch: async () => {
       const res = await fetch("https://open.er-api.com/v6/latest/USD", {
         cache: "no-store",
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const body = (await res.json()) as {
@@ -75,7 +79,7 @@ const PROVIDERS: Provider[] = [
     fetch: async () => {
       const res = await fetch(
         "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json",
-        { cache: "no-store" }
+        { cache: "no-store", signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const body = (await res.json()) as { usd?: Record<string, number> };

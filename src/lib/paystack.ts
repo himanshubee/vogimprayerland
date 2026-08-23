@@ -22,6 +22,18 @@ import type { CurrencyCode } from "@/lib/currencies";
 
 const API_BASE = "https://api.paystack.co";
 
+/**
+ * Give up on a request that never answers.
+ *
+ * Without this a gateway that accepts the connection and then stalls leaves the
+ * fetch pending forever: the checkout request never returns, and nginx
+ * eventually answers the buyer with its own 502 HTML page — which the browser
+ * cannot parse, so they see a generic "could not start your order" with no clue
+ * why. A bounded wait turns that into a real error message in seconds.
+ */
+const REQUEST_TIMEOUT_MS = 15_000;
+
+
 const secretKey = () => process.env.PAYSTACK_SECRET_KEY?.trim() || "";
 
 export function isPaystackConfigured(): boolean {
@@ -95,11 +107,16 @@ async function psFetch<T>(
         ...(init?.headers ?? {}),
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch (err) {
-    // Could not reach Paystack at all — always worth retrying.
+    const timedOut = err instanceof Error && err.name === "TimeoutError";
     throw new PaystackError(
-      err instanceof Error ? err.message : "Could not reach Paystack",
+      timedOut
+        ? `Paystack did not respond within ${REQUEST_TIMEOUT_MS / 1000}s`
+        : err instanceof Error
+          ? err.message
+          : "Could not reach Paystack",
       0
     );
   }

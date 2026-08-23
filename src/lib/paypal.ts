@@ -17,6 +17,15 @@
 const LIVE = "https://api-m.paypal.com";
 const SANDBOX = "https://api-m.sandbox.paypal.com";
 
+/**
+ * Give up on a request that never answers. Without a bound, a gateway that
+ * accepts the connection then stalls leaves the checkout request pending until
+ * the reverse proxy gives up and serves its own 502 — which the browser cannot
+ * parse, so the buyer sees a generic failure with no reason.
+ */
+const REQUEST_TIMEOUT_MS = 15_000;
+
+
 const clientId = () => process.env.PAYPAL_CLIENT_ID?.trim() || "";
 const clientSecret = () => process.env.PAYPAL_SECRET?.trim() || "";
 
@@ -66,10 +75,16 @@ async function accessToken(): Promise<string> {
       },
       body: "grant_type=client_credentials",
       cache: "no-store",
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch (err) {
+    const timedOut = err instanceof Error && err.name === "TimeoutError";
     throw new PaypalError(
-      err instanceof Error ? err.message : "Could not reach PayPal",
+      timedOut
+        ? `PayPal did not respond within ${REQUEST_TIMEOUT_MS / 1000}s`
+        : err instanceof Error
+          ? err.message
+          : "Could not reach PayPal",
       0
     );
   }
@@ -113,10 +128,16 @@ async function ppFetch<T>(
         ...(init?.headers ?? {}),
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch (err) {
+    const timedOut = err instanceof Error && err.name === "TimeoutError";
     throw new PaypalError(
-      err instanceof Error ? err.message : "Could not reach PayPal",
+      timedOut
+        ? `PayPal did not respond within ${REQUEST_TIMEOUT_MS / 1000}s`
+        : err instanceof Error
+          ? err.message
+          : "Could not reach PayPal",
       0
     );
   }
