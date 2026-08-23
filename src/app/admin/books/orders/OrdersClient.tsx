@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import type { OrderStatus, OrderView } from "@/lib/book-orders";
+import { gatewayLabel } from "@/lib/gateways";
 
 const TABS: (OrderStatus | "all")[] = ["all", "paid", "pending", "failed", "cancelled"];
 
@@ -35,10 +36,11 @@ function fmtDate(iso: string) {
 
 export function OrdersClient({
   initial,
-  testMode,
+  sandboxGateways,
 }: {
   initial: OrderView[];
-  testMode: boolean;
+  /** Display names of configured gateways currently in sandbox mode. */
+  sandboxGateways: string[];
 }) {
   const router = useRouter();
   const [items, setItems] = useState(initial);
@@ -170,7 +172,7 @@ export function OrdersClient({
             <button
               onClick={reconcile}
               disabled={busy}
-              title="Ask both gateways about every order still pending, and settle any that were actually paid"
+              title="Ask every gateway about the orders still pending, and settle any that were actually paid"
               className="btn-gold !py-2 !px-4 !text-[11px] disabled:opacity-60"
             >
               <RefreshCw size={14} className={busy ? "animate-spin" : ""} />
@@ -188,11 +190,12 @@ export function OrdersClient({
         </div>
       )}
 
-      {testMode && (
+      {sandboxGateways.length > 0 && (
         <div className="bg-midnight-soft/10 border-b border-midnight-soft/30">
           <p className="mx-auto max-w-6xl px-5 sm:px-6 py-2.5 text-xs text-midnight">
-            <strong>Test mode.</strong> Flutterwave is running against its sandbox
-            — these are not real transactions.
+            <strong>Test mode.</strong> {sandboxGateways.join(" and ")}{" "}
+            {sandboxGateways.length === 1 ? "is" : "are"} running against a
+            sandbox — those are not real transactions.
           </p>
         </div>
       )}
@@ -317,7 +320,7 @@ export function OrdersClient({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-midnight/60 whitespace-nowrap">
-                      {o.provider === "paypal" ? "PayPal" : o.paymentType || "Card"}
+                      {o.paymentType || gatewayLabel(o.provider)}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -399,7 +402,7 @@ export function OrdersClient({
                   ["Location", open.country],
                   ["Reference", open.ref],
                   ["Gateway ref", open.gatewayRef],
-                  ["Paid with", open.provider === "paypal" ? "PayPal" : "Flutterwave"],
+                  ["Paid with", gatewayLabel(open.provider)],
                   ["Method", open.paymentType],
                   ["Settled via", open.settledVia],
                   ["Status", open.status],

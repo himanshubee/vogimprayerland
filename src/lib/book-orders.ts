@@ -12,6 +12,8 @@ import {
   type VerifiedTransaction,
 } from "@/lib/flutterwave";
 import { capturePaypalOrder, type CapturedOrder } from "@/lib/paypal";
+import { verifyTransaction as verifyPaystack } from "@/lib/paystack";
+import { gatewayLabel, type Provider } from "@/lib/gateways";
 
 /**
  * Orders for the bookshop.
@@ -30,7 +32,7 @@ import { capturePaypalOrder, type CapturedOrder } from "@/lib/paypal";
 const COLLECTION = "book_orders";
 
 export type OrderStatus = "pending" | "paid" | "failed" | "cancelled";
-export type Provider = "flutterwave" | "paypal";
+export type { Provider } from "@/lib/gateways";
 export type SettledVia = "redirect" | "webhook" | "reconcile";
 
 export type OrderItem = {
@@ -61,6 +63,8 @@ export type BookOrderDoc = {
   flwRef?: string;
   paypalOrderId?: string;
   paypalCaptureId?: string;
+  /** Paystack keys on our own reference, so this is just its numeric id. */
+  paystackId?: number;
   chargedAmount?: number;
   paymentType?: string;
   settledVia?: SettledVia;
@@ -320,6 +324,55 @@ async function settleVerifiedFlw(
   });
 }
 
+/* ---- Paystack ---- */
+
+/**
+ * Settle against Paystack. Verification is keyed on *our* reference, so this
+ * one function serves the redirect, the webhook and the reconcile sweep alike.
+ */
+export async function settlePaystackOrder(
+  ref: string,
+  via: SettledVia
+): Promise<SettleResult> {
+  const tx = await verifyPaystack(ref);
+  if (!tx) {
+    return {
+      outcome: "not_found",
+      order: null,
+      reason: "Paystack has no transaction for that reference.",
+    };
+  }
+
+  const existing = await getOrder(tx.reference);
+  if (!existing) {
+    return {
+      outcome: "not_found",
+      order: null,
+      reason: `No local order for reference ${tx.reference}.`,
+    };
+  }
+  if (existing.status === "paid") {
+    return { outcome: "already_settled", order: existing };
+  }
+
+  const fields: Partial<BookOrderDoc> = {
+    paystackId: tx.id,
+    chargedAmount: tx.amount,
+    paymentType: tx.channel || "paystack",
+  };
+
+  if (tx.status !== "success") {
+    return markNotPaid(existing, tx.status || "unknown", fields, via);
+  }
+  return markPaid(existing, {
+    status: tx.status,
+    amount: tx.amount,
+    currency: tx.currency,
+    via,
+    fields,
+  });
+}
+
 /* ---- PayPal ---- */
 
 /**
@@ -436,7 +489,7 @@ async function deliverAndLink(order: BookOrderDoc): Promise<void> {
     country: order.country,
     books: titles,
     total: pretty,
-    "paid with": order.provider === "paypal" ? "PayPal" : "Flutterwave",
+    "paid with": gatewayLabel(order.provider),
     reference: order._id,
     message: `Book order — ${titles}`,
   };
@@ -569,7 +622,12 @@ function view(d: BookOrderDoc): OrderView {
     failureReason: d.failureReason ?? "",
     downloadCount: d.downloadCount ?? 0,
     deliveryEmailSent: Boolean(d.deliveryEmailSent),
-    gatewayRef: d.paypalCaptureId || d.flwRef || d.paypalOrderId || "",
+    gatewayRef:
+      d.paypalCaptureId ||
+      d.flwRef ||
+      d.paypalOrderId ||
+      (d.paystackId ? String(d.paystackId) : "") ||
+      "",
   };
 }
 
@@ -623,12 +681,18 @@ export async function reconcilePendingOrders(
 
   for (const o of pending) {
     try {
-      const result =
-        o.provider === "paypal"
-          ? o.paypalOrderId
-            ? await settlePaypalOrder(o.paypalOrderId, "reconcile", o._id)
-            : ({ outcome: "not_found" } as SettleResult)
-          : await settleFlutterwaveOrderByReference(o._id, "reconcile");
+      let result: SettleResult;
+      if (o.provider === "paypal") {
+        // PayPal is the odd one out: without its order id there is nothing to
+        // ask about, since it does not key on our reference.
+        result = o.paypalOrderId
+          ? await settlePaypalOrder(o.paypalOrderId, "reconcile", o._id)
+          : { outcome: "not_found", order: null, reason: "No PayPal order id." };
+      } else if (o.provider === "paystack") {
+        result = await settlePaystackOrder(o._id, "reconcile");
+      } else {
+        result = await settleFlutterwaveOrderByReference(o._id, "reconcile");
+      }
 
       if (result.outcome === "paid" || result.outcome === "already_settled") {
         report.settled += 1;

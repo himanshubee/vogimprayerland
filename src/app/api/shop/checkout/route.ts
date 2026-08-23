@@ -7,18 +7,19 @@ import {
   isFlutterwaveConfigured,
 } from "@/lib/flutterwave";
 import { createPaypalOrder, isPaypalConfigured } from "@/lib/paypal";
+import { initializeTransaction, isPaystackConfigured } from "@/lib/paystack";
 import {
-  getSellableBooksByIds,
-  isPaypalCurrency,
-  roundMoney,
-  type Book,
-} from "@/lib/books";
+  gateway,
+  isProvider,
+  supportsCurrency,
+  type Provider,
+} from "@/lib/gateways";
+import { getSellableBooksByIds, roundMoney, type Book } from "@/lib/books";
 import {
   attachPaypalOrderId,
   createPendingOrder,
   newOrderRef,
   type OrderItem,
-  type Provider,
 } from "@/lib/book-orders";
 
 export const dynamic = "force-dynamic";
@@ -101,31 +102,35 @@ export async function POST(req: NextRequest) {
 
   /* ---- who and how ---- */
 
-  const provider: Provider = body.provider === "paypal" ? "paypal" : "flutterwave";
+  const provider: Provider = isProvider(body.provider)
+    ? body.provider
+    : "flutterwave";
 
   const currency = str(body.currency, 8).toUpperCase();
   if (!isCurrency(currency)) {
     return NextResponse.json({ error: "Unsupported currency." }, { status: 400 });
   }
 
-  if (provider === "paypal" && !isPaypalCurrency(currency)) {
+  const info = gateway(provider);
+
+  if (!supportsCurrency(provider, currency)) {
     return NextResponse.json(
       {
-        error: `PayPal cannot take ${currency}. Please switch to USD, GBP or EUR, or pay by card instead.`,
+        error: `${info.label} cannot take ${currency}. Please choose another payment method, or switch to ${info.currencies.slice(0, 3).join(", ")}.`,
       },
       { status: 400 }
     );
   }
 
-  const configured =
-    provider === "paypal" ? isPaypalConfigured() : isFlutterwaveConfigured();
-  if (!configured) {
+  const CONFIGURED: Record<Provider, boolean> = {
+    flutterwave: isFlutterwaveConfigured(),
+    paystack: isPaystackConfigured(),
+    paypal: isPaypalConfigured(),
+  };
+  if (!CONFIGURED[provider]) {
     return NextResponse.json(
       {
-        error:
-          provider === "paypal"
-            ? "PayPal is not available right now. Please pay by card instead."
-            : "Card payment is not available right now. Please try again later.",
+        error: `${info.label} is not available right now. Please choose another payment method.`,
       },
       { status: 503 }
     );
@@ -224,6 +229,27 @@ export async function POST(req: NextRequest) {
         { link: created.approveUrl, reference: ref },
         { status: 201 }
       );
+    }
+
+    if (provider === "paystack") {
+      const link = await initializeTransaction({
+        reference: ref,
+        amount: total,
+        currency,
+        email,
+        // Paystack appends ?reference= &trxref= to this.
+        callbackUrl: `${SITE_URL}/books/thank-you/`,
+        metadata: {
+          kind: "books",
+          name,
+          custom_fields: items.map((i) => ({
+            display_name: i.title,
+            variable_name: i.slug,
+            value: `${i.quantity} × ${i.unitPrice}`,
+          })),
+        },
+      });
+      return NextResponse.json({ link, reference: ref }, { status: 201 });
     }
 
     const link = await createPaymentLink({

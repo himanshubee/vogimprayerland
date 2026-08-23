@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { isFlutterwaveConfigured, isTestMode } from "@/lib/flutterwave";
 import { isPaypalConfigured, isPaypalSandbox } from "@/lib/paypal";
+import { isPaystackConfigured, isPaystackTestMode } from "@/lib/paystack";
+import type { Provider } from "@/lib/gateways";
 import { getShopCatalogue } from "@/lib/shop-catalogue";
 import { CheckoutClient } from "./CheckoutClient";
 
@@ -17,17 +19,27 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage() {
-  const flutterwaveEnabled = isFlutterwaveConfigured();
-  const paypalEnabled = isPaypalConfigured();
+  // Which gateways can take money, and which are pointed at a sandbox. Read
+  // per request so adding credentials needs a restart, not a rebuild.
+  const configured: Record<Provider, boolean> = {
+    flutterwave: isFlutterwaveConfigured(),
+    paystack: isPaystackConfigured(),
+    paypal: isPaypalConfigured(),
+  };
+  const sandbox: Record<Provider, boolean> = {
+    flutterwave: isTestMode(),
+    paystack: isPaystackTestMode(),
+    paypal: isPaypalSandbox(),
+  };
 
   // Current prices for whatever is sitting in the visitor's basket, so the
   // total they approve is the total the server will charge.
   const { live } = await getShopCatalogue();
 
-  if (!flutterwaveEnabled && !paypalEnabled) {
+  if (!Object.values(configured).some(Boolean)) {
     // Loud, because the symptom is quiet: the checkout renders but no method
-    // can be chosen. Check FLW_SECRET_KEY / PAYPAL_CLIENT_ID + PAYPAL_SECRET
-    // are set on the server, then restart.
+    // can be chosen. Check FLW_SECRET_KEY / PAYSTACK_SECRET_KEY /
+    // PAYPAL_CLIENT_ID + PAYPAL_SECRET are set on the server, then restart.
     console.error(
       "[shop/checkout] No payment gateway is configured — the bookshop cannot take orders."
     );
@@ -56,13 +68,7 @@ export default async function CheckoutPage() {
               </div>
             }
           >
-            <CheckoutClient
-              live={live}
-              flutterwaveEnabled={flutterwaveEnabled}
-              paypalEnabled={paypalEnabled}
-              testMode={isTestMode()}
-              paypalSandbox={isPaypalSandbox()}
-            />
+            <CheckoutClient live={live} configured={configured} sandbox={sandbox} />
           </Suspense>
         </div>
       </section>

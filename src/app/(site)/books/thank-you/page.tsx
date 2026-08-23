@@ -17,8 +17,10 @@ import {
   linksFor,
   settleFlutterwaveOrder,
   settlePaypalOrder,
+  settlePaystackOrder,
   type BookOrderDoc,
 } from "@/lib/book-orders";
+import { gatewayLabel } from "@/lib/gateways";
 import { ClearCart } from "./ClearCart";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +77,25 @@ async function resolve(sp: Search): Promise<View> {
     } catch (err) {
       console.error("[books/thank-you] paypal settle failed:", err);
       return confirming(await lookup(ref, paypalOrderId));
+    }
+  }
+
+  // ── Paystack ──────────────────────────────────────────────────────────
+  // Paystack sends the buyer back with ?reference= and ?trxref=, both of which
+  // are the reference we generated, so no gateway id is needed to settle.
+  const paystackRef = one(sp.reference) || one(sp.trxref);
+  if (paystackRef) {
+    try {
+      const result = await settlePaystackOrder(paystackRef, "redirect");
+      if (result.outcome === "paid" || result.outcome === "already_settled") {
+        return { ...PAID, message: successMessage(result.order), order: result.order };
+      }
+      if (result.outcome === "mismatch") return checking(result.order);
+      if (result.outcome === "failed") return notCompleted(result.order);
+      return unmatched(await getOrder(paystackRef).catch(() => null));
+    } catch (err) {
+      console.error("[books/thank-you] paystack settle failed:", err);
+      return confirming(await getOrder(paystackRef).catch(() => null));
     }
   }
 
@@ -285,7 +306,7 @@ export default async function BooksThankYouPage({
                       Paid with
                     </dt>
                     <dd className="text-midnight text-right">
-                      {order.provider === "paypal" ? "PayPal" : "Card / bank"}
+                      {gatewayLabel(order.provider)}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-6 py-3">

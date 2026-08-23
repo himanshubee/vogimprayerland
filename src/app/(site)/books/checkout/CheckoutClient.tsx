@@ -14,58 +14,62 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { useLiveCart, type LiveBook } from "@/components/shop/useLiveCart";
-import { formatPrice, isPaypalCurrency } from "@/lib/books-shared";
-
-type Provider = "flutterwave" | "paypal";
+import { formatPrice } from "@/lib/books-shared";
+import {
+  GATEWAYS,
+  gateway,
+  supportsCurrency,
+  type Provider,
+} from "@/lib/gateways";
 
 type Props = {
   /** Current catalogue prices, so an old basket is never priced from a stale
    *  localStorage snapshot. */
   live: Record<string, LiveBook>;
-  flutterwaveEnabled: boolean;
-  paypalEnabled: boolean;
-  /** True when Flutterwave is running against its sandbox keys. */
-  testMode: boolean;
-  paypalSandbox: boolean;
+  /** Which gateways have credentials on the server. */
+  configured: Record<Provider, boolean>;
+  /** Gateways currently pointed at a sandbox rather than real money. */
+  sandbox: Record<Provider, boolean>;
 };
 
 const labelCls =
   "block text-[11px] tracking-[0.28em] uppercase text-midnight/60 mb-1";
 
-export function CheckoutClient({
-  live,
-  flutterwaveEnabled,
-  paypalEnabled,
-  testMode,
-  paypalSandbox,
-}: Props) {
+export function CheckoutClient({ live, configured, sandbox }: Props) {
   const search = useSearchParams();
   const { lines, blocked, subtotal, currency, ready, isEmpty } = useLiveCart(live);
 
-  const paypalUsable = paypalEnabled && isPaypalCurrency(currency);
-  const [preferred, setPreferred] = useState<Provider>("flutterwave");
+  const [preferred, setPreferred] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Switching to a currency PayPal cannot take (NGN, and most of Africa) must
+  // Every gateway that has credentials, whether or not it can take the chosen
+  // currency — the ones that can't are still shown, greyed, with the reason.
+  const offered = GATEWAYS.filter((g) => configured[g.id]);
+  const usable = offered.filter((g) => supportsCurrency(g.id, currency));
+
+  // Switching to a currency a gateway cannot take (PayPal and NGN, say) must
   // not leave a dead method selected. Derived rather than synced in an effect,
   // so the currency and the method can never disagree for even one render.
-  const provider: Provider =
-    preferred === "paypal" && !paypalUsable
-      ? "flutterwave"
-      : preferred === "flutterwave" && !flutterwaveEnabled && paypalUsable
-        ? "paypal"
-        : preferred;
+  const provider: Provider | null =
+    preferred && usable.some((g) => g.id === preferred)
+      ? preferred
+      : (usable[0]?.id ?? null);
 
   // The buyer bounced off PayPal's page without approving.
   const cancelled = search.get("cancelled") === "1";
 
   const hasBlocked = blocked.length > 0;
-  const noMethod = !flutterwaveEnabled && !paypalEnabled;
+  const noMethod = usable.length === 0;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    if (!provider) {
+      setError("Please choose a payment method.");
+      return;
+    }
 
     if (hasBlocked) {
       setError(
@@ -215,29 +219,24 @@ export function CheckoutClient({
           </p>
         ) : (
           <div className="mt-5 grid sm:grid-cols-2 gap-4">
-            {flutterwaveEnabled && (
-              <MethodButton
-                selected={provider === "flutterwave"}
-                onSelect={() => setPreferred("flutterwave")}
-                title="Card & bank"
-                body="Debit or credit card, bank transfer, USSD and mobile money."
-                icon={<CreditCard size={20} />}
-              />
-            )}
-            {paypalEnabled && (
-              <MethodButton
-                selected={provider === "paypal"}
-                onSelect={() => paypalUsable && setPreferred("paypal")}
-                disabled={!paypalUsable}
-                title="PayPal"
-                body={
-                  paypalUsable
-                    ? "Pay with your PayPal balance or a linked card."
-                    : `PayPal cannot take ${currency}. Switch to USD, GBP or EUR in your basket to use it.`
-                }
-                icon={<PaypalMark />}
-              />
-            )}
+            {offered.map((g) => {
+              const canTake = supportsCurrency(g.id, currency);
+              return (
+                <MethodButton
+                  key={g.id}
+                  selected={provider === g.id}
+                  onSelect={() => canTake && setPreferred(g.id)}
+                  disabled={!canTake}
+                  title={g.label}
+                  body={
+                    canTake
+                      ? g.blurb
+                      : `${g.label} cannot take ${currency}. It accepts ${g.currencies.join(", ")}.`
+                  }
+                  icon={g.id === "paypal" ? <PaypalMark /> : <CreditCard size={20} />}
+                />
+              );
+            })}
           </div>
         )}
 
@@ -250,12 +249,11 @@ export function CheckoutClient({
           </p>
         )}
 
-        {((provider === "flutterwave" && testMode) ||
-          (provider === "paypal" && paypalSandbox)) && (
+        {provider && sandbox[provider] && (
           <p className="mt-7 border border-dashed border-gold/60 bg-gold/5 px-4 py-3 text-xs text-midnight/70">
-            <strong className="text-midnight">Test mode.</strong> This checkout is
-            running against the payment provider&rsquo;s sandbox — no real money
-            moves.
+            <strong className="text-midnight">Test mode.</strong>{" "}
+            {gateway(provider).label} is running against its sandbox — no real
+            money moves.
           </p>
         )}
 
@@ -289,8 +287,8 @@ export function CheckoutClient({
             <p className="mt-5 flex items-center gap-2 text-xs text-midnight/50">
               <Lock size={13} className="text-gold-deep shrink-0" />
               You finish securely on{" "}
-              {provider === "paypal" ? "PayPal" : "Flutterwave"}&rsquo;s own
-              checkout. Card details never touch this site.
+              {provider ? gateway(provider).label : "the payment provider"}
+              &rsquo;s own checkout. Card details never touch this site.
             </p>
           </>
         )}
