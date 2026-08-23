@@ -104,6 +104,36 @@ if ! (git pull origin main 2>/dev/null || git pull origin master 2>/dev/null); t
   rollback "Git pull failed."
 fi
 
+# Preflight: the build imports lib/mongodb.ts, which throws at module load if
+# MONGODB_URI is missing — so a missing env file surfaces as a confusing
+# "Next.js build failed" three minutes in. Check it up front and say plainly
+# what is wrong.
+#
+# This matters because .env.local and .env.production are no longer tracked:
+# a pull that removes them leaves the server with nothing but
+# .env.production.local, which must therefore carry the full configuration.
+echo "🔎 Checking required configuration..."
+MISSING=$(node -e '
+const { loadEnvConfig } = require("@next/env");
+loadEnvConfig(process.cwd(), false);
+const required = ["MONGODB_URI", "ADMIN_PASSWORD", "ADMIN_SECRET"];
+const missing = required.filter((k) => !(process.env[k] || "").trim());
+process.stdout.write(missing.join(" "));
+' 2>/dev/null || echo "NODE_CHECK_FAILED")
+
+if [ "$MISSING" = "NODE_CHECK_FAILED" ]; then
+  echo "⚠️  Could not verify configuration (node/@next/env unavailable) — continuing."
+elif [ -n "$MISSING" ]; then
+  echo ""
+  echo "   Missing from the server's environment: $MISSING"
+  echo "   These belong in .env.production.local, which is never committed and"
+  echo "   survives git pull. .env.local and .env.production are no longer"
+  echo "   tracked, so a pull will have removed them."
+  echo ""
+  rollback "Required configuration is missing — refusing to build."
+fi
+echo "✅ Configuration looks complete."
+
 # Install dependencies (postinstall also copies TinyMCE into public/tinymce)
 echo "📦 Installing npm packages..."
 if ! npm install --legacy-peer-deps --no-audit --no-fund; then
