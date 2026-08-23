@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { isFlutterwaveConfigured, isTestMode } from "@/lib/flutterwave";
 import { isPaypalConfigured, isPaypalSandbox } from "@/lib/paypal";
+import { getShopCatalogue } from "@/lib/shop-catalogue";
 import { CheckoutClient } from "./CheckoutClient";
 
 export const metadata: Metadata = {
@@ -15,9 +16,13 @@ export const metadata: Metadata = {
 // time — prerendering would bake today's answer into the page for good.
 export const dynamic = "force-dynamic";
 
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
   const flutterwaveEnabled = isFlutterwaveConfigured();
   const paypalEnabled = isPaypalConfigured();
+
+  // Current prices for whatever is sitting in the visitor's basket, so the
+  // total they approve is the total the server will charge.
+  const { live } = await getShopCatalogue();
 
   if (!flutterwaveEnabled && !paypalEnabled) {
     // Loud, because the symptom is quiet: the checkout renders but no method
@@ -52,6 +57,7 @@ export default function CheckoutPage() {
             }
           >
             <CheckoutClient
+              live={live}
               flutterwaveEnabled={flutterwaveEnabled}
               paypalEnabled={paypalEnabled}
               testMode={isTestMode()}

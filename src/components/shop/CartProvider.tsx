@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
-import type { BookPrices } from "@/lib/books-shared";
 import {
   SERVER_SNAPSHOT,
   addItem,
@@ -39,10 +38,17 @@ type CartContextValue = {
   setCurrency: (code: string) => void;
   clear: () => void;
   has: (bookId: string) => boolean;
-  /** Lines that cannot be priced in the active currency. */
-  unavailable: CartItem[];
-  subtotal: number;
 };
+
+/*
+ * Note: this context deliberately exposes NO prices or totals.
+ *
+ * The stored CartItem.prices is a snapshot taken when a book was added, and
+ * pricing a basket from it silently goes wrong the moment an exchange rate
+ * refreshes or an admin edits a price — a book that had no USD price when it
+ * was added would read "not sold in USD" forever. Use useLiveCart(), which
+ * prices against the catalogue the server just sent.
+ */
 
 const CartContext = createContext<CartContextValue | null>(null);
 
@@ -66,11 +72,6 @@ export function CartProvider({
 
   const value = useMemo<CartContextValue>(() => {
     const { items } = snapshot;
-    const priceIn = (i: CartItem) =>
-      Number(i.prices[currency as keyof BookPrices] ?? 0);
-
-    const subtotal = items.reduce((sum, i) => sum + priceIn(i) * i.quantity, 0);
-
     return {
       items,
       currency,
@@ -82,8 +83,6 @@ export function CartProvider({
       setCurrency: setStoredCurrency,
       clear: clearItems,
       has: (bookId: string) => items.some((i) => i.bookId === bookId),
-      unavailable: items.filter((i) => priceIn(i) <= 0),
-      subtotal: Math.round((subtotal + Number.EPSILON) * 100) / 100,
     };
   }, [snapshot, currency, ready]);
 

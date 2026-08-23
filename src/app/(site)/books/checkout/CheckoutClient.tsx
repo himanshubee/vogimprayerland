@@ -13,16 +13,15 @@ import {
   Lock,
   ShoppingBag,
 } from "lucide-react";
-import { useCart } from "@/components/shop/CartProvider";
-import {
-  formatPrice,
-  isPaypalCurrency,
-  type BookPrices,
-} from "@/lib/books-shared";
+import { useLiveCart, type LiveBook } from "@/components/shop/useLiveCart";
+import { formatPrice, isPaypalCurrency } from "@/lib/books-shared";
 
 type Provider = "flutterwave" | "paypal";
 
 type Props = {
+  /** Current catalogue prices, so an old basket is never priced from a stale
+   *  localStorage snapshot. */
+  live: Record<string, LiveBook>;
   flutterwaveEnabled: boolean;
   paypalEnabled: boolean;
   /** True when Flutterwave is running against its sandbox keys. */
@@ -34,13 +33,14 @@ const labelCls =
   "block text-[11px] tracking-[0.28em] uppercase text-midnight/60 mb-1";
 
 export function CheckoutClient({
+  live,
   flutterwaveEnabled,
   paypalEnabled,
   testMode,
   paypalSandbox,
 }: Props) {
   const search = useSearchParams();
-  const { items, currency, ready, subtotal, unavailable } = useCart();
+  const { lines, blocked, subtotal, currency, ready, isEmpty } = useLiveCart(live);
 
   const paypalUsable = paypalEnabled && isPaypalCurrency(currency);
   const [preferred, setPreferred] = useState<Provider>("flutterwave");
@@ -60,20 +60,16 @@ export function CheckoutClient({
   // The buyer bounced off PayPal's page without approving.
   const cancelled = search.get("cancelled") === "1";
 
-  const priceIn = (prices: BookPrices) =>
-    Number(prices[currency as keyof BookPrices] ?? 0);
-
-  const blocked = unavailable.length > 0;
-  const empty = ready && items.length === 0;
+  const hasBlocked = blocked.length > 0;
   const noMethod = !flutterwaveEnabled && !paypalEnabled;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
-    if (blocked) {
+    if (hasBlocked) {
       setError(
-        `Some books in your basket are not sold in ${currency}. Please go back to the basket and adjust it.`
+        `Some books in your basket cannot be bought in ${currency}. Please go back to the basket and adjust it.`
       );
       return;
     }
@@ -91,7 +87,7 @@ export function CheckoutClient({
           provider,
           currency,
           // Only ids and quantities — the server prices the order itself.
-          items: items.map((i) => ({ bookId: i.bookId, quantity: i.quantity })),
+          items: lines.map((l) => ({ bookId: l.bookId, quantity: l.quantity })),
           name: data.get("name"),
           email: data.get("email"),
           phone: data.get("phone"),
@@ -127,7 +123,7 @@ export function CheckoutClient({
     );
   }
 
-  if (empty) {
+  if (isEmpty) {
     return (
       <div className="border border-midnight/15 bg-white px-8 py-16 text-center">
         <ShoppingBag className="mx-auto text-gold-deep" size={34} />
@@ -275,7 +271,7 @@ export function CheckoutClient({
           <>
             <button
               type="submit"
-              disabled={loading || blocked}
+              disabled={loading || hasBlocked}
               className="btn-gold mt-8 w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
@@ -305,45 +301,41 @@ export function CheckoutClient({
         <p className="eyebrow text-gold-deep">Your order</p>
 
         <ul className="mt-6 space-y-4 border-b border-midnight/12 pb-6">
-          {items.map((item) => {
-            const unit = priceIn(item.prices);
-            return (
-              <li key={item.bookId} className="flex gap-3.5 items-start">
-                <div className="relative w-11 aspect-[3/4] shrink-0 bg-midnight/5">
-                  {item.coverImage ? (
-                    <Image
-                      src={item.coverImage}
-                      alt=""
-                      fill
-                      sizes="44px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <span className="absolute inset-0 flex items-center justify-center bg-midnight text-gold/70">
-                      <BookOpen size={14} />
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-midnight leading-snug">{item.title}</p>
-                  {item.quantity > 1 && (
-                    <p className="text-xs text-midnight/50 mt-0.5">
-                      × {item.quantity}
-                    </p>
-                  )}
-                </div>
-                <p className="text-sm text-midnight tabular-nums shrink-0">
-                  {unit > 0 ? (
-                    formatPrice(unit * item.quantity, currency)
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-midnight-soft text-xs">
-                      <AlertTriangle size={12} /> n/a
-                    </span>
-                  )}
-                </p>
-              </li>
-            );
-          })}
+          {lines.map((line) => (
+            <li key={line.bookId} className="flex gap-3.5 items-start">
+              <div className="relative w-11 aspect-[3/4] shrink-0 bg-midnight/5">
+                {line.coverImage ? (
+                  <Image
+                    src={line.coverImage}
+                    alt=""
+                    fill
+                    sizes="44px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="absolute inset-0 flex items-center justify-center bg-midnight text-gold/70">
+                    <BookOpen size={14} />
+                  </span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-midnight leading-snug">{line.title}</p>
+                {line.quantity > 1 && (
+                  <p className="text-xs text-midnight/50 mt-0.5">× {line.quantity}</p>
+                )}
+              </div>
+              <p className="text-sm text-midnight tabular-nums shrink-0">
+                {line.available && line.unitPrice > 0 ? (
+                  formatPrice(line.lineTotal, currency)
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-midnight-soft text-xs">
+                    <AlertTriangle size={12} />
+                    {line.available ? "n/a" : "gone"}
+                  </span>
+                )}
+              </p>
+            </li>
+          ))}
         </ul>
 
         <div className="flex items-baseline justify-between gap-4 pt-6">
@@ -358,9 +350,9 @@ export function CheckoutClient({
           </span>
         </div>
 
-        {blocked && (
+        {hasBlocked && (
           <p className="mt-5 text-xs text-midnight-soft leading-relaxed">
-            Some books are not sold in {currency}.{" "}
+            Some books cannot be bought in {currency} right now.{" "}
             <Link href="/books/cart/" className="u-link">
               Fix your basket
             </Link>{" "}
