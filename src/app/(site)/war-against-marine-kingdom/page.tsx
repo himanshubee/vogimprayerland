@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Clock, Ticket, Video } from "lucide-react";
+import { ArrowUpRight, Clock, Download, Share2, Ticket, Video } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 import { RegisterForm } from "./RegisterForm";
@@ -14,6 +15,28 @@ import { RegisterForm } from "./RegisterForm";
  * form on the site.
  */
 
+const PAGE_URL = "https://www.vogimprayerland.org/war-against-marine-kingdom/";
+
+/**
+ * The awareness flyer, as handed out and forwarded.
+ *
+ * Both files sit in public/ beside the .ics: the PDF is the original artwork
+ * (one page, print or forward as it is), the JPEG is a 288dpi render of it,
+ * used for the on-page frame and as the share card everywhere the link is
+ * posted — the flyer is the face of this crusade, so it should be the image
+ * WhatsApp and X show rather than the site icon.
+ */
+const FLYER_PDF = "/war-against-marine-kingdom-flyer.pdf";
+const FLYER_IMAGE = "/war-against-marine-kingdom-flyer.jpg";
+const FLYER_W = 1016;
+const FLYER_H = 1364;
+const FLYER_ALT =
+  "War Against the Marine Kingdom flyer — live on Zoom, 25–27 September, 7:00 PM WAT nightly, Zoom meeting ID 788 5810 191, entry 100% free. Prophet Olaofe Oladele Emmanuel.";
+
+const SHARE_URL = `https://wa.me/?text=${encodeURIComponent(
+  `War Against the Marine Kingdom — three nights of prophetic deliverance, live on Zoom. 25–27 September, 7:00 PM WAT nightly. Free to attend. ${PAGE_URL}`
+)}`;
+
 const TITLE = "War Against the Marine Kingdom — Prophetic Deliverance Crusade";
 const DESCRIPTION =
   "Three nights of prophetic warfare to break covenants with water spirits, dissolve spiritual marriages and reclaim destinies. 25–27 September 2026, 7PM WAT, live on Zoom. Free to attend.";
@@ -25,9 +48,16 @@ export const metadata: Metadata = {
     type: "website",
     title: TITLE,
     description: DESCRIPTION,
-    images: [{ url: "/icon.png" }],
+    images: [
+      { url: FLYER_IMAGE, width: FLYER_W, height: FLYER_H, alt: FLYER_ALT },
+    ],
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [FLYER_IMAGE],
+  },
 };
 
 const NIGHTS = [
@@ -69,6 +99,7 @@ const EVENTS_JSONLD = {
     "@type": "Event",
     name: `War Against the Marine Kingdom — Night ${night.num}: ${night.title}`,
     description: DESCRIPTION,
+    image: [`https://www.vogimprayerland.org${FLYER_IMAGE}`],
     // 7PM West Africa Time (UTC+1).
     startDate: `${night.iso}T19:00:00+01:00`,
     endDate: `${night.iso}T22:00:00+01:00`,
@@ -76,7 +107,7 @@ const EVENTS_JSONLD = {
     eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
     location: {
       "@type": "VirtualLocation",
-      url: "https://www.vogimprayerland.org/war-against-marine-kingdom/",
+      url: PAGE_URL,
     },
     organizer: {
       "@type": "Organization",
@@ -88,7 +119,7 @@ const EVENTS_JSONLD = {
       price: "0",
       priceCurrency: "NGN",
       availability: "https://schema.org/InStock",
-      url: "https://www.vogimprayerland.org/war-against-marine-kingdom/",
+      url: PAGE_URL,
     },
   })),
 };
@@ -116,6 +147,74 @@ export default function MarineKingdomCrusadePage() {
         }}
         image="https://img.vogimprayerland.org/1780648526688-worship.jpg"
       />
+
+      {/* THE FLYER */}
+      <section className="bg-cream paper-grain border-b border-midnight/10">
+        <div className="mx-auto max-w-6xl px-5 sm:px-6 py-14 sm:py-20 grid md:grid-cols-[minmax(0,340px)_1fr] gap-10 md:gap-16 items-center">
+          <Reveal>
+            <div className="relative mx-auto w-full max-w-[340px]">
+              {/* Print-mount hairline, offset behind the flyer */}
+              <span
+                aria-hidden
+                className="absolute -inset-2.5 border border-gold/40"
+              />
+              <a
+                href={FLYER_PDF}
+                target="_blank"
+                rel="noopener"
+                className="relative block bg-white p-2 shadow-[0_24px_60px_-32px_rgba(58,6,16,0.6)] transition-transform duration-300 hover:-translate-y-1"
+              >
+                <Image
+                  src={FLYER_IMAGE}
+                  alt={FLYER_ALT}
+                  width={FLYER_W}
+                  height={FLYER_H}
+                  sizes="(min-width: 768px) 340px, 90vw"
+                  className="h-auto w-full"
+                />
+              </a>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.1}>
+            <p className="eyebrow text-gold-deep">
+              <span className="gold-rule mr-3" />
+              The flyer
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl text-midnight mt-4 leading-tight">
+              Send this to someone{" "}
+              <span className="italic">the waters are holding</span>
+            </h2>
+            <p className="mt-5 max-w-xl text-midnight/70 leading-relaxed">
+              One page, ready to print or forward. Post it in your church
+              WhatsApp group, pin it on a notice board, hand it to a neighbour.
+              Every copy that travels is a seat someone did not know was free.
+            </p>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <a
+                href={FLYER_PDF}
+                download="war-against-marine-kingdom-flyer.pdf"
+                className="btn-gold justify-center"
+              >
+                <Download size={16} /> Download the flyer
+              </a>
+              <a
+                href={SHARE_URL}
+                target="_blank"
+                rel="noopener"
+                className="btn-ghost text-midnight border-midnight/30 justify-center"
+              >
+                <Share2 size={15} /> Share on WhatsApp
+              </a>
+            </div>
+
+            <p className="mt-5 text-xs text-midnight/50">
+              PDF · one page · tap the flyer to open it full size
+            </p>
+          </Reveal>
+        </div>
+      </section>
 
       {/* THE THREE NIGHTS */}
       <section className="bg-ivory paper-grain">
