@@ -15,8 +15,8 @@ export function CartBadge({ className = "" }: { className?: string }) {
 
   return (
     <Link
-      href="/books/cart/"
-      aria-label={`Basket — ${count} ${count === 1 ? "book" : "books"}`}
+      href="/cart/"
+      aria-label={`Basket — ${count} ${count === 1 ? "item" : "items"}`}
       className={`relative inline-flex items-center justify-center p-2 text-midnight hover:text-gold-deep transition-colors ${className}`}
     >
       <ShoppingBag size={20} />

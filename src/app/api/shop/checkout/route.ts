@@ -21,22 +21,34 @@ import {
   settlementCurrency,
   type Provider,
 } from "@/lib/gateways";
-import { getSellableBooksByIds, roundMoney, type Book } from "@/lib/books";
+import { getSellableBooksByIds, roundMoney, type Book, type BookPrices } from "@/lib/books";
+import {
+  getSellableMerchByIds,
+  getShippingPrices,
+  isValidVariant,
+  variantLabel,
+  type MerchItem,
+  type MerchVariant,
+} from "@/lib/merch";
 import {
   attachPaypalOrderId,
   createPendingOrder,
+  itemLabel,
   newOrderRef,
   type OrderItem,
+  type ShippingAddress,
 } from "@/lib/book-orders";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Start a book order and hand back the gateway URL to redirect the buyer to.
+ * Start a shop order and hand back the gateway URL to redirect the buyer to.
  *
- * The cart arrives from the browser as ids and quantities *only*. Every price
- * is looked up from the database here — a cart that claims a book costs 1 naira
- * is repriced to what the book actually costs before a payment link is made.
+ * The basket arrives from the browser as ids, quantities and — for garments —
+ * a colour and size, *only*. Every price is looked up from the database here:
+ * a basket that claims a cap costs 1 naira is repriced to what the cap
+ * actually costs before a payment link is made, and delivery is added from the
+ * store's own settings rather than anything the client sent.
  */
 
 const str = (v: unknown, max: number) => String(v ?? "").slice(0, max).trim();
@@ -45,55 +57,119 @@ const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 const MAX_LINES = 30;
 const MAX_QTY = 20;
 
-type IncomingLine = { bookId?: unknown; quantity?: unknown };
+type IncomingLine = {
+  productId?: unknown;
+  /** Older clients sent this name. */
+  bookId?: unknown;
+  kind?: unknown;
+  quantity?: unknown;
+  variant?: unknown;
+};
 
-/** Collapse the raw cart into unique ids with sane quantities. */
-function parseCart(input: unknown): Map<string, number> {
-  const out = new Map<string, number>();
+type CartLine = {
+  kind: "book" | "merch";
+  productId: string;
+  quantity: number;
+  variant?: MerchVariant;
+};
+
+/** Collapse the raw basket into unique lines with sane quantities. */
+function parseCart(input: unknown): Map<string, CartLine> {
+  const out = new Map<string, CartLine>();
   if (!Array.isArray(input)) return out;
   for (const raw of input.slice(0, MAX_LINES)) {
     const line = (raw ?? {}) as IncomingLine;
-    const id = str(line.bookId, 40);
-    if (!id) continue;
+    const productId = str(line.productId ?? line.bookId, 40);
+    if (!productId) continue;
     const qty = Math.round(Number(line.quantity) || 1);
     if (!Number.isFinite(qty) || qty < 1) continue;
-    // A repeated id is one line with a bigger quantity, not two lines.
-    const total = Math.min(MAX_QTY, (out.get(id) ?? 0) + qty);
-    out.set(id, total);
+
+    const kind = line.kind === "merch" ? "merch" : "book";
+    const v = (line.variant ?? {}) as Record<string, unknown>;
+    const variant: MerchVariant | undefined =
+      kind === "merch" ? { color: str(v.color, 40), size: str(v.size, 20) } : undefined;
+
+    // A repeated line is one line with a bigger quantity, not two lines.
+    const key = variant ? `${productId}:${variant.color}:${variant.size}` : productId;
+    const existing = out.get(key);
+    out.set(key, {
+      kind,
+      productId,
+      quantity: Math.min(MAX_QTY, (existing?.quantity ?? 0) + qty),
+      variant,
+    });
   }
   return out;
 }
 
+function parseShipping(input: unknown): ShippingAddress {
+  const o = (input ?? {}) as Record<string, unknown>;
+  return {
+    name: str(o.name, 200),
+    line1: str(o.line1, 300),
+    line2: str(o.line2, 300),
+    city: str(o.city, 120),
+    state: str(o.state, 120),
+    country: str(o.country, 120),
+    postcode: str(o.postcode, 40),
+    phone: str(o.phone, 60),
+  };
+}
+
 function priceLines(
-  cart: Map<string, number>,
+  cart: Map<string, CartLine>,
   books: Map<string, Book>,
+  merch: Map<string, MerchItem>,
   currency: string
 ): { items: OrderItem[]; total: number; missing: string[] } {
   const items: OrderItem[] = [];
   const missing: string[] = [];
   let total = 0;
 
-  for (const [bookId, quantity] of cart) {
-    const book = books.get(bookId);
-    const unitPrice = book?.prices[currency as keyof typeof book.prices];
+  for (const line of cart.values()) {
+    if (line.kind === "merch") {
+      const item = merch.get(line.productId);
+      const unitPrice = item?.prices[currency as keyof BookPrices];
+      if (!item || !unitPrice || unitPrice <= 0 || !line.variant) {
+        missing.push(item?.title ?? line.productId);
+        continue;
+      }
+      items.push({
+        kind: "merch",
+        bookId: item.id,
+        slug: item.slug,
+        title: item.title,
+        coverImage: item.design,
+        unitPrice,
+        quantity: line.quantity,
+        variant: line.variant,
+        category: item.category,
+      });
+      total += unitPrice * line.quantity;
+      continue;
+    }
 
-    // Either the book vanished/unpublished since the cart was filled, or it
-    // simply isn't sold in this currency. Both are the buyer's problem to see,
-    // not something to silently drop from a total they already read.
+    const book = books.get(line.productId);
+    const unitPrice = book?.prices[currency as keyof BookPrices];
+
+    // Either the product vanished/unpublished since the basket was filled, or
+    // it simply isn't sold in this currency. Both are the buyer's problem to
+    // see, not something to silently drop from a total they already read.
     if (!book || !unitPrice || unitPrice <= 0) {
-      missing.push(book?.title ?? bookId);
+      missing.push(book?.title ?? line.productId);
       continue;
     }
 
     items.push({
+      kind: "book",
       bookId: book.id,
       slug: book.slug,
       title: book.title,
       coverImage: book.coverImage,
       unitPrice,
-      quantity,
+      quantity: line.quantity,
     });
-    total += unitPrice * quantity;
+    total += unitPrice * line.quantity;
   }
 
   return { items, total: roundMoney(total), missing };
@@ -109,9 +185,7 @@ export async function POST(req: NextRequest) {
 
   /* ---- who and how ---- */
 
-  const provider: Provider = isProvider(body.provider)
-    ? body.provider
-    : "flutterwave";
+  const provider: Provider = isProvider(body.provider) ? body.provider : "flutterwave";
 
   const currency = str(body.currency, 8).toUpperCase();
   if (!isCurrency(currency)) {
@@ -127,9 +201,7 @@ export async function POST(req: NextRequest) {
   };
   if (!CONFIGURED[provider]) {
     return NextResponse.json(
-      {
-        error: `${label} is not available right now. Please choose another payment method.`,
-      },
+      { error: `${label} is not available right now. Please choose another payment method.` },
       { status: 503 }
     );
   }
@@ -137,7 +209,7 @@ export async function POST(req: NextRequest) {
   const email = str(body.email, 200).toLowerCase();
   if (!isEmail(email)) {
     return NextResponse.json(
-      { error: "Please enter a valid email address — your books are sent there." },
+      { error: "Please enter a valid email address — your receipt is sent there." },
       { status: 400 }
     );
   }
@@ -154,9 +226,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Your basket is empty." }, { status: 400 });
   }
 
+  const bookIds = [...cart.values()].filter((l) => l.kind === "book").map((l) => l.productId);
+  const merchIds = [...cart.values()].filter((l) => l.kind === "merch").map((l) => l.productId);
+
   let books: Map<string, Book>;
+  let merch: Map<string, MerchItem>;
+  let shippingPrices: BookPrices;
   try {
-    books = await getSellableBooksByIds([...cart.keys()]);
+    [books, merch, shippingPrices] = await Promise.all([
+      getSellableBooksByIds(bookIds),
+      getSellableMerchByIds(merchIds),
+      merchIds.length ? getShippingPrices() : Promise.resolve({} as BookPrices),
+    ]);
   } catch (err) {
     // Outside a try this escaped as an HTML 500, which the browser could not
     // parse — so the buyer saw the client's generic fallback instead of a
@@ -168,21 +249,38 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // A book that has left the catalogue entirely — unpublished, deleted, or its
-  // PDF removed. Reported before currency is considered, because no choice of
-  // currency can bring it back.
-  const gone = [...cart.keys()].filter((id) => !books.has(id));
+  // Anything that has left the catalogue entirely — unpublished, deleted, or
+  // a garment in a colour no longer offered. Reported before currency is
+  // considered, because no choice of currency can bring it back.
+  const gone = [...cart.values()].filter((l) => {
+    if (l.kind === "book") return !books.has(l.productId);
+    const item = merch.get(l.productId);
+    return !item || !l.variant || !isValidVariant(item, l.variant);
+  });
   if (gone.length) {
+    const names = gone.map((l) => {
+      const item = l.kind === "merch" ? merch.get(l.productId) : books.get(l.productId);
+      const variant = l.kind === "merch" && l.variant ? ` (${variantLabel(l.variant)})` : "";
+      return item ? `${item.title}${variant}` : null;
+    });
+    const known = names.filter((n): n is string => Boolean(n));
     return NextResponse.json(
       {
-        error: `${gone.length === 1 ? "A book" : `${gone.length} books`} in your basket ${
-          gone.length === 1 ? "is" : "are"
-        } no longer available. Please remove ${gone.length === 1 ? "it" : "them"} and try again.`,
-        unavailable: gone,
+        error:
+          (known.length
+            ? `${known.join(", ")} ${known.length === 1 ? "is" : "are"}`
+            : `${gone.length === 1 ? "An item" : `${gone.length} items`} in your basket ${
+                gone.length === 1 ? "is" : "are"
+              }`) +
+          ` no longer available. Please remove ${gone.length === 1 ? "it" : "them"} and try again.`,
+        unavailable: gone.map((l) => l.productId),
       },
       { status: 409 }
     );
   }
+
+  const physical = merchIds.length > 0;
+  const chargesShipping = physical && Object.keys(shippingPrices).length > 0;
 
   /**
    * Which currency this gateway will actually charge in.
@@ -190,11 +288,17 @@ export async function POST(req: NextRequest) {
    * The shopper's own currency when the gateway can settle it, otherwise the
    * nearest one it can — the same derivation the checkout page used to show
    * them the figure, so the amount they approved is the amount charged.
+   * Delivery must be priceable in it too.
    */
+  const priceable = priceableCurrencies([
+    ...[...books.values()].map((b) => b.prices),
+    ...[...merch.values()].map((m) => m.prices),
+    ...(chargesShipping ? [shippingPrices] : []),
+  ]);
   const settlement = settlementCurrency(
     resolveGatewayCurrencies(process.env)[provider],
     currency,
-    priceableCurrencies([...books.values()].map((b) => b.prices))
+    priceable
   );
 
   if (!settlement) {
@@ -206,7 +310,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { items, total, missing } = priceLines(cart, books, settlement);
+  const { items, total: goodsTotal, missing } = priceLines(cart, books, merch, settlement);
 
   if (missing.length) {
     return NextResponse.json(
@@ -219,19 +323,39 @@ export async function POST(req: NextRequest) {
       { status: 409 }
     );
   }
-  if (!items.length || total <= 0) {
+  if (!items.length || goodsTotal <= 0) {
     return NextResponse.json({ error: "Your basket is empty." }, { status: 400 });
   }
 
+  /* ---- where, for anything physical ---- */
+
+  let shipping: ShippingAddress | undefined;
+  if (physical) {
+    shipping = parseShipping(body.shipping);
+    if (!shipping.line1 || !shipping.city || !shipping.country) {
+      return NextResponse.json(
+        { error: "Please give us a delivery address — street, city and country at least." },
+        { status: 400 }
+      );
+    }
+    if (!shipping.name) shipping.name = name;
+    if (!shipping.phone) shipping.phone = str(body.phone, 60);
+  }
+
+  const shippingFee = chargesShipping
+    ? roundMoney(Number(shippingPrices[settlement as keyof BookPrices] ?? 0))
+    : 0;
+  const total = roundMoney(goodsTotal + shippingFee);
+
   // Below the gateway's floor the payment link is refused outright, so catch it
   // here with an explanation rather than bouncing the buyer off a gateway error
-  // page. Reachable when a book carries a manually pinned price under the
+  // page. Reachable when a product carries a manually pinned price under the
   // minimum — converted prices are already floored at it.
   const min = CURRENCIES[settlement].min;
   if (total < min) {
     return NextResponse.json(
       {
-        error: `The smallest order ${label} can process is ${CURRENCIES[settlement].symbol}${min} ${settlement}. Please add another book, or choose another payment method.`,
+        error: `The smallest order ${label} can process is ${CURRENCIES[settlement].symbol}${min} ${settlement}. Please add something else, or choose another payment method.`,
       },
       { status: 400 }
     );
@@ -248,13 +372,20 @@ export async function POST(req: NextRequest) {
     name,
     email,
     phone: str(body.phone, 60),
-    country: str(body.country, 120),
+    country: str(body.country, 120) || shipping?.country || "",
+    shipping,
+    shippingFee,
     ip:
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("x-real-ip") ||
       null,
     userAgent: req.headers.get("user-agent") || null,
   };
+
+  const description =
+    items.length === 1
+      ? itemLabel(items[0])
+      : `${items.length} items from VOGIM Prayer Land`;
 
   try {
     // Record the intent *before* handing the buyer to the gateway, so the order
@@ -266,20 +397,22 @@ export async function POST(req: NextRequest) {
         reference: ref,
         currency: settlement,
         total,
-        items: items.map((i) => ({
-          name: i.title,
-          quantity: i.quantity,
-          unitAmount: i.unitPrice,
-        })),
-        returnUrl: `${SITE_URL}/books/thank-you/?ref=${encodeURIComponent(ref)}`,
-        cancelUrl: `${SITE_URL}/books/checkout/?cancelled=1`,
+        items: [
+          ...items.map((i) => ({
+            name: itemLabel({ ...i, quantity: 1 }),
+            quantity: i.quantity,
+            unitAmount: i.unitPrice,
+          })),
+          ...(shippingFee > 0
+            ? [{ name: "Delivery", quantity: 1, unitAmount: shippingFee }]
+            : []),
+        ],
+        returnUrl: `${SITE_URL}/checkout/thank-you/?ref=${encodeURIComponent(ref)}`,
+        cancelUrl: `${SITE_URL}/checkout/?cancelled=1`,
         brandName: "VOGIM Prayer Land",
       });
       await attachPaypalOrderId(ref, created.id);
-      return NextResponse.json(
-        { link: created.approveUrl, reference: ref },
-        { status: 201 }
-      );
+      return NextResponse.json({ link: created.approveUrl, reference: ref }, { status: 201 });
     }
 
     if (provider === "paystack") {
@@ -289,12 +422,12 @@ export async function POST(req: NextRequest) {
         currency: settlement,
         email,
         // Paystack appends ?reference= &trxref= to this.
-        callbackUrl: `${SITE_URL}/books/thank-you/`,
+        callbackUrl: `${SITE_URL}/checkout/thank-you/`,
         metadata: {
-          kind: "books",
+          kind: physical ? "shop" : "books",
           name,
           custom_fields: items.map((i) => ({
-            display_name: i.title,
+            display_name: itemLabel({ ...i, quantity: 1 }),
             variable_name: i.slug,
             value: `${i.quantity} × ${i.unitPrice}`,
           })),
@@ -307,14 +440,14 @@ export async function POST(req: NextRequest) {
       txRef: ref,
       amount: total,
       currency: settlement,
-      redirectUrl: `${SITE_URL}/books/thank-you/`,
+      redirectUrl: `${SITE_URL}/checkout/thank-you/`,
       customer: { email, name, phonenumber: order.phone || undefined },
-      title: "VOGIM Prayer Land — Books",
-      description:
-        items.length === 1
-          ? items[0].title
-          : `${items.length} books from VOGIM Prayer Land`,
-      meta: { kind: "books", source: "vogimprayerland.org/books" },
+      title: physical ? "VOGIM Prayer Land — Store" : "VOGIM Prayer Land — Books",
+      description,
+      meta: {
+        kind: physical ? "shop" : "books",
+        source: physical ? "vogimprayerland.org/store" : "vogimprayerland.org/books",
+      },
     });
 
     return NextResponse.json({ link, reference: ref }, { status: 201 });
@@ -332,11 +465,7 @@ export async function POST(req: NextRequest) {
 
     if (gatewayError && !unreachable) {
       return NextResponse.json(
-        {
-          error: `${label} could not start this payment: ${
-            (err as Error).message
-          }`,
-        },
+        { error: `${label} could not start this payment: ${(err as Error).message}` },
         { status: 502 }
       );
     }

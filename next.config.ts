@@ -31,6 +31,13 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
 
+      // The basket and checkout used to live under /books; they now serve
+      // the store as well. Query strings carry over, so an old gateway return
+      // URL still lands on the receipt.
+      { source: "/books/cart", destination: "/cart/", permanent: true },
+      { source: "/books/checkout", destination: "/checkout/", permanent: true },
+      { source: "/books/thank-you", destination: "/checkout/thank-you/", permanent: true },
+
       // Individual posts that the WordPress import left behind.
       ...LEGACY_REDIRECTS.map(([from, to]) => ({
         source: `/${from}`,

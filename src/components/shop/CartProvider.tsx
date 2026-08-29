@@ -14,7 +14,7 @@ import {
   type CartItem,
 } from "./cart-store";
 
-export type { CartItem } from "./cart-store";
+export type { CartItem, CartKind, CartVariant } from "./cart-store";
 
 /**
  * The basket, exposed to the tree.
@@ -33,17 +33,18 @@ type CartContextValue = {
   ready: boolean;
   count: number;
   add: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
-  remove: (bookId: string) => void;
-  setQuantity: (bookId: string, quantity: number) => void;
+  remove: (key: string) => void;
+  setQuantity: (key: string, quantity: number) => void;
   setCurrency: (code: string) => void;
   clear: () => void;
-  has: (bookId: string) => boolean;
+  /** Whether a line with this key (book id, or garment id:colour:size) is in the basket. */
+  has: (key: string) => boolean;
 };
 
 /*
  * Note: this context deliberately exposes NO prices or totals.
  *
- * The stored CartItem.prices is a snapshot taken when a book was added, and
+ * The stored CartItem.prices is a snapshot taken when a line was added, and
  * pricing a basket from it silently goes wrong the moment an exchange rate
  * refreshes or an admin edits a price — a book that had no USD price when it
  * was added would read "not sold in USD" forever. Use useLiveCart(), which
@@ -59,11 +60,7 @@ export function CartProvider({
   children: React.ReactNode;
   defaultCurrency?: string;
 }) {
-  const snapshot = useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getServerSnapshot
-  );
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   // The server snapshot's identity IS the "not read yet" signal, so no effect
   // and no extra state are needed to know whether the basket is trustworthy.
@@ -82,7 +79,7 @@ export function CartProvider({
       setQuantity: setItemQuantity,
       setCurrency: setStoredCurrency,
       clear: clearItems,
-      has: (bookId: string) => items.some((i) => i.bookId === bookId),
+      has: (key: string) => items.some((i) => i.key === key),
     };
   }, [snapshot, currency, ready]);
 

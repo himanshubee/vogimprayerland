@@ -12,6 +12,11 @@ import type { BookPrices } from "@/lib/books-shared";
  * The authoritative copy is the module-level `state`; localStorage is a mirror.
  * That matters in private browsing, where writes throw: the basket still works
  * for the session instead of silently refusing to change.
+ *
+ * One basket holds both books and store items. A book is one line per title;
+ * a T-shirt or cap is one line per colour and size, which is what `key` is
+ * for — it is the line's identity, and everything that removes or re-counts a
+ * line addresses it by key.
  */
 
 const ITEMS_KEY = "vogim_cart_v1";
@@ -19,13 +24,22 @@ const CURRENCY_KEY = "vogim_cart_currency";
 const MAX_QTY = 20;
 const MAX_LINES = 30;
 
+export type CartKind = "book" | "merch";
+
+export type CartVariant = { color: string; size: string };
+
 export type CartItem = {
-  bookId: string;
+  /** Line identity: the book id, or `${id}:${color}:${size}` for a garment. */
+  key: string;
+  kind: CartKind;
+  productId: string;
   slug: string;
   title: string;
-  coverImage: string | null;
+  /** Cover for a book; the printed artwork for a garment. */
+  image: string | null;
   prices: BookPrices;
   quantity: number;
+  variant?: CartVariant;
 };
 
 export type CartSnapshot = {
@@ -68,15 +82,31 @@ function parseItems(raw: string | null): CartItem[] {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .filter((i) => i && typeof i.bookId === "string")
-      .map((i) => ({
-        bookId: String(i.bookId),
-        slug: String(i.slug ?? ""),
-        title: String(i.title ?? ""),
-        coverImage: i.coverImage ?? null,
-        prices: (i.prices ?? {}) as BookPrices,
-        quantity: Math.max(1, Math.min(MAX_QTY, Number(i.quantity) || 1)),
-      }))
+      .map((i): CartItem | null => {
+        if (!i || typeof i !== "object") return null;
+        // Baskets saved before the store existed hold books only, keyed by
+        // `bookId` with a `coverImage` — read them as book lines.
+        const legacy = typeof i.bookId === "string" && typeof i.productId !== "string";
+        const productId = String(legacy ? i.bookId : i.productId ?? "");
+        if (!productId) return null;
+        const kind: CartKind = i.kind === "merch" ? "merch" : "book";
+        const variant =
+          kind === "merch" && i.variant && typeof i.variant === "object"
+            ? { color: String(i.variant.color ?? ""), size: String(i.variant.size ?? "") }
+            : undefined;
+        return {
+          key: String(i.key ?? productId),
+          kind,
+          productId,
+          slug: String(i.slug ?? ""),
+          title: String(i.title ?? ""),
+          image: i.image ?? i.coverImage ?? null,
+          prices: (i.prices ?? {}) as BookPrices,
+          quantity: Math.max(1, Math.min(MAX_QTY, Number(i.quantity) || 1)),
+          ...(variant ? { variant } : {}),
+        };
+      })
+      .filter((i): i is CartItem => i !== null)
       .slice(0, MAX_LINES);
   } catch {
     // A corrupt basket must never white-screen the shop.
@@ -143,11 +173,11 @@ function setItems(items: CartItem[]): void {
 
 export function addItem(item: Omit<CartItem, "quantity">, quantity = 1): void {
   const { items } = getSnapshot();
-  const existing = items.find((i) => i.bookId === item.bookId);
+  const existing = items.find((i) => i.key === item.key);
   setItems(
     existing
       ? items.map((i) =>
-          i.bookId === item.bookId
+          i.key === item.key
             ? { ...i, ...item, quantity: Math.min(MAX_QTY, i.quantity + quantity) }
             : i
         )
@@ -155,19 +185,17 @@ export function addItem(item: Omit<CartItem, "quantity">, quantity = 1): void {
   );
 }
 
-export function removeItem(bookId: string): void {
-  setItems(getSnapshot().items.filter((i) => i.bookId !== bookId));
+export function removeItem(key: string): void {
+  setItems(getSnapshot().items.filter((i) => i.key !== key));
 }
 
-export function setItemQuantity(bookId: string, quantity: number): void {
+export function setItemQuantity(key: string, quantity: number): void {
   const q = Math.round(quantity);
   const { items } = getSnapshot();
   setItems(
     q < 1
-      ? items.filter((i) => i.bookId !== bookId)
-      : items.map((i) =>
-          i.bookId === bookId ? { ...i, quantity: Math.min(MAX_QTY, q) } : i
-        )
+      ? items.filter((i) => i.key !== key)
+      : items.map((i) => (i.key === key ? { ...i, quantity: Math.min(MAX_QTY, q) } : i))
   );
 }
 

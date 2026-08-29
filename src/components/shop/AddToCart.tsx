@@ -36,7 +36,7 @@ export function AddToCart({
 
   if (inCart) {
     return (
-      <Link href="/books/cart/" className={`${cls} !bg-midnight !text-gold`}>
+      <Link href="/cart/" className={`${cls} !bg-midnight !text-gold`}>
         {justAdded ? (
           <>
             <Check size={15} /> Added
@@ -58,10 +58,12 @@ export function AddToCart({
       disabled={!ready}
       onClick={() => {
         add({
-          bookId: book.id,
+          key: book.id,
+          kind: "book",
+          productId: book.id,
           slug: book.slug,
           title: book.title,
-          coverImage: book.coverImage,
+          image: book.coverImage,
           prices: book.prices,
         });
         setJustAdded(true);

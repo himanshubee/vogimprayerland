@@ -10,6 +10,20 @@ const UPLOAD_URL = process.env.S3_UPLOAD_URL || "https://s3upload.vogimprayerlan
 const API_KEY = process.env.S3_UPLOAD_KEY;
 
 export async function POST(req: NextRequest) {
+  // Every path out of here is JSON: the admin parses the reply, and a bare
+  // "Internal Server Error" body surfaces as a baffling JSON-parse message.
+  try {
+    return await handle(req);
+  } catch (err) {
+    console.error("[upload] failed:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Upload failed" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handle(req: NextRequest) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -62,6 +76,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Upload failed" }, { status: 502 });
   }
 
-  // TinyMCE expects { location }; we also return url for the featured-image picker.
-  return NextResponse.json({ location: url, url });
+  // TinyMCE expects { location }; we also return url for the featured-image
+  // picker, and the original-format URL for artwork whose transparency must
+  // survive (store designs).
+  return NextResponse.json({ location: url, url, originalUrl: data.publicUrl || url });
 }

@@ -14,9 +14,10 @@ import {
 import { capturePaypalOrder, type CapturedOrder } from "@/lib/paypal";
 import { verifyTransaction as verifyPaystack } from "@/lib/paystack";
 import { gatewayLabel, type Provider } from "@/lib/gateways";
+import { variantLabel, type MerchCategory, type MerchVariant } from "@/lib/merch-shared";
 
 /**
- * Orders for the bookshop.
+ * Orders for the shop — books and store items alike.
  *
  * Mirrors lib/donations.ts deliberately — a row is written `pending` *before*
  * the buyer leaves for the gateway, and is settled by whichever callback
@@ -36,13 +37,39 @@ export type { Provider } from "@/lib/gateways";
 export type SettledVia = "redirect" | "webhook" | "reconcile";
 
 export type OrderItem = {
+  /** Absent on orders from before the store existed — those are all books. */
+  kind?: "book" | "merch";
+  /**
+   * The product's id. Named for the download-token path it feeds; a garment's
+   * id sits in the same field so one order shape serves both.
+   */
   bookId: string;
   slug: string;
   title: string;
   coverImage: string | null;
   unitPrice: number;
   quantity: number;
+  /** Garments only: the colour and size that were ordered. */
+  variant?: MerchVariant;
+  category?: MerchCategory;
 };
+
+export const isBookItem = (item: OrderItem): boolean => (item.kind ?? "book") === "book";
+export const isMerchItem = (item: OrderItem): boolean => item.kind === "merch";
+
+/** Where a physical order is sent. */
+export type ShippingAddress = {
+  name: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  country: string;
+  postcode: string;
+  phone: string;
+};
+
+export type Fulfilment = "unfulfilled" | "shipped" | "delivered";
 
 export type BookOrderDoc = {
   _id: string; // our reference — unique per attempt
@@ -75,16 +102,29 @@ export type BookOrderDoc = {
   deliveryEmailSent?: boolean;
   ip?: string | null;
   userAgent?: string | null;
+  /** Present when the order holds anything physical. */
+  shipping?: ShippingAddress;
+  /** Delivery charged on this order, in `currency`; folded into `total`. */
+  shippingFee?: number;
+  fulfilment?: Fulfilment;
+  fulfilledAt?: Date;
+  fulfilmentNote?: string;
 };
 
-/** `VOGIM-BOOK-<random>` — the prefix is what lets one shared Flutterwave
- *  webhook URL tell a book order apart from a donation. */
+/**
+ * `VOGIM-SHOP-<random>` — the prefix is what lets one shared Flutterwave
+ * webhook URL tell a shop order apart from a donation. Orders placed before
+ * the store existed carry `VOGIM-BOOK-`, and both are recognised.
+ */
 export function newOrderRef(): string {
-  return `VOGIM-BOOK-${randomUUID()}`;
+  return `VOGIM-SHOP-${randomUUID()}`;
 }
 
 export const isBookRef = (ref: string): boolean =>
-  /^VOGIM-BOOK-/.test(String(ref ?? ""));
+  /^VOGIM-(BOOK|SHOP)-/.test(String(ref ?? ""));
+
+export const orderHasMerch = (order: Pick<BookOrderDoc, "items">): boolean =>
+  order.items.some(isMerchItem);
 
 /* -------------------------------- Writes -------------------------------- */
 
@@ -99,6 +139,8 @@ export type NewOrder = {
   country?: string;
   ip?: string | null;
   userAgent?: string | null;
+  shipping?: ShippingAddress;
+  shippingFee?: number;
 };
 
 export async function createPendingOrder(
@@ -123,7 +165,32 @@ export async function createPendingOrder(
     downloadCount: 0,
     ip: input.ip ?? null,
     userAgent: input.userAgent ?? null,
+    ...(input.shipping ? { shipping: input.shipping } : {}),
+    ...(input.shippingFee ? { shippingFee: input.shippingFee } : {}),
+    ...(orderHasMerch(input) ? { fulfilment: "unfulfilled" as const } : {}),
   });
+}
+
+/** Admin: record that a physical order has been sent or has arrived. */
+export async function setFulfilment(
+  ref: string,
+  fulfilment: Fulfilment,
+  note = ""
+): Promise<BookOrderDoc | null> {
+  const db = await getDb();
+  const orders = db.collection<BookOrderDoc>(COLLECTION);
+  await orders.updateOne(
+    { _id: ref },
+    {
+      $set: {
+        fulfilment,
+        fulfilmentNote: String(note).slice(0, 500),
+        updatedAt: new Date(),
+        ...(fulfilment === "unfulfilled" ? {} : { fulfilledAt: new Date() }),
+      },
+    }
+  );
+  return orders.findOne({ _id: ref });
 }
 
 /** Record PayPal's order id against our reference so the return trip can
@@ -437,34 +504,83 @@ export async function settlePaypalOrder(
 
 /* ------------------------------- Delivery ------------------------------- */
 
-/** Fresh signed links for every book on a paid order. */
+/** Fresh signed links for every book on a paid order. Garments have none. */
 export function linksFor(order: BookOrderDoc): { title: string; url: string }[] {
-  return order.items.map((item) => ({
+  return order.items.filter(isBookItem).map((item) => ({
     title: item.title,
     url: downloadUrl(SITE_URL, order._id, item.bookId),
   }));
 }
 
-function deliveryEmailText(order: BookOrderDoc): string {
-  const lines = linksFor(order).map((l) => `• ${l.title}\n  ${l.url}`);
+/** "Navy · L" for a garment line, "" for a book. */
+export function itemVariantLabel(item: OrderItem): string {
+  return isMerchItem(item) ? variantLabel(item.variant) : "";
+}
+
+/** One line per item, as it should read on a receipt or in the admin. */
+export function itemLabel(item: OrderItem): string {
+  const variant = itemVariantLabel(item);
+  const base = variant ? `${item.title} (${variant})` : item.title;
+  return item.quantity > 1 ? `${base} ×${item.quantity}` : base;
+}
+
+export function formatShipping(address: ShippingAddress | undefined): string[] {
+  if (!address) return [];
   return [
-    `Dear ${order.name || "friend"},`,
-    "",
-    "Thank you for your order. Your book download links are below.",
-    "",
-    ...lines,
-    "",
-    `These links stay active for ${TOKEN_TTL_DAYS} days. If one expires, visit`,
-    `${SITE_URL}/books/library/ and enter this email address together with your`,
-    `order reference to have fresh links issued.`,
+    address.name,
+    address.line1,
+    address.line2,
+    [address.city, address.state].filter(Boolean).join(", "),
+    [address.postcode, address.country].filter(Boolean).join(" "),
+    address.phone,
+  ].filter(Boolean);
+}
+
+function deliveryEmailText(order: BookOrderDoc): string {
+  const links = linksFor(order);
+  const goods = order.items.filter(isMerchItem);
+  const out: string[] = [`Dear ${order.name || "friend"},`, "", "Thank you for your order."];
+
+  if (links.length) {
+    out.push(
+      "",
+      links.length === 1 ? "Your book download link is below." : "Your book download links are below.",
+      "",
+      ...links.map((l) => `• ${l.title}\n  ${l.url}`),
+      "",
+      `These links stay active for ${TOKEN_TTL_DAYS} days. If one expires, visit`,
+      `${SITE_URL}/books/library/ and enter this email address together with your`,
+      `order reference to have fresh links issued.`
+    );
+  }
+
+  if (goods.length) {
+    out.push(
+      "",
+      goods.length === 1 ? "Being made and sent to you:" : "Being made and sent to you:",
+      "",
+      ...goods.map((i) => `• ${itemLabel(i)}`),
+      "",
+      "Delivery address:",
+      ...formatShipping(order.shipping).map((l) => `  ${l}`),
+      "",
+      "We will be in touch on this email address when it is dispatched."
+    );
+  }
+
+  out.push(
     "",
     `Order reference: ${order._id}`,
-    `Total: ${formatPrice(order.total, order.currency)} ${order.currency}`,
+    `Total: ${formatPrice(order.total, order.currency)} ${order.currency}` +
+      (order.shippingFee
+        ? ` (including ${formatPrice(order.shippingFee, order.currency)} delivery)`
+        : ""),
     "",
-    "May the word in these pages bear fruit in your life.",
+    links.length ? "May the word in these pages bear fruit in your life." : "Thank you for standing with the ministry.",
     "",
-    "VOGIM Prayer Land",
-  ].join("\n");
+    "VOGIM Prayer Land"
+  );
+  return out.join("\n");
 }
 
 /**
@@ -478,32 +594,33 @@ function deliveryEmailText(order: BookOrderDoc): string {
  */
 async function deliverAndLink(order: BookOrderDoc): Promise<void> {
   const pretty = `${formatPrice(order.total, order.currency)} ${order.currency}`;
-  const titles = order.items
-    .map((i) => (i.quantity > 1 ? `${i.title} ×${i.quantity}` : i.title))
-    .join(", ");
+  const titles = order.items.map(itemLabel).join(", ");
+  const physical = orderHasMerch(order);
+  const intent = physical ? "Shop Order" : "Book Order";
 
   const fields: Record<string, string> = {
     name: order.name,
     email: order.email,
     phone: order.phone,
     country: order.country,
-    books: titles,
+    items: titles,
     total: pretty,
     "paid with": gatewayLabel(order.provider),
     reference: order._id,
-    message: `Book order — ${titles}`,
+    ...(physical ? { "deliver to": formatShipping(order.shipping).join(", ") } : {}),
+    message: `${intent} — ${titles}`,
   };
 
   const results = await Promise.allSettled([
     sendEmail({
       to: order.email,
-      subject: `Your books from VOGIM Prayer Land (${order._id})`,
+      subject: `Your order from VOGIM Prayer Land (${order._id})`,
       text: deliveryEmailText(order),
     }),
-    sendSubmissionEmail({ intent: "Book Order", fields }),
+    sendSubmissionEmail({ intent, fields }),
     linkSubmissionToContact({
       id: order._id,
-      intent: "Book Order",
+      intent,
       fields,
       createdAt: order.paidAt ?? order.createdAt,
     }),
@@ -534,7 +651,7 @@ export async function resendDeliveryEmail(
 ): Promise<{ ok: boolean; error?: string }> {
   const res = await sendEmail({
     to: order.email,
-    subject: `Your books from VOGIM Prayer Land (${order._id})`,
+    subject: `Your order from VOGIM Prayer Land (${order._id})`,
     text: deliveryEmailText(order),
   });
   if (res.ok) {
@@ -597,6 +714,11 @@ export type OrderView = {
   downloadCount: number;
   deliveryEmailSent: boolean;
   gatewayRef: string;
+  hasMerch: boolean;
+  shipping: ShippingAddress | null;
+  shippingFee: number;
+  fulfilment: Fulfilment | "";
+  fulfilmentNote: string;
 };
 
 const iso = (d: Date | string | undefined) =>
@@ -628,8 +750,16 @@ function view(d: BookOrderDoc): OrderView {
       d.paypalOrderId ||
       (d.paystackId ? String(d.paystackId) : "") ||
       "",
+    hasMerch: orderHasMerch(d),
+    shipping: d.shipping ?? null,
+    shippingFee: d.shippingFee ?? 0,
+    fulfilment: d.fulfilment ?? (orderHasMerch(d) ? "unfulfilled" : ""),
+    fulfilmentNote: d.fulfilmentNote ?? "",
   };
 }
+
+export const isFulfilment = (v: unknown): v is Fulfilment =>
+  v === "unfulfilled" || v === "shipped" || v === "delivered";
 
 export async function listOrders(limit = 500): Promise<OrderView[]> {
   const db = await getDb();

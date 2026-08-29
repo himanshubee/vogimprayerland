@@ -70,7 +70,7 @@ export function LibraryClient() {
               name="reference"
               required
               className="input-line font-mono text-sm"
-              placeholder="VOGIM-BOOK-…"
+              placeholder="VOGIM-SHOP-…"
             />
             <span className="mt-2 block text-xs text-midnight/45">
               It appears on your receipt page and in the email we sent you.

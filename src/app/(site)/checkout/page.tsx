@@ -10,7 +10,7 @@ import { CheckoutClient } from "./CheckoutClient";
 
 export const metadata: Metadata = {
   title: "Checkout — VOGIM Prayer Land",
-  description: "Complete your book order from VOGIM Prayer Land.",
+  description: "Complete your order from VOGIM Prayer Land.",
   robots: { index: false, follow: false },
 };
 
@@ -34,7 +34,7 @@ export default async function CheckoutPage() {
 
   // Current prices for whatever is sitting in the visitor's basket, so the
   // total they approve is the total the server will charge.
-  const { live } = await getShopCatalogue();
+  const { live, shipping, templates } = await getShopCatalogue();
 
   // What each gateway can settle on THIS account. Narrowed per deployment by
   // e.g. PAYSTACK_CURRENCIES=NGN, and passed down so the buyer is shown exactly
@@ -45,21 +45,19 @@ export default async function CheckoutPage() {
     // Loud, because the symptom is quiet: the checkout renders but no method
     // can be chosen. Check FLW_SECRET_KEY / PAYSTACK_SECRET_KEY /
     // PAYPAL_CLIENT_ID + PAYPAL_SECRET are set on the server, then restart.
-    console.error(
-      "[shop/checkout] No payment gateway is configured — the bookshop cannot take orders."
-    );
+    console.error("[shop/checkout] No payment gateway is configured — the shop cannot take orders.");
   }
 
   return (
     <>
       <PageHeader
-        eyebrow="The Bookshop"
+        eyebrow="Checkout"
         title={
           <>
             Complete your <span className="italic text-gold">order</span>
           </>
         }
-        intro="One more step. Your books are delivered as PDFs the moment payment clears."
+        intro="One more step. Books arrive as PDFs the moment payment clears; T-shirts and caps are made for you and sent to your door."
       />
 
       <section className="bg-ivory paper-grain">
@@ -75,6 +73,8 @@ export default async function CheckoutPage() {
           >
             <CheckoutClient
               live={live}
+              shipping={shipping}
+              templates={templates}
               configured={configured}
               sandbox={sandbox}
               gatewayCurrencies={gatewayCurrencies}

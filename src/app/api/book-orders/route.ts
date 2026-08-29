@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
 import {
   getOrder,
+  isFulfilment,
   listOrders,
   reconcilePendingOrders,
   resendDeliveryEmail,
+  setFulfilment,
 } from "@/lib/book-orders";
 
 export const dynamic = "force-dynamic";
@@ -60,6 +62,15 @@ export async function POST(req: NextRequest) {
             },
         { status: result.ok ? 200 : 502 }
       );
+    }
+
+    if (body.action === "fulfil") {
+      if (!isFulfilment(body.fulfilment)) {
+        return NextResponse.json({ error: "Unknown fulfilment status" }, { status: 400 });
+      }
+      const order = await setFulfilment(String(body.ref ?? ""), body.fulfilment, body.note);
+      if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      return NextResponse.json({ ok: true, fulfilment: order.fulfilment });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

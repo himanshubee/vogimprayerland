@@ -113,18 +113,23 @@ type SettingsDoc = Partial<SiteSettings> & { _id: string };
  * remove it in /admin/settings like any other entry, and that edit sticks
  * because a saved nav that mentions /books is left alone.
  */
-function ensureBooksLink(nav: NavLink[]): NavLink[] {
-  const mentionsBooks = nav.some(
+function ensureLink(nav: NavLink[], link: NavLink, after: string[]): NavLink[] {
+  const mentioned = nav.some(
     (l) =>
-      l.href.startsWith("/books") ||
-      l.children?.some((c) => c.href.startsWith("/books"))
+      l.href.startsWith(link.href) ||
+      l.children?.some((c) => c.href.startsWith(link.href))
   );
-  if (mentionsBooks) return nav;
+  if (mentioned) return nav;
 
-  const books: NavLink = { label: "Books", href: "/books" };
-  const at = nav.findIndex((l) => l.href === "/blog");
-  if (at === -1) return [...nav, books];
-  return [...nav.slice(0, at + 1), books, ...nav.slice(at + 1)];
+  const at = after.map((href) => nav.findIndex((l) => l.href === href)).find((i) => i !== -1);
+  if (at === undefined) return [...nav, link];
+  return [...nav.slice(0, at + 1), link, ...nav.slice(at + 1)];
+}
+
+/** Books, then the store right after it — the same reasoning applies to both. */
+function ensureBooksLink(nav: NavLink[]): NavLink[] {
+  const withBooks = ensureLink(nav, { label: "Books", href: "/books" }, ["/blog"]);
+  return ensureLink(withBooks, { label: "Store", href: "/store" }, ["/books", "/blog"]);
 }
 
 /** Shallow-merge a stored doc over the defaults so any field that was never

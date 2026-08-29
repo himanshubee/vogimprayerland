@@ -8,7 +8,7 @@ import { gatewayLabel, type Provider } from "@/lib/gateways";
 import { OrdersClient } from "./OrdersClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Book orders — VOGIM Admin" };
+export const metadata = { title: "Orders — VOGIM Admin" };
 
 export default async function AdminBookOrdersPage() {
   if (!(await isAuthenticated())) redirect("/admin/login");

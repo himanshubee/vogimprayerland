@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllPublishedSlugs } from "@/lib/posts";
 import { listPublishedBooks } from "@/lib/books";
+import { listPublishedMerch } from "@/lib/merch";
 import { PAGE_SCHEMAS, getPageModifiedMap } from "@/lib/page-content";
 import { LEGAL_DOCS } from "@/lib/legal";
 
@@ -22,6 +23,7 @@ const STATIC_PATHS = [
   "deliverance-request",
   "blog",
   "books",
+  "store",
   "war-against-marine-kingdom",
   "zoom",
   "media",
@@ -83,12 +85,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // Store designs — listPublishedMerch swallows its own errors the same way.
+  const storeEntries: MetadataRoute.Sitemap = (await listPublishedMerch()).map((m) => ({
+    url: `${SITE_URL}/store/${m.slug}/`,
+    lastModified: new Date(m.updatedAt),
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
   // Several WordPress "pages" were imported as posts under slugs that are also
   // hand-built routes here — /prayer-request/, /gallery/, /blog/ and friends.
   // The hand-built route is what actually serves, so the post row is a second
   // copy of a URL already listed. First entry wins.
   const seen = new Set<string>();
-  return [...staticEntries, ...postEntries, ...bookEntries].filter((e) => {
+  return [...staticEntries, ...postEntries, ...bookEntries, ...storeEntries].filter((e) => {
     if (seen.has(e.url)) return false;
     seen.add(e.url);
     return true;

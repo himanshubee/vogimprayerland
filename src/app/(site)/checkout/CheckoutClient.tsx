@@ -1,20 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   AlertTriangle,
   ArrowUpRight,
-  BookOpen,
   CreditCard,
   Loader2,
   Lock,
   ShoppingBag,
+  Truck,
 } from "lucide-react";
-import { useLiveCart, type LiveBook } from "@/components/shop/useLiveCart";
-import { formatPrice } from "@/lib/books-shared";
+import { useLiveCart, type LiveProduct } from "@/components/shop/useLiveCart";
+import { LineThumb } from "@/components/shop/LineThumb";
+import { formatPrice, type BookPrices } from "@/lib/books-shared";
+import { variantLabel, type MerchTemplates } from "@/lib/merch-shared";
 import {
   gatewayOptions,
   type GatewayCurrencies,
@@ -25,7 +26,10 @@ import {
 type Props = {
   /** Current catalogue prices, so an old basket is never priced from a stale
    *  localStorage snapshot. */
-  live: Record<string, LiveBook>;
+  live: Record<string, LiveProduct>;
+  /** Delivery for physical items, in every currency it is charged in. */
+  shipping: BookPrices;
+  templates: MerchTemplates;
   /** Which gateways have credentials on the server. */
   configured: Record<Provider, boolean>;
   /** Gateways currently pointed at a sandbox rather than real money. */
@@ -34,18 +38,31 @@ type Props = {
   gatewayCurrencies: GatewayCurrencies;
 };
 
-const labelCls =
-  "block text-[11px] tracking-[0.28em] uppercase text-midnight/60 mb-1";
+const labelCls = "block text-[11px] tracking-[0.28em] uppercase text-midnight/60 mb-1";
 
 export function CheckoutClient({
   live,
+  shipping,
+  templates,
   configured,
   sandbox,
   gatewayCurrencies,
 }: Props) {
   const search = useSearchParams();
-  const { lines, blocked, subtotal, currency, ready, isEmpty, priceable, totalIn } =
-    useLiveCart(live);
+  const cart = useLiveCart(live, shipping);
+  const {
+    lines,
+    blocked,
+    subtotal,
+    total,
+    currency,
+    ready,
+    isEmpty,
+    priceable,
+    totalIn,
+    hasMerch,
+    hasBooks,
+  } = cart;
 
   const [preferred, setPreferred] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(false);
@@ -66,7 +83,7 @@ export function CheckoutClient({
 
   /** What the buyer will actually be charged, in the gateway's own currency. */
   const chargeCurrency = selected?.currency ?? currency;
-  const chargeTotal = selected?.currency ? totalIn(selected.currency) : subtotal;
+  const chargeTotal = selected?.currency ? totalIn(selected.currency) : total;
 
   // The buyer bounced off PayPal's page without approving.
   const cancelled = search.get("cancelled") === "1";
@@ -85,7 +102,7 @@ export function CheckoutClient({
 
     if (hasBlocked) {
       setError(
-        `Some books in your basket cannot be bought in ${currency}. Please go back to the basket and adjust it.`
+        `Some items in your basket cannot be bought in ${currency}. Please go back to the basket and adjust it.`
       );
       return;
     }
@@ -102,21 +119,37 @@ export function CheckoutClient({
         body: JSON.stringify({
           provider,
           currency,
-          // Only ids and quantities — the server prices the order itself.
-          items: lines.map((l) => ({ bookId: l.bookId, quantity: l.quantity })),
+          // Only ids, quantities and the chosen colour/size — the server
+          // prices the order itself.
+          items: lines.map((l) => ({
+            productId: l.productId,
+            kind: l.kind,
+            quantity: l.quantity,
+            variant: l.variant,
+          })),
           name: data.get("name"),
           email: data.get("email"),
           phone: data.get("phone"),
           country: data.get("country"),
+          shipping: hasMerch
+            ? {
+                name: data.get("ship_name") || data.get("name"),
+                line1: data.get("line1"),
+                line2: data.get("line2"),
+                city: data.get("city"),
+                state: data.get("state"),
+                postcode: data.get("postcode"),
+                country: data.get("ship_country"),
+                phone: data.get("phone"),
+              }
+            : undefined,
         }),
       });
 
       const payload = await res.json().catch(() => ({}));
 
       if (!res.ok || !payload.link) {
-        throw new Error(
-          payload.error || "We could not start your order. Please try again."
-        );
+        throw new Error(payload.error || "We could not start your order. Please try again.");
       }
 
       // The basket is deliberately NOT cleared here — if the buyer abandons the
@@ -126,9 +159,7 @@ export function CheckoutClient({
       // compiler lint reads a property write on a global as a mutation.
       window.location.assign(payload.link);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
-      );
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setLoading(false);
     }
   }
@@ -145,15 +176,18 @@ export function CheckoutClient({
     return (
       <div className="border border-midnight/15 bg-white px-8 py-16 text-center">
         <ShoppingBag className="mx-auto text-gold-deep" size={34} />
-        <h2 className="font-display text-3xl text-midnight mt-5">
-          There is nothing to check out
-        </h2>
+        <h2 className="font-display text-3xl text-midnight mt-5">There is nothing to check out</h2>
         <p className="mt-4 text-midnight/70 max-w-sm mx-auto leading-relaxed">
-          Your basket is empty. Choose a book and it will appear here.
+          Your basket is empty. Choose something and it will appear here.
         </p>
-        <Link href="/books/" className="btn-gold mt-8">
-          Browse the books <ArrowUpRight size={16} />
-        </Link>
+        <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+          <Link href="/store/" className="btn-gold justify-center">
+            Browse the store <ArrowUpRight size={16} />
+          </Link>
+          <Link href="/books/" className="btn-ghost text-midnight border-midnight/30 justify-center">
+            Browse the books
+          </Link>
+        </div>
       </div>
     );
   }
@@ -164,8 +198,8 @@ export function CheckoutClient({
       <form onSubmit={onSubmit}>
         {cancelled && (
           <p className="mb-8 border-l-2 border-gold bg-gold/5 px-4 py-3 text-sm text-midnight">
-            Your PayPal payment was cancelled and nothing was charged. Your basket
-            is exactly as you left it.
+            Your PayPal payment was cancelled and nothing was charged. Your basket is
+            exactly as you left it.
           </p>
         )}
 
@@ -174,11 +208,12 @@ export function CheckoutClient({
           Your details
         </p>
         <h2 className="font-display text-3xl text-midnight mt-4 leading-tight">
-          Where should we send your books?
+          {hasMerch ? "Who is this for?" : "Where should we send your books?"}
         </h2>
         <p className="mt-3 text-sm text-midnight/65 leading-relaxed">
-          Your download links appear on the next page and are emailed to you as
-          well — so the email address matters.
+          {hasBooks
+            ? "Your download links appear on the next page and are emailed to you as well — so the email address matters."
+            : "Your receipt and dispatch updates go to this email address — so it matters."}
         </p>
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
@@ -201,18 +236,79 @@ export function CheckoutClient({
             />
           </label>
           <label className="block">
-            <span className={labelCls}>Phone or WhatsApp</span>
-            <input name="phone" type="tel" className="input-line" placeholder="+234 …" />
-          </label>
-          <label className="block">
-            <span className={labelCls}>City &amp; country</span>
+            <span className={labelCls}>
+              Phone or WhatsApp {hasMerch && <span className="text-gold-deep">*</span>}
+            </span>
             <input
-              name="country"
+              name="phone"
+              type="tel"
+              required={hasMerch}
               className="input-line"
-              placeholder="e.g. Lagos, Nigeria"
+              placeholder="+234 …"
             />
           </label>
+          {!hasMerch && (
+            <label className="block">
+              <span className={labelCls}>City &amp; country</span>
+              <input name="country" className="input-line" placeholder="e.g. Lagos, Nigeria" />
+            </label>
+          )}
         </div>
+
+        {/* DELIVERY ADDRESS — only when something physical is in the basket */}
+        {hasMerch && (
+          <>
+            <p className="eyebrow text-gold-deep mt-12">
+              <span className="gold-rule mr-3" />
+              Delivery address
+            </p>
+            <p className="mt-3 text-sm text-midnight/65 leading-relaxed">
+              Your T-shirts and caps are made to order and sent here. We will email you
+              when they are dispatched.
+            </p>
+            <div className="mt-6 grid gap-6 sm:grid-cols-2">
+              <label className="block sm:col-span-2">
+                <span className={labelCls}>Deliver to (if not you)</span>
+                <input name="ship_name" className="input-line" placeholder="Recipient's name" />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className={labelCls}>
+                  Street address <span className="text-gold-deep">*</span>
+                </span>
+                <input
+                  name="line1"
+                  required
+                  className="input-line"
+                  placeholder="House number and street"
+                />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className={labelCls}>Apartment, landmark, etc.</span>
+                <input name="line2" className="input-line" placeholder="Optional" />
+              </label>
+              <label className="block">
+                <span className={labelCls}>
+                  City <span className="text-gold-deep">*</span>
+                </span>
+                <input name="city" required className="input-line" placeholder="Lagos" />
+              </label>
+              <label className="block">
+                <span className={labelCls}>State / region</span>
+                <input name="state" className="input-line" placeholder="Lagos State" />
+              </label>
+              <label className="block">
+                <span className={labelCls}>Postcode</span>
+                <input name="postcode" className="input-line" placeholder="Optional" />
+              </label>
+              <label className="block">
+                <span className={labelCls}>
+                  Country <span className="text-gold-deep">*</span>
+                </span>
+                <input name="ship_country" required className="input-line" placeholder="Nigeria" />
+              </label>
+            </div>
+          </>
+        )}
 
         {/* PAYMENT METHOD */}
         <p className="eyebrow text-gold-deep mt-12">
@@ -229,7 +325,7 @@ export function CheckoutClient({
             <Link href="/contact/" className="text-gold-deep u-link">
               contact the ministry
             </Link>{" "}
-            and we will arrange your books personally.
+            and we will arrange your order personally.
           </p>
         ) : (
           <div className="mt-5 grid sm:grid-cols-2 gap-4">
@@ -243,9 +339,7 @@ export function CheckoutClient({
                 onSelect={() => setPreferred(o.id)}
                 title={o.label}
                 body={o.blurb}
-                amount={
-                  o.currency ? formatPrice(totalIn(o.currency), o.currency) : null
-                }
+                amount={o.currency ? formatPrice(totalIn(o.currency), o.currency) : null}
                 amountCurrency={o.currency}
                 // Say so plainly when the charge differs from what is on screen,
                 // rather than surprising the buyer on the gateway's own page.
@@ -271,9 +365,8 @@ export function CheckoutClient({
 
         {provider && sandbox[provider] && (
           <p className="mt-7 border border-dashed border-gold/60 bg-gold/5 px-4 py-3 text-xs text-midnight/70">
-            <strong className="text-midnight">Test mode.</strong>{" "}
-            {selected?.label} is running against its sandbox — no real money
-            moves.
+            <strong className="text-midnight">Test mode.</strong> {selected?.label} is
+            running against its sandbox — no real money moves.
           </p>
         )}
 
@@ -307,13 +400,13 @@ export function CheckoutClient({
             <p className="mt-5 flex items-start gap-2 text-xs text-midnight/50">
               <Lock size={13} className="text-gold-deep shrink-0 mt-0.5" />
               <span>
-                You finish securely on {selected?.label ?? "the payment provider"}
-                &rsquo;s own checkout. Card details never touch this site.
+                You finish securely on {selected?.label ?? "the payment provider"}&rsquo;s
+                own checkout. Card details never touch this site.
                 {selected?.converted && (
                   <>
                     {" "}
-                    {selected.label} settles in {chargeCurrency}, so your basket
-                    of {formatPrice(subtotal, currency)} {currency} is charged as{" "}
+                    {selected.label} settles in {chargeCurrency}, so your basket of{" "}
+                    {formatPrice(total, currency)} {currency} is charged as{" "}
                     {formatPrice(chargeTotal, chargeCurrency)} {chargeCurrency}.
                   </>
                 )}
@@ -329,27 +422,23 @@ export function CheckoutClient({
 
         <ul className="mt-6 space-y-4 border-b border-midnight/12 pb-6">
           {lines.map((line) => (
-            <li key={line.bookId} className="flex gap-3.5 items-start">
-              <div className="relative w-11 aspect-[3/4] shrink-0 bg-midnight/5">
-                {line.coverImage ? (
-                  <Image
-                    src={line.coverImage}
-                    alt=""
-                    fill
-                    sizes="44px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <span className="absolute inset-0 flex items-center justify-center bg-midnight text-gold/70">
-                    <BookOpen size={14} />
-                  </span>
-                )}
-              </div>
+            <li key={line.key} className="flex gap-3.5 items-start">
+              <LineThumb
+                kind={line.kind}
+                image={line.image}
+                category={line.category}
+                variant={line.variant}
+                templates={line.category ? templates[line.category] : undefined}
+                sizes="44px"
+                className="w-11 shrink-0"
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-midnight leading-snug">{line.title}</p>
-                {line.quantity > 1 && (
-                  <p className="text-xs text-midnight/50 mt-0.5">× {line.quantity}</p>
-                )}
+                <p className="text-xs text-midnight/50 mt-0.5">
+                  {line.kind === "merch" && line.variant ? variantLabel(line.variant) : null}
+                  {line.kind === "merch" && line.variant && line.quantity > 1 ? " · " : null}
+                  {line.quantity > 1 ? `× ${line.quantity}` : null}
+                </p>
               </div>
               <p className="text-sm text-midnight tabular-nums shrink-0">
                 {line.available && line.unitPrice > 0 ? (
@@ -365,12 +454,27 @@ export function CheckoutClient({
           ))}
         </ul>
 
-        <div className="flex items-baseline justify-between gap-4 pt-6">
-          <span className="text-[11px] tracking-[0.28em] uppercase text-midnight/50">
-            Total
-          </span>
+        <dl className="mt-5 space-y-2 text-sm">
+          <div className="flex justify-between gap-4">
+            <dt className="text-midnight/60">Subtotal</dt>
+            <dd className="text-midnight tabular-nums">{formatPrice(subtotal, currency)}</dd>
+          </div>
+          {hasMerch && (
+            <div className="flex justify-between gap-4">
+              <dt className="text-midnight/60 inline-flex items-center gap-1.5">
+                <Truck size={13} className="text-gold-deep" /> Delivery
+              </dt>
+              <dd className="text-midnight tabular-nums">
+                {cart.shipping > 0 ? formatPrice(cart.shipping, currency) : "Free"}
+              </dd>
+            </div>
+          )}
+        </dl>
+
+        <div className="flex items-baseline justify-between gap-4 pt-5 mt-5 border-t border-midnight/12">
+          <span className="text-[11px] tracking-[0.28em] uppercase text-midnight/50">Total</span>
           <span className="font-display text-3xl text-midnight tabular-nums">
-            {formatPrice(subtotal, currency)}
+            {formatPrice(total, currency)}
             <span className="ml-1.5 text-xs tracking-[0.2em] uppercase text-midnight/45">
               {currency}
             </span>
@@ -379,8 +483,8 @@ export function CheckoutClient({
 
         {hasBlocked && (
           <p className="mt-5 text-xs text-midnight-soft leading-relaxed">
-            Some books cannot be bought in {currency} right now.{" "}
-            <Link href="/books/cart/" className="u-link">
+            Some items cannot be bought in {currency} right now.{" "}
+            <Link href="/cart/" className="u-link">
               Fix your basket
             </Link>{" "}
             to continue.
@@ -388,7 +492,7 @@ export function CheckoutClient({
         )}
 
         <Link
-          href="/books/cart/"
+          href="/cart/"
           className="mt-6 block text-center text-xs text-midnight/50 hover:text-gold-deep transition-colors"
         >
           Edit basket
@@ -452,14 +556,10 @@ function MethodButton({
         </span>
       )}
 
-      <span className="mt-2 block text-xs text-midnight/60 leading-relaxed">
-        {body}
-      </span>
+      <span className="mt-2 block text-xs text-midnight/60 leading-relaxed">{body}</span>
 
       {note && (
-        <span className="mt-1.5 block text-[11px] text-gold-deep leading-relaxed">
-          {note}
-        </span>
+        <span className="mt-1.5 block text-[11px] text-gold-deep leading-relaxed">{note}</span>
       )}
     </button>
   );

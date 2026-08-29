@@ -11,12 +11,14 @@ export const dynamic = "force-dynamic";
  * catalogue or the exchange rates change, so an edited price is visible at
  * once instead of after the revalidate window.
  *
- * /books/cart and /books/checkout are absent on purpose: both are
+ * /cart and /checkout are absent on purpose: both are
  * force-dynamic, because the total a shopper is shown must always match what
  * checkout re-prices from the database.
  */
 export function revalidateShop(slug?: string) {
   revalidatePath("/books");
+  // Store prices convert from the same rate table.
+  revalidatePath("/store");
   if (slug) revalidatePath(`/books/${slug}`);
 }
 
