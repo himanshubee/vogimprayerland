@@ -118,7 +118,52 @@ export function visibleViews(category: GarmentCategory, templates?: CategoryTemp
 }
 export type MerchTemplates = Record<GarmentCategory, CategoryTemplates>;
 
-export const DEFAULT_TEMPLATES: MerchTemplates = { tshirt: {}, cap: {} };
+/**
+ * The ministry's own garment photos, as uploaded on 2026-08-29. These are the
+ * mockups every design is shown on unless the admin replaces them in
+ * "Photo mockups" — and what a fresh database starts from.
+ */
+export const DEFAULT_TEMPLATES: MerchTemplates = {
+  tshirt: {
+    front: {
+      photo: "https://img.vogimprayerland.org/1788004903653-Free_Back_Polo_Shirt_Mockup-(1).png",
+      width: 1500,
+      height: 1800,
+      quad: [[34, 30], [66, 30], [66, 62], [34, 62]],
+      showDesign: true,
+    },
+    back: {
+      photo: "https://img.vogimprayerland.org/1788006291307-Free_Back_Polo_Shirt_Mockup.png",
+      width: 1500,
+      height: 1800,
+      quad: [[34, 30], [66, 30], [66, 62], [34, 62]],
+      showDesign: false,
+    },
+  },
+  cap: {
+    front: {
+      photo: "https://img.vogimprayerland.org/1788006369807-cap-front.png",
+      width: 1500,
+      height: 1800,
+      quad: [[21.7, 36.7], [77.5, 33.5], [78.3, 53.5], [22, 54.6]],
+      showDesign: true,
+    },
+    left: {
+      photo: "https://img.vogimprayerland.org/1788006398847-Baseball_Cap-_Mockup_01.png",
+      width: 1500,
+      height: 1800,
+      quad: [[48.7, 37.3], [66, 30], [79.9, 44.6], [61.9, 55]],
+      showDesign: true,
+    },
+    right: {
+      photo: "https://img.vogimprayerland.org/1788006406249-Baseball_Cap-_Mockup_01-(1).png",
+      width: 1500,
+      height: 1800,
+      quad: [[41.5, 34.2], [68.1, 37.8], [61.8, 55.6], [35, 51.1]],
+      showDesign: true,
+    },
+  },
+};
 
 /** The angles that take a photo. The close-up is the front photo, zoomed. */
 export function photoViews(category: GarmentCategory): GarmentView[] {
