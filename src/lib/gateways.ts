@@ -8,11 +8,10 @@ import type { BookPrices } from "@/lib/books-shared";
  * describe each option. Whether a gateway is *configured* is a server question
  * and is passed down as a prop.
  *
- * Which methods a shopper sees depends on the currency they are browsing in and
- * on each gateway's conversion policy (ALLOWS_CONVERSION below). PayPal
- * converts, so it is always offered and always charges dollars. Paystack does
- * not, so it appears only when the shopper is already paying in naira rather
- * than surprising them with a converted charge.
+ * Every gateway converts, so all three are offered in every currency. The one
+ * a shopper is browsing in is used whenever the gateway settles it; otherwise
+ * the charge falls back to that gateway's own currency (dollars for PayPal,
+ * naira for Paystack) and the checkout says so before they commit.
  */
 
 export type Provider = "flutterwave" | "paystack" | "paypal";
@@ -34,15 +33,15 @@ export type GatewayInfo = {
 /**
  * Whether a gateway may charge in a currency other than the one on screen.
  *
- * PayPal converts: it is the option international buyers reach for, and a
- * dollar charge is what they expect anyway. Paystack does not: it is the local
- * Nigerian method, and offering it to someone shopping in dollars only to bill
- * them naira is a surprise, so it simply doesn't appear unless they are already
- * paying in a currency it settles.
+ * All three may. A buyer browsing in dollars still gets Paystack's card, bank
+ * transfer, USSD and mobile money — it simply bills naira at the day's rate,
+ * which the checkout states next to the option rather than springing on them
+ * at the gateway. Kept as a switch so a gateway can be pinned back to its own
+ * currency later without touching the option-building code.
  */
 const ALLOWS_CONVERSION: Record<Provider, boolean> = {
   flutterwave: true,
-  paystack: false,
+  paystack: true,
   paypal: true,
 };
 
