@@ -3,6 +3,10 @@ import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import {
+  GoogleTagManagerBody,
+  GoogleTagManagerHead,
+} from "@/components/GoogleTagManager";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -64,7 +68,10 @@ export const metadata: Metadata = {
   // Webmaster-tool site verifications carried over from the previous
   // WordPress site (old.vogimprayerland.org).
   verification: {
-    google: "p3zMtdgse25dnwQksgqNy3BV5w7kL4CF7xhmdJ9_fFk",
+    google: [
+      "p3zMtdgse25dnwQksgqNy3BV5w7kL4CF7xhmdJ9_fFk",
+      "v-EZmIPBsPuWYP_O9UnRJVBglFVwuGg8fAvZnad9k1g",
+    ],
     yandex: "4fbdd97331c78d4e",
     other: {
       "msvalidate.01": "EC93E391DA3A3C520BA7E94F01CEF220",
@@ -125,7 +132,12 @@ export default function RootLayout({
       lang="en"
       className={`${cormorant.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <GoogleTagManagerHead />
+        <GoogleAnalytics />
+      </head>
       <body className="min-h-full flex flex-col bg-white text-ink">
+        <GoogleTagManagerBody />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -139,7 +151,6 @@ export default function RootLayout({
           strategy="afterInteractive"
           crossOrigin="anonymous"
         />
-        <GoogleAnalytics />
       </body>
     </html>
   );
