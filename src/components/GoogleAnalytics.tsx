@@ -1,6 +1,6 @@
-// GA4 measurement ID. Carried over from the previous WordPress site
-// (old.vogimprayerland.org). Override per-environment via NEXT_PUBLIC_GA_ID.
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-8H8Z3K4M1B";
+// GA4 measurement ID ("vogimprayerland.org - GA4" stream).
+// Override per-environment via NEXT_PUBLIC_GA_ID.
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-LQF04TNC6V";
 
 // Rendered as plain <script> tags inside <head> (not next/script
 // afterInteractive) so the gtag.js snippet is in the server HTML —
