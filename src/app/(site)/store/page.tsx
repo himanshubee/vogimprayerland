@@ -108,6 +108,12 @@ export default async function StorePage() {
             </Link>
             .
           </p>
+          <p className="mt-3 text-center text-xs text-midnight/60">
+            Questions about paying or an order?{" "}
+            <Link href="/faq/store-and-books/how-do-i-pay/" className="text-gold-deep u-link">How to pay</Link>
+            {" · "}
+            <Link href="/faq/store-and-books/problem-with-my-order/" className="text-gold-deep u-link">A problem with my order</Link>
+          </p>
         </div>
       </section>
     </>

@@ -61,7 +61,7 @@ const REFUND: LegalDoc = {
   heroImage: HERO_WORSHIP,
   seoTitle: "Giving and Refund Policy | VOGIM Prayer Land",
   seoDescription:
-    "Read how VOGIM Prayer Land reviews donation refunds, duplicate charges, errors, unauthorised use and recurring gifts. Prayer, deliverance and counselling are free.",
+    "How VOGIM Prayer Land reviews refunds for duplicate charges, wrong amounts, unauthorised use and recurring gifts. Prayer, deliverance and counselling are free.",
   sections: [
     {
       id: "overview",

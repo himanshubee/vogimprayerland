@@ -9,7 +9,7 @@ export const metadata = {
   alternates: { canonical: "/gallery/" },
   title: "Gallery — VOGIM Prayer Land",
   description:
-    "Photographs from VOGIM Deliverance Ministries — prophetic services, worship nights, deliverance encounters, and moments of restoration.",
+    "Photographs from VOGIM Prayer Land in Ikorodu, Lagos: prophetic services, worship nights and ministry moments. Prayer is always free and private.",
 };
 
 // Refresh the gallery shortly after media is edited in the admin panel.

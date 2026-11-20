@@ -144,7 +144,7 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     path: "/about",
     seoTitle: "About VOGIM Prayer Land | Ikorodu, Lagos Ministry",
     seoDescription:
-      "Read the story of VOGIM Prayer Land in Ikorodu, Lagos. Founded in May 2021 by Prophet Olaofe Oladele, the ministry welcomes everyone for prayer and pastoral care.",
+      "The story of VOGIM Prayer Land in Ikorodu, Lagos: founded in May 2021 by Prophet Olaofe Oladele, open to everyone for free prayer and pastoral care.",
     fields: [
       ...heroFields(
         "About the Ministry",
@@ -359,7 +359,7 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     path: "/partnership",
     seoTitle: "Partnership — VOGIM Prayer Land",
     seoDescription:
-      "Become a covenant partner of VOGIM and help carry deliverance, healing, and the gospel to the nations.",
+      "Become a partner of VOGIM Prayer Land through the official giving channel. Giving is voluntary and separate from prayer, which is always free.",
     fields: [
       ...heroFields(
         "Partnership",
@@ -414,7 +414,7 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     path: "/zoom",
     seoTitle: "Online Prophetic Service on Zoom, Mon and Sat | VOGIM",
     seoDescription:
-      "Join VOGIM Prayer Land's online prophetic service on Mondays and Saturdays at 10:00 PM WAT. No Zoom account or registration is needed. Find the public join link.",
+      "Join VOGIM Prayer Land's online prophetic service on Zoom, Mondays and Saturdays at 10:00 PM WAT. No account or sign-up needed. Prayer is free.",
     fields: [
       { key: "heroEyebrow", label: "Hero eyebrow", type: "text", default: "Live on Zoom", group: "Hero" },
       { key: "heroTitle", label: "Hero title", type: "textarea", default: "Pray with us,\n_wherever you are._", group: "Hero", hint: "New line = line break · _wrap_ for gold italic" },
@@ -487,7 +487,7 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     path: "/media",
     seoTitle: "Media — VOGIM Prayer Land",
     seoDescription:
-      "Sermons, prophetic words, worship moments and gallery from VOGIM Deliverance Ministries.",
+      "Watch and listen to services, teachings and worship from VOGIM Prayer Land in Ikorodu, Lagos, and browse photos. Prayer requests are always free.",
     fields: [
       { key: "heroEyebrow", label: "Hero eyebrow", type: "text", default: "Media", group: "Hero" },
       { key: "heroTitle", label: "Hero title", type: "textarea", default: "Sermons, sounds\n& _moments of glory._", group: "Hero" },
@@ -531,9 +531,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "war-against-marine-kingdom",
     label: "Crusade — Marine Kingdom",
     path: "/war-against-marine-kingdom",
-    seoTitle: "War Against the Marine Kingdom — Prophetic Deliverance Crusade",
+    seoTitle: "War Against the Marine Kingdom | VOGIM Prayer Land",
     seoDescription:
-      "Three nights of prophetic warfare to break covenants with water spirits, dissolve spiritual marriages and reclaim destinies. 25–27 September 2026, 7PM WAT, live on Zoom. Free to attend.",
+      "A three-night prophetic deliverance crusade held live on Zoom, 25 to 27 September 2026, 7:00 PM WAT. Free to attend. Ask to hear about the next one.",
     fields: [
       { key: "heroEyebrow", label: "Hero eyebrow — before the crusade", type: "text", default: "Prophetic Deliverance Crusade · Live on Zoom", group: "Hero" },
       { key: "heroEyebrowLive", label: "Hero eyebrow — while it runs", type: "text", default: "Live now · The crusade is on", group: "Hero" },

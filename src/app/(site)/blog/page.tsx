@@ -9,7 +9,7 @@ export const revalidate = 300;
 
 const TITLE = "Articles & Prayer Points — VOGIM Prayer Land";
 const DESCRIPTION =
-  "Deliverance prayer points, teachings, and faith articles from VOGIM Deliverance Ministries.";
+  "Articles and teachings from VOGIM Prayer Land in Ikorodu, Lagos, on prayer, deliverance and faith. Send a free, private prayer request any time.";
 
 /**
  * Each archive page points its canonical at itself, not at page 1.

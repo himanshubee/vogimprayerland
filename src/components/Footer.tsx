@@ -13,7 +13,7 @@ const ifPublished = (key: (typeof PUBLISHED_OWNER_PAGES)[number], label: string)
 const COLUMNS = [
   { title: "Get prayer", links: [["Prayer request", "/prayer-request/"], ["Healing request", "/healing-request/"], ["Deliverance request", "/deliverance-request/"], ["Dream request", "/dream-interpretation/"], ["How requests work", "/how-requests-work/"]] },
   { title: "Ministries", links: [["Online deliverance", "/online-deliverance/"], ["Marital settlement", "/marital-settlement/"], ["Healing", "/healing/"], ["Dream interpretation", "/dream-interpretation/"]] },
-  { title: "Watch and join", links: [["Services and Zoom", "/services/"], ["Media", "/media/"], ["Gallery", "/gallery/"], ["Testimonies", "/testimonies/"], ["Outreach", "/outreach/"]] },
+  { title: "Watch and join", links: [["Services and Zoom", "/services/"], ["Zoom room", "/zoom/"], ["Media", "/media/"], ["Gallery", "/gallery/"], ["Testimonies", "/testimonies/"], ["Outreach", "/outreach/"]] },
   { title: "About", links: [["Our story", "/about/"], ...ifPublished("what-we-believe", "What we believe"), ["Leaders", "/leaders/"], ["Visit", "/visit/"], ["Contact", "/contact/"]] },
   { title: "Give and shop", links: [["Give", "/give/"], ["Partnership", "/partnership/"], ...ifPublished("where-gifts-go", "Where gifts go"), ["Store", "/store/"], ["Books", "/books/"], ["FAQ", "/faq/"]] },
   { title: "Trust and legal", links: [["Privacy policy", "/privacy-policy/"], ["Cookie policy", "/cookie-policy/"], ["Giving and refund policy", "/refund-policy/"], ["Terms", "/terms-and-conditions/"], ...ifPublished("safeguarding", "Safeguarding"), ["Official channels", "/notice/"], ["Complaints", "/complaints/"], ["Privacy requests", "/privacy-requests/"], ...ifPublished("accessibility", "Accessibility")] },

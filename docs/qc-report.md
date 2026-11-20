@@ -30,9 +30,9 @@ Status words: **Done** = built and checked here. **Blocked** = waits on a named 
 | Q5 | FAQ question and category meta descriptions outside 140–160 characters | P3 | Fixed with a fitter that only appends fixed, true lines |
 | Q6 | `/books/` and `/store/` had no canonical | P2 | Fixed (self-canonical on `www`) |
 | Q7 | Meta descriptions over 160 characters on `/healing/`, `/healing-request/`, `/give/`, `/notice/`, `/privacy-requests/`, and under 140 on `/store/`, `/books/` | P3 | Fixed |
-| Q8 | CMS-driven descriptions outside 140–160 on `/about/` (162), `/zoom/` (161), `/refund-policy/` (163), `/partnership/` (102), `/media/` (88), `/blog/` (91), `/gallery/` (135); `/blog/` and `/gallery/` still say "VOGIM Deliverance Ministries" | P3 | Open. Edit in the admin Pages editor after D1 (name) is decided; saved CMS values override code defaults |
-| Q9 | `/war-against-marine-kingdom/` title is 62 characters and no page links to it (past event) | P3 | Open. Owner decides whether the event page stays in the sitemap |
-| Q10 | `/zoom/` and some FAQ answer pages (dreams, marriage, store) have 2 inbound internal links rather than 3 | P3 | Open. Resolves as more owner-supplied answers in those categories are published |
+| Q8 | CMS-driven descriptions outside 140–160 on `/about/`, `/zoom/`, `/refund-policy/`, `/partnership/`, `/media/`, `/blog/`, `/gallery/` | P3 | Fixed in code defaults (re-crawl: 0 out of range). A value saved in the admin SEO editor still overrides the default |
+| Q9 | `/war-against-marine-kingdom/` title 62 characters; no page links to the past event | P3 | Title fixed (50). Linking or retiring the event page is an owner decision |
+| Q10 | `/zoom/` and some FAQ answer pages had 2 inbound internal links | P3 | Fixed: Zoom room in the footer, FAQ deep links kept on ministry pages, store FAQ links, every topic linked from each topic page. Re-crawl: only the single published marriage answer has 2 (it gains more once "What is marital settlement?" is supplied) |
 
 ## Coverage map (16.1)
 
@@ -59,6 +59,10 @@ Status words: **Done** = built and checked here. **Blocked** = waits on a named 
 `CARE_REFRESH_V1` controls the platform release: `off` (or unset) → previous dashboard; `staff` → new inbox for signed-in staff; `10`/`50`/`100` → staff plus that share of visitors, bucketed by a stable id. Rollback was tested in `tests/platform.test.mjs` (stage `off` and unset both return the old path) and on the built server. Role checks apply in both paths. After Pass 2 finding R3, the old dashboard also writes audit entries for its page load (one `open` for the list) and for CSV exports; it still loads full request text with the page, which is why the new inbox is the target state.
 
 Public-site changes from earlier phases are not behind the flag; they are already in the working tree and were reviewed as one release.
+
+## Follow-up after merge (20 November 2026)
+
+Merged to `main`. Re-crawl of 73 sitemap URLs on a fresh build: no description or title out of range, no broken links, no error pages. Lighthouse could not be run on this machine (fetching the tool was not permitted), so speed and automated accessibility scores are still **Not run**.
 
 ## Pass 2 (independent reviewer)
 

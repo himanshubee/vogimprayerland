@@ -7,9 +7,9 @@ export type Faq = { question: string; answer: string };
 /** relatedPath links up to five deeper answers from the FAQ hub that point back at this page. */
 export function FaqList({ faqs, title = "Frequently asked questions", relatedPath }: { faqs: Faq[]; title?: string; relatedPath?: string }) {
   if (!faqs.length) return null;
-  const onPage = new Set(faqs.map((f) => f.question.toLowerCase()));
+  // Questions repeated on the page still link out: the FAQ page carries the fuller answer and next steps.
   const more = relatedPath
-    ? PUBLISHED_QUESTIONS.filter((q) => (q.related_pages.includes(relatedPath) || q.request_page === relatedPath) && !onPage.has(q.question.toLowerCase())).slice(0, 5)
+    ? PUBLISHED_QUESTIONS.filter((q) => q.related_pages.includes(relatedPath) || q.request_page === relatedPath).slice(0, 5)
     : [];
   const jsonLd = {
     "@context": "https://schema.org",
@@ -38,7 +38,7 @@ export function FaqList({ faqs, title = "Frequently asked questions", relatedPat
         </div>
         {more.length > 0 && (
           <div className="mt-8">
-            <h3 className="font-semibold text-maroon">More answers</h3>
+            <h3 className="font-semibold text-maroon">Fuller answers</h3>
             <ul className="mt-3 space-y-1">
               {more.map((q) => <li key={q.slug}><Link href={faqHref(q)} className="inline-flex min-h-11 items-center text-maroon underline underline-offset-4">{q.question}</Link></li>)}
               <li><Link href="/faq/" className="inline-flex min-h-11 items-center text-maroon underline underline-offset-4">All FAQs</Link></li>

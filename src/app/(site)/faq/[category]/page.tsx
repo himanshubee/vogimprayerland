@@ -32,7 +32,7 @@ export default async function FaqCategoryPage({ params }: Props) {
     "@type": "FAQPage",
     mainEntity: category.questions.map((q) => ({ "@type": "Question", name: q.question, acceptedAnswer: { "@type": "Answer", text: q.short_answer } })),
   };
-  const others = FAQ_CATEGORIES.filter((c) => c.slug !== category.slug).slice(0, 4);
+  const others = FAQ_CATEGORIES.filter((c) => c.slug !== category.slug);
   return (
     <SimplePage eyebrow="FAQs" title={`${category.name} FAQs`} intro={category.intro}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
