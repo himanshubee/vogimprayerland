@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Heart, BookOpen, HandHeart, Hourglass, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { InShort } from "@/components/InShort";
 import { Reveal } from "@/components/Reveal";
 import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
@@ -74,6 +75,7 @@ export default async function MaritalSettlementPage() {
           text: "Whoso findeth a wife findeth a good thing, and obtaineth favour of the Lord.",
         }}
       />
+      <InShort>VOGIM Prayer Land in Ikorodu, Lagos, Nigeria offers free, private prayer and guidance for marriages, relationships and families. Send a request through the prayer form and share only what you choose. Intercessors pray over requests each morning, and a pastor may follow up where needed.</InShort>
 
       {/* INTRO with image */}
       <section className="bg-white paper-grain">

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default function LeadersPage() {
-  const jsonLd = { "@context": "https://schema.org", "@type": "Person", name: MINISTRY.founder.name, jobTitle: MINISTRY.founder.role, worksFor: { "@id": `${absoluteUrl()}#organization` }, image: absoluteUrl("/past.jpeg") };
+  const jsonLd = { "@context": "https://schema.org", "@type": "Person", "@id": `${absoluteUrl()}#founder`, name: MINISTRY.founder.name, jobTitle: MINISTRY.founder.role, worksFor: { "@id": `${absoluteUrl()}#organization` }, image: absoluteUrl("/past.jpeg") };
   return (
     <SimplePage eyebrow="Our leaders" title="Leadership at VOGIM Prayer Land" intro="VOGIM Prayer Land is led by Prophet Olaofe Oladele, Founder and General Overseer. He founded the ministry in May 2021 as village evangelism in Porto Novo and the surrounding communities.">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />

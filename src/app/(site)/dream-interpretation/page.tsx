@@ -15,7 +15,7 @@ const FAQS = [
 ];
 
 export default function DreamInterpretationPage() {
-  return <RequestExperience eyebrow="Dream interpretation prayer ministry" title="Send Your Dream for Interpretation" intro="Send your dream privately to the VOGIM ministry team. This service is free. Include the details you remember and share only what you choose." intent="Dream Interpretation" submitLabel="Send my dream" fields={[
+  return <RequestExperience eyebrow="Dream interpretation prayer ministry" title="Send Your Dream for Interpretation" intro="Send your dream privately to the VOGIM Prayer Land ministry team in Ikorodu, Lagos, Nigeria. This online service is free and open to people anywhere. Include the details you remember and share only what you choose." intent="Dream Interpretation" submitLabel="Send my dream" fields={[
     { name: "name", label: "Name", required: true, autoComplete: "name" },
     { name: "email", label: "Email", type: "email", inputMode: "email", required: true, autoComplete: "email" },
     { name: "phone", label: "Phone or WhatsApp (optional)", type: "tel", inputMode: "tel", autoComplete: "tel" },

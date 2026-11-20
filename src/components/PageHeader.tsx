@@ -56,7 +56,16 @@ export function PageHeader({ eyebrow, title, intro, scripture, image }: Props) {
               &ldquo;{scripture.text}&rdquo;
             </blockquote>
             <figcaption className="mt-3 text-[11px] tracking-[0.28em] uppercase text-gold">
-              {scripture.ref}{!scripture.ref.includes("KJV") && " · KJV"}
+              <cite className="not-italic">
+                <a
+                  href={`https://www.biblegateway.com/passage/?search=${encodeURIComponent(scripture.ref.replace(/\s*·?\s*KJV$/, ""))}&version=KJV`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline-offset-4 hover:underline"
+                >
+                  {scripture.ref}{!scripture.ref.includes("KJV") && " · KJV"}
+                </a>
+              </cite>
             </figcaption>
           </figure>
         )}

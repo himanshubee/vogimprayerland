@@ -49,7 +49,7 @@ Items below are blocked, not skipped. No claim, policy protection, price or past
 - [ ] D10: Approve the medical, mental-health and emergency care-note wording. The existing healing-page doctor wording remains.
 - [ ] D11: Decide whether a “Save data” control is wanted.
 - [ ] D12: The code currently uses `https://www.vogimprayerland.org` and redirects the bare host to it. Confirm this canonical host.
-- [ ] D13: Decide whether training crawlers GPTBot and Google-Extended are allowed. Search and AI-answer crawlers are allowed; training crawlers remain blocked.
+- [x] D13: Decided 20 Nov 2026 (per the VisibilityIQ audit): GPTBot, Google-Extended, ClaudeBot and other AI crawlers are allowed on public pages; admin, API, checkout and search stay blocked.
 - [ ] D14: Decide whether live Zoom captions will be provided.
 - [ ] D15: Decide whether any ad pixels or heatmaps may be used. None are enabled.
 - [ ] D16: State whether public services or private sessions are recorded, where recordings are kept and for how long.
@@ -94,3 +94,17 @@ Items below are blocked, not skipped. No claim, policy protection, price or past
 | V12 | `next/image` is used and the home page is a static hero, not an autoplay slider. Actual CDN image weights need a production Lighthouse run. | `src/app/(site)/page.tsx` |
 | V13 | A retention endpoint anonymises requests after 5 years and enquiries after 2, logs each run, and accepts a scheduler token. A daily schedule still has to be set up (see Access). Giving records are kept (7-year accounting period). | `src/lib/retention.ts`, `src/app/api/admin/retention/route.ts` |
 | V14 | No recording configuration was found. Owner confirmation is required before making recording claims. | `OWNER_INPUTS.md` D16 |
+
+## VisibilityIQ audit follow-ups (20 Nov 2026)
+
+The audit scored the live site, which still runs the old build. Code changes from it are on `main`. These need people, accounts or ministry words:
+
+- [ ] **Cloudflare:** turn off the managed robots.txt / "Block AI bots" setting. The live robots.txt blocks ClaudeBot, GPTBot and Google-Extended before the site's own rules are read.
+- [ ] **Google Business Profile:** create and verify it for 18 Association Avenue, Owutu-Agric, Ikorodu (category: church), with the exact name, phone and service hours. The audit found the ministry absent from the Google map.
+- [ ] **Reviews:** ask real members for Google reviews, with no incentive, and reply to each.
+- [ ] **Search Console and Bing Webmaster Tools:** submit the sitemap after deploy, and request indexing of the home page. The site did not appear for its own name.
+- [ ] **Entity links:** add any official profiles the ministry or founder holds (for example LinkedIn, Instagram, X, a Wikidata item if one is created properly) so they can be added to the schema `sameAs`. Founder `sameAs` needs the founder's own profiles.
+- [ ] **Directories and mentions:** list the ministry on reputable church and local directories with identical name, address and phone. No paid links.
+- [ ] **Article bylines:** articles show "By VOGIM Prayer Land". A named author byline needs D2 approval.
+- [ ] **Ministry page headings:** the H1s on Online Deliverance ("Embrace freedom through Christ") and Marital Settlement are CMS wording without the search phrase. Leadership may edit them in Admin → Pages to include "online deliverance" and "marital settlement".
+- [ ] **Content the ministry may write** (questions people search; doctrine and prayers stay the ministry's): How can I find out what my dream means? · How to know if God is warning you in a dream? · What prayer do you say for healing? · What are scriptures used for healing? · A morning prayer for strength and healing · A prayer for a loved one's surgery · Is there a website that offers daily prayers? Each can become an FAQ answer or article once written and approved.

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { getPostBySlug } from "@/lib/posts";
+import { SITE_NAME } from "@/lib/ministry";
 
 export const dynamicParams = true; // generate posts on-demand, then cache (ISR)
 export const revalidate = 300;
@@ -95,7 +96,7 @@ export default async function PostPage({
         articleSection: post.categories.length ? post.categories : undefined,
         author: { "@id": `${SITE_URL}/#organization` },
         publisher: { "@id": `${SITE_URL}/#organization` },
-        inLanguage: "en-US",
+        inLanguage: "en-NG",
       },
       {
         "@type": "BreadcrumbList",
@@ -166,9 +167,17 @@ export default async function PostPage({
           <h1 className="font-display mt-5 text-3xl sm:text-5xl md:text-6xl leading-[1.08] tracking-tight">
             {post.title}
           </h1>
-          <p className="mt-6 flex items-center gap-2 text-white/70 text-sm">
-            <Calendar size={15} className="text-gold" />
-            {fmtDate(post.date)}
+          <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-white/75 text-sm">
+            <Calendar size={15} className="text-gold" aria-hidden="true" />
+            <span>By {SITE_NAME}</span>
+            <span aria-hidden="true">·</span>
+            <span>Published <time dateTime={new Date(post.date).toISOString()}>{fmtDate(post.date)}</time></span>
+            {post.modified && fmtDate(post.modified) !== fmtDate(post.date) && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>Updated <time dateTime={new Date(post.modified).toISOString()}>{fmtDate(post.modified)}</time></span>
+              </>
+            )}
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />

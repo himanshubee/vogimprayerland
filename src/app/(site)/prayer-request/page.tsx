@@ -16,7 +16,7 @@ const FAQS = [
 ];
 
 export default function PrayerRequestPage() {
-  return <RequestExperience eyebrow="Online prayer request" title="Send a Prayer Request Online" intro="Tell us what you would like us to pray about. It is free and private, and you can share as much or as little as you choose. Intercessors pray over requests each morning." intent="Prayer Request" submitLabel="Send my prayer request" fields={[
+  return <RequestExperience eyebrow="Online prayer request" title="Send a Prayer Request Online" intro="Send a free online prayer request to VOGIM Prayer Land in Ikorodu, Lagos, from anywhere. Tell us what you would like us to pray about. It is private, and you can share as much or as little as you choose. Intercessors pray over requests each morning." intent="Prayer Request" submitLabel="Send my prayer request" fields={[
     { name: "name", label: "Name", required: true, autoComplete: "name" },
     { name: "email", label: "Email", type: "email", inputMode: "email", required: true, autoComplete: "email" },
     { name: "phone", label: "Phone or WhatsApp (optional)", type: "tel", inputMode: "tel", autoComplete: "tel" },

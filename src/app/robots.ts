@@ -5,10 +5,18 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        userAgent: ["Googlebot", "Bingbot", "OAI-SearchBot", "ChatGPT-User", "PerplexityBot", "ClaudeBot", "Claude-SearchBot", "Applebot"],
+        // Search, answer and AI-model crawlers may read public pages so AI assistants can describe the
+        // ministry accurately (D13, decided 20 Nov 2026 following the VisibilityIQ audit).
+        userAgent: [
+          "Googlebot", "Bingbot", "Applebot", "Applebot-Extended",
+          "OAI-SearchBot", "ChatGPT-User", "GPTBot",
+          "PerplexityBot", "Perplexity-User",
+          "ClaudeBot", "Claude-User", "Claude-SearchBot",
+          "Google-Extended", "DuckAssistBot", "Meta-ExternalAgent",
+        ],
         allow: "/",
+        disallow: ["/admin/", "/api/", "/checkout/", "/cart/", "/faq/search/", "/give/thank-you/", "/checkout/thank-you/"],
       },
-      { userAgent: ["GPTBot", "Google-Extended"], disallow: "/" },
       {
         userAgent: "*",
         allow: "/",

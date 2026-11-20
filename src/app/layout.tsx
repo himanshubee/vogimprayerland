@@ -46,28 +46,56 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, images: [DEFAULT_OG_IMAGE] },
 };
 
+// Organization carries identity (logo, founder, sameAs); Church is the place of worship in Ikorodu.
+// schema.org's Church is a Place type, so organisation properties belong on the Organization node.
 const ORG_AND_SITE_JSONLD = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Church",
+      "@type": "Organization",
       "@id": `${SITE_URL}/#organization`,
       name: SITE_NAME,
       alternateName: MINISTRY.alternateName,
-      url: SITE_URL,
-      logo: `${SITE_URL}${DEFAULT_OG_IMAGE}`,
+      url: `${SITE_URL}/`,
+      logo: { "@type": "ImageObject", url: `${SITE_URL}${DEFAULT_OG_IMAGE}` },
       description: MINISTRY.description,
       telephone: MINISTRY.phone,
       foundingDate: MINISTRY.foundingDate,
-      founder: { "@type": "Person", name: MINISTRY.founder.name, jobTitle: MINISTRY.founder.role },
+      founder: { "@id": `${SITE_URL}/#founder` },
       address: { "@type": "PostalAddress", ...MINISTRY.address },
+      location: { "@id": `${SITE_URL}/#church` },
+      areaServed: "Worldwide",
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "prayer requests and enquiries",
+        telephone: MINISTRY.phone,
+        url: `${SITE_URL}/contact/`,
+        availableLanguage: "English",
+      },
       sameAs: [MINISTRY.social.facebook, MINISTRY.social.youtube],
+    },
+    {
+      "@type": "Church",
+      "@id": `${SITE_URL}/#church`,
+      name: SITE_NAME,
+      url: `${SITE_URL}/visit/`,
+      telephone: MINISTRY.phone,
+      address: { "@type": "PostalAddress", ...MINISTRY.address },
+    },
+    {
+      "@type": "Person",
+      "@id": `${SITE_URL}/#founder`,
+      name: MINISTRY.founder.name,
+      jobTitle: MINISTRY.founder.role,
+      worksFor: { "@id": `${SITE_URL}/#organization` },
+      url: `${SITE_URL}/leaders/`,
     },
     {
       "@type": "WebSite",
       "@id": `${SITE_URL}/#website`,
-      url: SITE_URL,
+      url: `${SITE_URL}/`,
       name: SITE_NAME,
+      alternateName: MINISTRY.alternateName,
       description: DEFAULT_DESCRIPTION,
       publisher: { "@id": `${SITE_URL}/#organization` },
       inLanguage: "en-NG",

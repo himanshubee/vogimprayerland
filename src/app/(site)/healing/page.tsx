@@ -22,7 +22,7 @@ const FAQS = [
 export default function HealingPage() {
   return (
     <>
-      <SimplePage eyebrow="Healing ministry" title="Healing Prayer Ministry Online" intro="VOGIM Prayer Land offers free online healing prayer. You can ask for prayer without sharing a diagnosis or medical records. Send a private request, and please continue with your doctor while we stand in prayer with you.">
+      <SimplePage eyebrow="Healing ministry" title="Healing Prayer Ministry Online" intro="VOGIM Prayer Land in Ikorodu, Lagos offers free online healing prayer to people anywhere. You can ask for prayer without sharing a diagnosis or medical records. Send a private request, and please continue with your doctor while we stand in prayer with you.">
         <Reassurance />
         <section className="mt-10"><h2 className="font-display text-4xl text-maroon">How a healing prayer request works</h2><ol className="mt-6 space-y-5">{["Send your name, email and whatever you would like us to pray about. Health details are optional.", "Your request goes privately to the prayer team. Intercessors pray over requests each morning.", "A pastor may follow up where needed. You can also contact the ministry on WhatsApp."].map((text, index) => <li key={text} className="flex gap-4 rounded-2xl bg-mist p-5"><span className="font-display text-3xl text-gold-deep">0{index + 1}</span><p className="text-slate">{text}</p></li>)}</ol></section>
         <aside className="mt-8 rounded-2xl border-l-4 border-gold bg-cream p-6"><h2 className="font-display text-2xl text-maroon">Your medical care continues</h2><p className="mt-2 text-slate">If you are continuing under medical care, please continue with your doctor while we stand in prayer with you.</p></aside>

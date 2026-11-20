@@ -12,6 +12,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { InShort } from "@/components/InShort";
 import { Reveal } from "@/components/Reveal";
 import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
@@ -71,6 +72,7 @@ export default async function OnlineDeliverancePage() {
           text: "He hath sent me to heal the brokenhearted, to preach deliverance to the captives.",
         }}
       />
+      <InShort>VOGIM Prayer Land in Ikorodu, Lagos, Nigeria offers free, private online deliverance sessions to people anywhere. You send a request, the team confirms it and proposes a time, you receive scripture to read beforehand, and the prophet leads a one-to-one session online, followed by aftercare: scripture, a prayer plan and follow-up.</InShort>
 
       {/* INTRO with image */}
       <section className="bg-white paper-grain">
