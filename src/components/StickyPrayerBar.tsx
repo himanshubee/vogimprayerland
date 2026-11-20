@@ -50,7 +50,15 @@ export function StickyPrayerBar() {
     };
   }, [pathname]);
 
-  if (!allowed || !pastHero || focused || closing || HIDDEN.some((part) => pathname.includes(part))) return null;
+  const visible = allowed && pastHero && !focused && !closing && !HIDDEN.some((part) => pathname.includes(part));
+
+  // Lets the chat launcher sit above the bar only while the bar is on screen.
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-sticky-bar", visible);
+    return () => document.documentElement.removeAttribute("data-sticky-bar");
+  }, [visible]);
+
+  if (!visible) return null;
 
   return (
     <aside className="sticky-prayer md:hidden" aria-label="Prayer shortcuts">

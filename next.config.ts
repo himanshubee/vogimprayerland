@@ -29,10 +29,12 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.chatway.app",
-              "style-src 'self' 'unsafe-inline'",
-              "font-src 'self' data:",
+              // Chatway loads its own stylesheet and fonts; without them the widget renders unstyled in the page flow.
+              "style-src 'self' 'unsafe-inline' https://cdn.chatway.app",
+              "font-src 'self' data: https://cdn.chatway.app https://*.chatway.app",
               "img-src 'self' data: blob: https://img.vogimprayerland.org https://www.google-analytics.com https://www.googletagmanager.com https://*.chatway.app",
-              "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.chatway.app wss://*.chatway.app",
+              // Chatway looks up the visitor's region through Cloudflare's trace endpoint.
+              "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.chatway.app wss://*.chatway.app https://www.cloudflare.com",
               "frame-src 'self' https://www.youtube.com https://www.facebook.com https://*.chatway.app",
               "frame-ancestors 'self'",
               "base-uri 'self'",

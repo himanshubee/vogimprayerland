@@ -39,15 +39,28 @@ export function Footer() {
           </address>
         </div>
 
-        <nav aria-label="Footer" className="grid gap-4 py-10 md:grid-cols-3 xl:grid-cols-6">
-          {COLUMNS.map((column) => (
-            <details key={column.title} className="footer-group border-b border-white/10 md:border-0">
-              <summary>{column.title}</summary>
-              <ul className="space-y-1 pb-4 md:mt-4">
-                {column.links.map(([label, href]) => <li key={href}><Link href={href} className="inline-flex min-h-10 items-center text-sm text-white/75 hover:text-gold">{label}</Link></li>)}
-              </ul>
-            </details>
-          ))}
+        {/* Six open columns from tablet up; accordions on phones (brief 6.5). */}
+        <nav aria-label="Footer" className="py-10">
+          <div className="hidden gap-8 md:grid md:grid-cols-3 xl:grid-cols-6">
+            {COLUMNS.map((column) => (
+              <div key={column.title}>
+                <h2 className="footer-heading">{column.title}</h2>
+                <ul className="mt-4 space-y-1">
+                  {column.links.map(([label, href]) => <li key={href}><Link href={href} className="inline-flex min-h-10 items-center text-sm text-white/75 hover:text-gold">{label}</Link></li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div className="md:hidden">
+            {COLUMNS.map((column) => (
+              <details key={column.title} className="footer-group border-b border-white/10">
+                <summary>{column.title}</summary>
+                <ul className="space-y-1 pb-4">
+                  {column.links.map(([label, href]) => <li key={href}><Link href={href} className="inline-flex min-h-10 items-center text-sm text-white/75 hover:text-gold">{label}</Link></li>)}
+                </ul>
+              </details>
+            ))}
+          </div>
         </nav>
         <div className="flex flex-col gap-4 border-t border-white/15 pt-6 text-sm text-white/65 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} {MINISTRY.name}</p>
