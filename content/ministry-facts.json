@@ -1,0 +1,83 @@
+{
+  "name": "VOGIM Prayer Land",
+  "alternateName": "Voice of God International Ministry",
+  "description": "An online deliverance and prayer ministry rooted in Ikorodu, Lagos, Nigeria",
+  "address": {
+    "streetAddress": "18 Association Avenue, Owutu-Agric",
+    "addressLocality": "Ikorodu",
+    "addressRegion": "Lagos State",
+    "addressCountry": "NG"
+  },
+  "phone": "+234 815 074 3998",
+  "whatsapp": "https://wa.me/2348150743998",
+  "email": "hello@vogimprayerland.org",
+  "founder": {
+    "name": "Prophet Olaofe Oladele",
+    "role": "Founder & General Overseer"
+  },
+  "foundingDate": "2021-05",
+  "origin": "Village evangelism in Porto Novo and the surrounding communities",
+  "services": [
+    {
+      "id": "monday-prophetic",
+      "name": "Online Prophetic Service",
+      "day": "Monday",
+      "byDay": "https://schema.org/Monday",
+      "time": "22:00",
+      "displayTime": "10:00 PM WAT",
+      "mode": "Zoom",
+      "durationMinutes": 120,
+      "joinUrl": "https://us06web.zoom.us/j/7885810191?pwd=7RhsFPIzCcnZuKkwos0r7bhhmyS9ec.1"
+    },
+    {
+      "id": "wednesday-bible-study",
+      "name": "Bible Study",
+      "day": "Wednesday",
+      "byDay": "https://schema.org/Wednesday",
+      "time": "19:00",
+      "displayTime": "7:00 PM WAT",
+      "mode": "Zoom",
+      "durationMinutes": 90,
+      "joinUrl": "https://us06web.zoom.us/j/7885810191?pwd=7RhsFPIzCcnZuKkwos0r7bhhmyS9ec.1"
+    },
+    {
+      "id": "saturday-prophetic",
+      "name": "Online Prophetic Service",
+      "day": "Saturday",
+      "byDay": "https://schema.org/Saturday",
+      "time": "22:00",
+      "displayTime": "10:00 PM WAT",
+      "mode": "Zoom",
+      "durationMinutes": 120,
+      "joinUrl": "https://us06web.zoom.us/j/7885810191?pwd=7RhsFPIzCcnZuKkwos0r7bhhmyS9ec.1"
+    },
+    {
+      "id": "sunday-worship",
+      "name": "Sunday Worship",
+      "day": "Sunday",
+      "byDay": "https://schema.org/Sunday",
+      "time": "09:00",
+      "displayTime": "9:00 AM WAT",
+      "mode": "In person and livestream",
+      "durationMinutes": 150,
+      "joinUrl": null
+    }
+  ],
+  "meetingId": "788 5810 191",
+  "givingUrl": "https://give.vogimprayerland.org/",
+  "social": {
+    "facebook": "https://www.facebook.com/vogimdeliveranceministries",
+    "youtube": "https://www.youtube.com/@vogimdeliveranceministry"
+  },
+  "publishing": {
+    "replyWithin24HoursApproved": false,
+    "everyRequestReadApproved": false,
+    "careNoteApproved": false,
+    "commitmentsApproved": false,
+    "registeredName": "",
+    "registrationNumber": "",
+    "privacyContact": "",
+    "complaintsContact": "",
+    "securityContact": ""
+  }
+}

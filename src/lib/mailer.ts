@@ -1,40 +1,23 @@
 import nodemailer from "nodemailer";
 
 const TO = process.env.SUBMISSIONS_EMAIL || "vogimdeliveranceministry@gmail.com";
-
-// ── Optional SMTP (Brevo/Gmail/etc.) ─────────────────────────────────────
-// If SMTP_* creds are present we use them (most reliable). If they're blank,
-// we fall back to FormSubmit.co below, which needs NO account and NO signup.
 const host = process.env.SMTP_HOST;
 const port = Number(process.env.SMTP_PORT || 587);
 const user = process.env.SMTP_USER;
 const pass = process.env.SMTP_PASS;
-
 const smtpEnabled = Boolean(host && user && pass);
 
 const transporter = smtpEnabled
-  ? nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465, // true for 465, false for 587 (STARTTLS)
-      auth: { user, pass },
-    })
+  ? nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass } })
   : null;
 
-/**
- * Send an arbitrary email (used by the CRM to reply to a contact).
- * Requires SMTP — FormSubmit can only deliver to the ministry inbox, not to
- * an arbitrary recipient. Returns a structured result; never throws.
- */
 export async function sendEmail(opts: {
   to: string;
   subject: string;
   text: string;
   replyTo?: string;
 }): Promise<{ ok: boolean; error?: string }> {
-  if (!transporter) {
-    return { ok: false, error: "Email sending is not configured (SMTP)." };
-  }
+  if (!transporter) return { ok: false, error: "Email sending is not configured (SMTP)." };
   try {
     await transporter.sendMail({
       from: process.env.SMTP_FROM || `VOGIM Prayer Land <${user}>`,
@@ -42,9 +25,7 @@ export async function sendEmail(opts: {
       replyTo: opts.replyTo || undefined,
       subject: opts.subject,
       text: opts.text,
-      html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#1A0608;white-space:pre-wrap;">${escapeHtml(
-        opts.text
-      )}</div>`,
+      html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#1A0608;white-space:pre-wrap;">${escapeHtml(opts.text)}</div>`,
     });
     return { ok: true };
   } catch (err) {
@@ -54,134 +35,67 @@ export async function sendEmail(opts: {
 }
 
 function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-function buildHtml(submission: {
-  intent: string;
-  fields: Record<string, string>;
-}) {
-  const rows = Object.entries(submission.fields)
-    .map(
-      ([k, v]) =>
-        `<tr>
-          <td style="padding:6px 12px;border:1px solid #eee;font-weight:600;text-transform:capitalize;color:#7A0E1A;">${escapeHtml(
-            k
-          )}</td>
-          <td style="padding:6px 12px;border:1px solid #eee;color:#1A0608;white-space:pre-wrap;">${escapeHtml(
-            v
-          )}</td>
-        </tr>`
-    )
-    .join("");
-
-  return `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-      <div style="background:#7A0E1A;color:#D4A437;padding:20px 24px;">
-        <h2 style="margin:0;font-size:20px;">New ${escapeHtml(
-          submission.intent
-        )}</h2>
-        <p style="margin:4px 0 0;font-size:12px;color:#E5C97A;">VOGIM Prayer Land — website submission</p>
-      </div>
-      <table style="border-collapse:collapse;width:100%;margin-top:0;">
-        ${rows}
-      </table>
-      <p style="font-size:11px;color:#999;padding:16px 24px;">
-        Sent automatically from vogimprayerland.org
-      </p>
+function notificationHtml(intent: string, id: string) {
+  return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1A0608">
+    <div style="background:#4A0A12;color:#E3B23C;padding:20px 24px;border-radius:12px 12px 0 0">
+      <h2 style="margin:0;font-size:20px">New ${escapeHtml(intent)}</h2>
+      <p style="margin:4px 0 0;font-size:14px;color:#FFFFFF">VOGIM Prayer Land</p>
     </div>
-  `;
+    <div style="padding:24px;border:1px solid #E4D9CB;border-top:0;border-radius:0 0 12px 12px">
+      <p>A new ${escapeHtml(intent)} arrived. Open the protected inbox to read it.</p>
+      <p><a href="https://www.vogimprayerland.org/admin/" style="color:#7A0E1A;font-weight:600">Open the admin inbox</a></p>
+      <p style="font-size:12px;color:#5B4B4D">Reference: ${escapeHtml(id)}. This notification intentionally contains no name, contact details or request text.</p>
+    </div>
+  </div>`;
 }
 
-// ── FormSubmit.co — zero-signup email delivery ───────────────────────────
-// No account, no API key. We POST the submission to their AJAX endpoint and
-// they email it to TO. The FIRST time a new address is used, FormSubmit sends
-// a one-time "Activate" email to that inbox — click it once and every future
-// submission is delivered automatically.
-async function sendViaFormSubmit(submission: {
-  intent: string;
-  fields: Record<string, string>;
-}): Promise<boolean> {
+async function sendViaFormSubmit(intent: string, id: string): Promise<boolean> {
   const endpoint = `https://formsubmit.co/ajax/${encodeURIComponent(TO)}`;
-
-  const payload: Record<string, string> = {
-    _subject: `New ${submission.intent} — ${
-      submission.fields.name || "Anonymous"
-    }`,
-    _template: "table",
-    _captcha: "false",
-    intent: submission.intent,
-    ...submission.fields,
-  };
-  // Let replies go straight to the person who submitted, when we have it.
-  if (submission.fields.email) payload._replyto = submission.fields.email;
-
   try {
     const res = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        _subject: `New ${intent} — open the inbox`,
+        _template: "box",
+        _captcha: "false",
+        message: `A new ${intent} arrived. Open https://www.vogimprayerland.org/admin/ to read it. Reference: ${id}`,
+      }),
     });
-
-    if (!res.ok) {
-      console.error(`[mailer] FormSubmit HTTP ${res.status}`);
-      return false;
-    }
-    const data = (await res.json().catch(() => ({}))) as {
-      success?: string | boolean;
-      message?: string;
-    };
-    const ok = String(data.success) === "true";
-    if (!ok) {
-      // Most commonly this is the one-time "please activate" response.
-      console.warn(
-        `[mailer] FormSubmit not yet active: ${
-          data.message || "confirm the activation email sent to " + TO
-        }`
-      );
-    }
-    return ok;
+    return res.ok && String(((await res.json().catch(() => ({}))) as { success?: string | boolean }).success) === "true";
   } catch (err) {
     console.error("[mailer] FormSubmit request failed:", err);
     return false;
   }
 }
 
-/**
- * Email a new submission to the ministry inbox.
- * Best-effort: uses SMTP if configured, otherwise FormSubmit.co (no signup).
- * Never throws — a mail failure must never block the DB write.
- */
-export async function sendSubmissionEmail(submission: {
-  intent: string;
-  fields: Record<string, string>;
-}): Promise<boolean> {
-  // Preferred path: SMTP, if credentials are configured.
+export async function sendSubmissionEmail({ intent, id }: { intent: string; id: string }): Promise<boolean> {
   if (transporter) {
     try {
       await transporter.sendMail({
         from: process.env.SMTP_FROM || `VOGIM Prayer Land <${user}>`,
         to: TO,
-        replyTo: submission.fields.email || undefined,
-        subject: `New ${submission.intent} — ${
-          submission.fields.name || "Anonymous"
-        }`,
-        html: buildHtml(submission),
+        subject: `New ${intent} — open the inbox`,
+        text: `A new ${intent} arrived. Open https://www.vogimprayerland.org/admin/ to read it. Reference: ${id}`,
+        html: notificationHtml(intent, id),
       });
       return true;
     } catch (err) {
-      console.error("[mailer] SMTP send failed, falling back to FormSubmit:", err);
-      // fall through to FormSubmit
+      console.error("[mailer] SMTP notification failed:", err);
     }
   }
+  return sendViaFormSubmit(intent, id);
+}
 
-  // Zero-signup path: FormSubmit.co.
-  return sendViaFormSubmit(submission);
+export async function sendRequestConfirmation(email: string, intent: string): Promise<void> {
+  if (!transporter) return;
+  const prayerFlow = ["Prayer Request", "Healing Request", "Deliverance Request", "Dream Interpretation"].includes(intent);
+  await sendEmail({
+    to: email,
+    subject: `We received your ${intent.toLowerCase()}`,
+    text: `We have received your ${intent.toLowerCase()}. The VOGIM Prayer Land team will review it and arrange any follow-up that is needed.\n\n${prayerFlow ? "Intercessors pray over requests each morning. Prayer, deliverance and counselling are free." : "The responsible team will review your request and contact you about the next steps."}\n\nYou can reply to this email if you need to contact the team.`,
+  });
 }

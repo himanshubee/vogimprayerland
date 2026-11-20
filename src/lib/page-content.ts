@@ -88,12 +88,12 @@ export const PAGE_SCHEMAS: PageSchema[] = [
       { key: "missionImage", label: "Image", type: "image", default: "https://img.vogimprayerland.org/1780648526688-worship.jpg", group: "Mission" },
       { key: "missionPara1", label: "Paragraph 1", type: "textarea", default: "By the power of the Holy Ghost, VOGIM Deliverance Ministries brings deliverance, healing and restoration to individuals and families oppressed and tormented by the devil. Chains of bondage are broken in the blood of Jesus Christ of Nazareth.", group: "Mission" },
       { key: "missionPara2", label: "Paragraph 2", type: "textarea", default: "We demonstrate the power of God by breaking generational poverty, ancestral curses, and generational sins — through teaching, prophetic ministry, and the raw display of God's love, grace, and the forgiveness found only in the Lord Jesus Christ.", group: "Mission" },
-      { key: "stat1Num", label: "Stat 1 number", type: "text", default: "50+", group: "Mission" },
-      { key: "stat1Label", label: "Stat 1 label", type: "text", default: "Nations reached online", group: "Mission" },
-      { key: "stat2Num", label: "Stat 2 number", type: "text", default: "1000s", group: "Mission" },
-      { key: "stat2Label", label: "Stat 2 label", type: "text", default: "Lives restored", group: "Mission" },
-      { key: "stat3Num", label: "Stat 3 number", type: "text", default: "24/7", group: "Mission" },
-      { key: "stat3Label", label: "Stat 3 label", type: "text", default: "Intercession upheld", group: "Mission" },
+      { key: "stat1Num", label: "Stat 1 number", type: "text", default: "", group: "Mission" },
+      { key: "stat1Label", label: "Stat 1 label", type: "text", default: "", group: "Mission" },
+      { key: "stat2Num", label: "Stat 2 number", type: "text", default: "", group: "Mission" },
+      { key: "stat2Label", label: "Stat 2 label", type: "text", default: "", group: "Mission" },
+      { key: "stat3Num", label: "Stat 3 number", type: "text", default: "", group: "Mission" },
+      { key: "stat3Label", label: "Stat 3 label", type: "text", default: "", group: "Mission" },
       // Ministries
       { key: "ministriesEyebrow", label: "Eyebrow", type: "text", default: "Our Ministries", group: "Ministries" },
       { key: "ministriesTitle", label: "Title", type: "textarea", default: "Spirit-led pathways\n_to your breakthrough._", group: "Ministries" },
@@ -112,15 +112,15 @@ export const PAGE_SCHEMAS: PageSchema[] = [
       // Testimonies
       { key: "testimoniesTitle", label: "Title", type: "textarea", default: "What the Lord\nhas done.", group: "Testimonies" },
       { key: "testimoniesIntro", label: "Intro", type: "textarea", default: "Real stories from those who came seeking and left transformed by the power of Jesus Christ.", group: "Testimonies" },
-      { key: "testimony1Text", label: "Quote 1", type: "textarea", default: "Received an international opening door to KUWAIT after I had an encounter with the man of God, Prophet Olaofe Oladele. Praise Master Jesus!", group: "Testimonies" },
-      { key: "testimony1Name", label: "Quote 1 name", type: "text", default: "Karim Mouinath", group: "Testimonies" },
-      { key: "testimony1Place", label: "Quote 1 place", type: "text", default: "Benin Republic", group: "Testimonies" },
-      { key: "testimony2Text", label: "Quote 2", type: "textarea", default: "After years of unexplained sickness and torment, one online session brought freedom and peace to my home. Glory to Jesus.", group: "Testimonies" },
-      { key: "testimony2Name", label: "Quote 2 name", type: "text", default: "Adaeze O.", group: "Testimonies" },
-      { key: "testimony2Place", label: "Quote 2 place", type: "text", default: "Port Harcourt, Nigeria", group: "Testimonies" },
-      { key: "testimony3Text", label: "Quote 3", type: "textarea", default: "I joined the Monday service from another continent. The word came alive. My business broke open the following week.", group: "Testimonies" },
-      { key: "testimony3Name", label: "Quote 3 name", type: "text", default: "Brother Samuel", group: "Testimonies" },
-      { key: "testimony3Place", label: "Quote 3 place", type: "text", default: "London, UK", group: "Testimonies" },
+      { key: "testimony1Text", label: "Quote 1", type: "textarea", default: "", group: "Testimonies" },
+      { key: "testimony1Name", label: "Quote 1 name", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony1Place", label: "Quote 1 place", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony2Text", label: "Quote 2", type: "textarea", default: "", group: "Testimonies" },
+      { key: "testimony2Name", label: "Quote 2 name", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony2Place", label: "Quote 2 place", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony3Text", label: "Quote 3", type: "textarea", default: "", group: "Testimonies" },
+      { key: "testimony3Name", label: "Quote 3 name", type: "text", default: "", group: "Testimonies" },
+      { key: "testimony3Place", label: "Quote 3 place", type: "text", default: "", group: "Testimonies" },
       // Founder
       { key: "founderEyebrow", label: "Eyebrow", type: "text", default: "The Watchman", group: "Founder" },
       { key: "founderTitle", label: "Title", type: "textarea", default: "A man of God, a father to the nation,\n_a giver, a philanthropist._", group: "Founder" },
@@ -142,9 +142,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "about",
     label: "About",
     path: "/about",
-    seoTitle: "About — VOGIM Prayer Land",
+    seoTitle: "About VOGIM Prayer Land | Ikorodu, Lagos Ministry",
     seoDescription:
-      "Voice of God International Ministry (VOGIM) — a deliverance ministry rooted in Lagos, Nigeria, founded May 2021 by Prophet Olaofe Oladele.",
+      "Read the story of VOGIM Prayer Land in Ikorodu, Lagos. Founded in May 2021 by Prophet Olaofe Oladele, the ministry welcomes everyone for prayer and pastoral care.",
     fields: [
       ...heroFields(
         "About the Ministry",
@@ -181,9 +181,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "online-deliverance",
     label: "Online Deliverance",
     path: "/online-deliverance",
-    seoTitle: "Online Deliverance Ministry — VOGIM",
+    seoTitle: "Online Deliverance Prayer, Free and Private | VOGIM",
     seoDescription:
-      "Embracing freedom through Christ at VOGIM. Online deliverance sessions with Prophet Olaofe Emmanuel — wherever you are.",
+      "Request free online deliverance prayer with VOGIM Prayer Land. See how a private session works, how to prepare and what aftercare the ministry provides.",
     fields: [
       ...heroFields(
         "Online Deliverance Ministry",
@@ -191,7 +191,7 @@ export const PAGE_SCHEMAS: PageSchema[] = [
         "In a world filled with spiritual challenges, many seek freedom from bondage and oppression. At VOGIM, we believe in the power of God to set people free from the clutches of the enemy.",
         "https://img.vogimprayerland.org/1780648526061-slider3.webp"
       ),
-      { key: "introParagraph", label: "Intro paragraph", type: "textarea", default: "Whether you are battling spiritual attacks, anxiety, depression, or feel a dark cloud hovering over your life — _online deliverance ministry can help you break those chains._ Through a deliverance request, you can connect with Prophet Olaofe Emmanuel and experience the transforming power of God.", group: "Intro" },
+      { key: "introParagraph", label: "Intro paragraph", type: "textarea", default: "Whether you are battling spiritual attacks, anxiety, depression, or feel a dark cloud hovering over your life — _online deliverance ministry can help you break those chains._ Through a deliverance request, you can connect with Prophet Olaofe Oladele and experience the transforming power of God.", group: "Intro" },
       { key: "introImage", label: "Intro image", type: "image", default: "https://img.vogimprayerland.org/1780648546756-deliverance.webp", group: "Intro" },
       { key: "whyEyebrow", label: "Why eyebrow", type: "text", default: "Why VOGIM", group: "Why VOGIM" },
       { key: "whyTitle", label: "Why title", type: "textarea", default: "The same power, in your home — _no different than in person._", group: "Why VOGIM" },
@@ -242,9 +242,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "marital-settlement",
     label: "Marital Settlement",
     path: "/marital-settlement",
-    seoTitle: "Prayer for Marital Settlement — VOGIM",
+    seoTitle: "Marital Settlement Prayer and Guidance | VOGIM Prayer Land",
     seoDescription:
-      "A guide to finding divine guidance and peace in your marital journey. Through prayer and spiritual counsel, VOGIM helps individuals navigate the complexities of marriage.",
+      "Ask VOGIM Prayer Land for free, private marital settlement prayer and guidance. Learn how requests work and share only what you choose about your relationship.",
     fields: [
       ...heroFields(
         "Prayer for Marital Settlement",
@@ -368,7 +368,7 @@ export const PAGE_SCHEMAS: PageSchema[] = [
         "https://img.vogimprayerland.org/1780648526688-worship.jpg"
       ),
       { key: "whyEyebrow", label: "Eyebrow", type: "text", default: "Why become a partner?", group: "Why Partner" },
-      { key: "whyTitle", label: "Heading", type: "textarea", default: "When you give, you _plant a seed_ that is multiplied back to you.", group: "Why Partner" },
+      { key: "whyTitle", label: "Heading", type: "textarea", default: "Give voluntarily. Stand with the work.", group: "Why Partner" },
       { key: "whyPara1", label: "Paragraph 1", type: "textarea", default: "We always want the best from God, therefore when you give, give the best seed you have. Partnership is a decision of the heart — to stand with the work of God so that more captives are set free, more bodies are healed, and more homes are restored.", group: "Why Partner" },
       { key: "whyPara2", label: "Paragraph 2", type: "textarea", default: "As you sow into this ministry, you sow into every soul it reaches. Your seed becomes a deliverance session, a meal for a widow, a Bible in a seeking hand, and the gospel carried farther than before.", group: "Why Partner" },
       { key: "whyButtonLabel", label: "Button Label", type: "text", default: "Become a Partner", group: "Why Partner" },
@@ -396,7 +396,7 @@ export const PAGE_SCHEMAS: PageSchema[] = [
       { key: "step2Title", label: "Step 2 Title", type: "text", default: "Give", group: "How It Works" },
       { key: "step2Body", label: "Step 2 Body", type: "textarea", default: "Sow your partnership seed through our official giving channel — monthly, or as the Lord leads your heart.", group: "How It Works" },
       { key: "step3Title", label: "Step 3 Title", type: "text", default: "Notify Us", group: "How It Works" },
-      { key: "step3Body", label: "Step 3 Body", type: "textarea", default: "Send us your payment notification on WhatsApp so we can confirm your seed and stand with you in prayer.", group: "How It Works" },
+      { key: "step3Body", label: "Step 3 Body", type: "textarea", default: "Send us your payment notification on WhatsApp so we can confirm your partnership.", group: "How It Works" },
       { key: "howButtonLabel", label: "Button Label", type: "text", default: "Give Now", group: "How It Works" },
       { key: "howButtonHref", label: "Button Link", type: "url", default: "https://give.vogimprayerland.org/", group: "How It Works" },
       { key: "enquiriesEyebrow", label: "Eyebrow", type: "text", default: "For questions or enquiries", group: "Enquiries" },
@@ -412,9 +412,9 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     key: "zoom",
     label: "Zoom Service",
     path: "/zoom",
-    seoTitle: "Join Us on Zoom — VOGIM Prayer Land",
+    seoTitle: "Online Prophetic Service on Zoom, Mon and Sat | VOGIM",
     seoDescription:
-      "Join Voice of God International Ministry (VOGIM) live on Zoom for prayer, deliverance, and the Word. Connect from anywhere in the world.",
+      "Join VOGIM Prayer Land's online prophetic service on Mondays and Saturdays at 10:00 PM WAT. No Zoom account or registration is needed. Find the public join link.",
     fields: [
       { key: "heroEyebrow", label: "Hero eyebrow", type: "text", default: "Live on Zoom", group: "Hero" },
       { key: "heroTitle", label: "Hero title", type: "textarea", default: "Pray with us,\n_wherever you are._", group: "Hero", hint: "New line = line break · _wrap_ for gold italic" },
@@ -473,7 +473,7 @@ export const PAGE_SCHEMAS: PageSchema[] = [
     path: "/deliverance-request",
     seoTitle: "Deliverance Request — VOGIM",
     seoDescription:
-      "Submit your deliverance request to VOGIM. Schedule a one-on-one online session with Prophet Olaofe Emmanuel.",
+      "Submit your deliverance request to VOGIM. Schedule a one-on-one online session with Prophet Olaofe Oladele.",
     fields: heroFields(
       "Deliverance Request",
       "Schedule your\n_deliverance session._",
@@ -663,15 +663,17 @@ export async function getPageMeta(key: string): Promise<Metadata> {
   const baseTitle =
     schema?.seoTitle ||
     (heroTitle ? `${heroTitle} — VOGIM Prayer Land` : "VOGIM Prayer Land");
-  const title = seo.title || baseTitle;
-  const description =
-    seo.description || schema?.seoDescription || content.heroIntro || undefined;
+  const cleanPublicCopy = (value: string) => value.replace(/Prophet Olaofe Emmanuel/g, "Prophet Olaofe Oladele");
+  const title = cleanPublicCopy(seo.title || baseTitle);
+  const description = cleanPublicCopy(
+    seo.description || schema?.seoDescription || content.heroIntro || ""
+  ) || undefined;
 
   const url = `${SITE_URL}${path === "/" ? "/" : `${path}/`}`;
   const canonical = seo.canonical || url;
   const ogImage = seo.ogImage || content.heroImage || undefined;
-  const ogTitle = seo.ogTitle || seo.title || baseTitle;
-  const ogDescription = seo.ogDescription || description;
+  const ogTitle = cleanPublicCopy(seo.ogTitle || seo.title || baseTitle);
+  const ogDescription = cleanPublicCopy(seo.ogDescription || description || "") || undefined;
 
   return {
     title,
@@ -698,6 +700,73 @@ export async function getPageMeta(key: string): Promise<Metadata> {
   };
 }
 
+function protectLiveContent(key: string, values: Record<string, string>) {
+  const content = Object.fromEntries(
+    Object.entries(values).map(([field, value]) => [
+      field,
+      value.replace(/Prophet Olaofe Emmanuel/g, "Prophet Olaofe Oladele"),
+    ])
+  );
+  for (const field of Object.keys(content)) {
+    if (/^testimony\d+(Text|Name|Place)$/.test(field)) content[field] = "";
+  }
+
+  if (key === "home") {
+    Object.assign(content, {
+      heroPrimaryCta: "Request prayer",
+      heroPrimaryHref: "/prayer-request/",
+      heroSecondaryCta: "Join the next service",
+      heroSecondaryHref: "/services/",
+      ministry3Href: "/healing/",
+      stat1Num: "",
+      stat1Label: "",
+      stat2Num: "",
+      stat2Label: "",
+      stat3Num: "",
+      stat3Label: "",
+      testimony1Text: "",
+      testimony2Text: "",
+      testimony3Text: "",
+    });
+  }
+  if (key === "partnership") {
+    Object.assign(content, {
+      whyTitle: "Give voluntarily. Stand with the work.",
+      whyPara1: "Partnership is a voluntary way to support the ministry. It is separate from prayer, deliverance and counselling, which are free.",
+      whyPara2: "No one receives less prayer for giving less. Give only through the official giving channel.",
+      partnership_level: "",
+      step1Body: "Complete the partnership form and the team will explain the next steps.",
+    });
+  }
+  if (key === "give") {
+    Object.assign(content, {
+      heroIntro: "Giving is voluntary. Prayer, deliverance and counselling are free. Card details are entered on the payment provider's hosted checkout and never touch this site.",
+      area1Body: "",
+      area2Body: "",
+      area3Body: "",
+    });
+  }
+  if (key === "zoom") {
+    content.ctaBody = "Join the online prophetic service on Zoom. No account or registration is needed.";
+  }
+  if (key === "online-deliverance") {
+    Object.assign(content, {
+      signsFootnote: "You can share as much or as little as you like. Health, family and marriage details are optional.",
+      why3Title: "Clear next steps",
+      why3Body: "Send a request and the team will confirm what happens next and arrange a session slot.",
+      ctaTitle: "Request a private online deliverance session.",
+      ctaBody: "Send your request and the team will confirm the next steps. Prayer, deliverance and counselling are free.",
+    });
+  }
+  if (key === "healing-request") {
+    content.heroIntro = "Send a free, private healing prayer request. You can share as much or as little as you like. Please continue with your doctor while we stand in prayer with you.";
+  }
+  if (key === "deliverance-request") {
+    content.heroIntro = "Request a free, private online deliverance session. Share only what you choose, and tell us how the team can reach you to arrange the next steps.";
+  }
+  return content;
+}
+
 /** Defaults overlaid by saved edits. Safe — never throws. */
 export async function getPageContent(key: string): Promise<Record<string, string>> {
   const defaults = defaultsFor(key);
@@ -707,9 +776,9 @@ export async function getPageContent(key: string): Promise<Record<string, string
     // Fall back to a legacy draft if a page was only ever draft-saved before,
     // so no prior edits are lost after the switch to direct saving.
     const stored = doc?.values && Object.keys(doc.values).length ? doc.values : doc?.draft ?? {};
-    return { ...defaults, ...stored };
+    return protectLiveContent(key, { ...defaults, ...stored });
   } catch {
-    return defaults;
+    return protectLiveContent(key, defaults);
   }
 }
 

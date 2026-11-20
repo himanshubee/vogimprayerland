@@ -112,7 +112,7 @@ export default async function AboutPage() {
                   &ldquo;{c.visionScripture}&rdquo;
                 </blockquote>
                 <figcaption className="mt-3 text-[10px] tracking-[0.32em] uppercase text-gold">
-                  {c.visionScriptureRef}
+                  {c.visionScriptureRef} · KJV
                 </figcaption>
               </figure>
             </div>

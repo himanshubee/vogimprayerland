@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import {
   getOrder,
   isFulfilment,
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 // GET — admin: recent book orders, newest first.
 export async function GET() {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("finance", "admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -27,7 +27,7 @@ export async function GET() {
 // POST — admin: sweep for orders that were paid but never settled, or re-send
 // a customer's download links.
 export async function POST(req: NextRequest) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("finance", "admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = await req.json().catch(() => null);

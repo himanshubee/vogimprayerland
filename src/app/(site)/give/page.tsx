@@ -1,225 +1,52 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowUpRight, LockKey, SealCheck } from "@phosphor-icons/react/dist/ssr";
 import { PageHeader } from "@/components/PageHeader";
-import { Reveal } from "@/components/Reveal";
-import { ArrowUpRight, HandHeart, Sprout, HomeIcon } from "lucide-react";
-import { getPageContent, getPageMeta } from "@/lib/page-content";
-import { RichText } from "@/components/RichText";
 import { GiveForm } from "@/components/GiveForm";
-import { StablecoinGive } from "@/components/StablecoinGive";
-import {
-  CURRENCIES,
-  isCurrency,
-  isFlutterwaveConfigured,
-  isTestMode,
-} from "@/lib/flutterwave";
+import { getPageContent } from "@/lib/page-content";
+import { CURRENCIES, isCurrency, isFlutterwaveConfigured, isTestMode } from "@/lib/flutterwave";
 import { isPaystackConfigured, isPaystackTestMode } from "@/lib/paystack";
 import { isPaypalConfigured, isPaypalSandbox } from "@/lib/paypal";
 import { resolveGatewayCurrencies, type Provider } from "@/lib/gateways";
+import { MINISTRY, absoluteUrl } from "@/lib/ministry";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return getPageMeta("give");
-}
+export const metadata: Metadata = {
+  title: "Give to VOGIM Prayer Land | Official Giving Channel",
+  description: "Give voluntarily through VOGIM Prayer Land's official online channel. Prayer, deliverance and counselling are free. Card details stay on the secure checkout.",
+  alternates: { canonical: absoluteUrl("/give/") },
+};
 
 export const revalidate = 300;
-
-/** "2000, 5000 , x, 10000" → [2000, 5000, 10000] */
-const numbers = (csv: string): number[] =>
-  csv
-    .split(",")
-    .map((v) => Number(v.trim()))
-    .filter((n) => Number.isFinite(n) && n > 0)
-    .slice(0, 8);
-
-const strings = (csv: string): string[] =>
-  csv
-    .split(",")
-    .map((v) => v.trim())
-    .filter(Boolean)
-    .slice(0, 8);
+const numbers = (csv: string): number[] => csv.split(",").map((value) => Number(value.trim())).filter((value) => Number.isFinite(value) && value > 0).slice(0, 8);
+const strings = (csv: string): string[] => csv.split(",").map((value) => value.trim()).filter(Boolean).slice(0, 8);
 
 export default async function GivePage() {
   const c = await getPageContent("give");
-
-  const currencies = strings(c.giveCurrencies)
-    .map((code) => code.toUpperCase())
-    .filter(isCurrency)
-    .map((code) => ({
-      code,
-      symbol: CURRENCIES[code].symbol,
-      min: CURRENCIES[code].min,
-    }));
-
-  const presets: Record<string, number[]> = {
-    NGN: numbers(c.amountsNgn),
-    USD: numbers(c.amountsUsd),
-    GBP: numbers(c.amountsGbp),
-    EUR: numbers(c.amountsEur),
-    AED: numbers(c.amountsAed),
-  };
-  // Any other enabled currency falls back to the USD ladder so the chips are
-  // never empty when a new code is added in the admin.
-  for (const { code } of currencies) {
-    if (!presets[code]?.length) presets[code] = presets.USD;
-  }
-
-  const defaultCurrency = (c.defaultCurrency || "NGN").toUpperCase();
-  // Which gateways can take a gift, and which are pointed at a sandbox.
-  const configured: Record<Provider, boolean> = {
-    flutterwave: isFlutterwaveConfigured(),
-    paystack: isPaystackConfigured(),
-    paypal: isPaypalConfigured(),
-  };
-  const sandbox: Record<Provider, boolean> = {
-    flutterwave: isTestMode(),
-    paystack: isPaystackTestMode(),
-    paypal: isPaypalSandbox(),
-  };
+  const currencies = strings(c.giveCurrencies).map((code) => code.toUpperCase()).filter(isCurrency).map((code) => ({ code, symbol: CURRENCIES[code].symbol, min: CURRENCIES[code].min }));
+  const presets: Record<string, number[]> = { NGN: numbers(c.amountsNgn), USD: numbers(c.amountsUsd), GBP: numbers(c.amountsGbp), EUR: numbers(c.amountsEur), AED: numbers(c.amountsAed) };
+  for (const { code } of currencies) if (!presets[code]?.length) presets[code] = presets.USD;
+  const configured: Record<Provider, boolean> = { flutterwave: isFlutterwaveConfigured(), paystack: isPaystackConfigured(), paypal: isPaypalConfigured() };
+  const sandbox: Record<Provider, boolean> = { flutterwave: isTestMode(), paystack: isPaystackTestMode(), paypal: isPaypalSandbox() };
   const gatewayCurrencies = resolveGatewayCurrencies(process.env);
+  const giveEnabled = Object.values(configured).some(Boolean) && currencies.length > 0;
 
-  const giveEnabled =
-    Object.values(configured).some(Boolean) && currencies.length > 0;
-
-  // Stablecoins are received directly to the ministry's Treasury wallets —
-  // the section only exists once an address has been filled in via the admin.
-  const stablecoins = [
-    { code: "USDT", address: c.stablecoinUsdtAddress.trim() },
-    { code: "USDC", address: c.stablecoinUsdcAddress.trim() },
-    { code: "RLUSD", address: c.stablecoinRlusdAddress.trim() },
-  ].filter((coin) => coin.address.length > 0);
-
-  if (!giveEnabled) {
-    // Loud, because the symptom is silent: the page renders the old external
-    // button and on-site giving simply never appears. Check FLW_SECRET_KEY is
-    // set in .env.production *on the server*, then rebuild — this page is
-    // prerendered, so the decision is baked in at build time.
-    console.error(
-      `[give] On-site giving is DISABLED — ${
-        !Object.values(configured).some(Boolean)
-          ? "no payment gateway is configured (FLW_SECRET_KEY / PAYSTACK_SECRET_KEY / PAYPAL_CLIENT_ID+PAYPAL_SECRET)"
-          : `no valid currencies in "${c.giveCurrencies}"`
-      }. Falling back to ${c.giveButtonHref}`
-    );
-  }
-  const AREAS = [
-    {
-      icon: HandHeart,
-      title: c.area1Title,
-      body: c.area1Body,
-    },
-    {
-      icon: Sprout,
-      title: c.area2Title,
-      body: c.area2Body,
-    },
-    {
-      icon: HomeIcon,
-      title: c.area3Title,
-      body: c.area3Body,
-    },
-  ];
   return (
     <>
-      <PageHeader
-        image={c.heroImage}
-        eyebrow={c.heroEyebrow}
-        title={<RichText text={c.heroTitle} />}
-        intro={c.heroIntro}
-        scripture={{
-          ref: "2 Corinthians 9:7",
-          text: "God loveth a cheerful giver.",
-        }}
-      />
-
-      {/* GIVE CARD */}
-      <section className="bg-ivory paper-grain">
-        <div className="mx-auto max-w-6xl px-6 py-20 lg:py-28 grid lg:grid-cols-[1.1fr_1fr] gap-14 items-start">
-          <Reveal>
-            <p className="eyebrow text-gold-deep">
-              <span className="gold-rule mr-3" />
-              {c.giveEyebrow}
-            </p>
-            <h2 className="font-display text-4xl md:text-5xl text-midnight mt-4 leading-tight">
-              <RichText text={c.giveTitle} accentClass="italic" />
-            </h2>
-            <p className="mt-6 text-midnight/75 leading-relaxed">
-              {c.giveIntro}
-            </p>
-
-            {giveEnabled ? (
-              <GiveForm
-                currencies={currencies}
-                presets={presets}
-                funds={strings(c.giveFunds)}
-                submitLabel={c.giveButtonLabel}
-                defaultCurrency={defaultCurrency}
-                configured={configured}
-                sandbox={sandbox}
-                gatewayCurrencies={gatewayCurrencies}
-                fallbackHref={c.giveButtonHref}
-              />
-            ) : (
-              // Flutterwave isn't configured on this server — fall back to the
-              // ministry's hosted giving page rather than showing a dead form.
-              <Link
-                href={c.giveButtonHref}
-                className="btn-gold mt-10"
-                target="_blank"
-                rel="noreferrer"
-              >
-                {c.giveButtonLabel}
-                <ArrowUpRight size={16} />
-              </Link>
-            )}
-
-            {/* Wallet-address giving works whether or not the card gateway
-                is configured, so it lives outside the giveEnabled branch. */}
-            <StablecoinGive
-              intro={c.stablecoinIntro}
-              network={c.stablecoinNetwork.trim()}
-              coins={stablecoins}
-            />
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <div className="border border-midnight/15 bg-ivory p-8">
-              <p className="eyebrow text-gold-deep">{c.pledgeEyebrow}</p>
-              <h3 className="font-display text-3xl text-midnight mt-3 leading-tight">
-                {c.pledgeTitle}
-              </h3>
-              <ul className="mt-6 space-y-5">
-                {AREAS.map((a) => {
-                  const Icon = a.icon;
-                  return (
-                    <li key={a.title} className="flex gap-4">
-                      <Icon className="text-gold-deep shrink-0 mt-1" size={22} />
-                      <div>
-                        <p className="font-display text-xl text-midnight">{a.title}</p>
-                        <p className="text-midnight/70 text-sm leading-relaxed mt-1">
-                          {a.body}
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </Reveal>
+      <PageHeader eyebrow="Official online giving" title="Give to VOGIM Prayer Land" intro="Giving is voluntary. Prayer, deliverance and counselling are free. No request, session or follow-up depends on a gift." scripture={{ ref: "2 Corinthians 9:7 · KJV", text: "God loveth a cheerful giver." }} />
+      <section className="bg-cream"><div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.1fr_1fr]">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full bg-mist px-4 py-2 text-sm font-semibold text-maroon"><SealCheck size={22} weight="duotone" />Official giving channel</div>
+          <h2 className="mt-5 font-display text-4xl text-maroon">Give securely through the official page</h2>
+          <p className="mt-4 text-slate">Choose a currency and amount, then continue to the available payment provider. The page shows any currency conversion before you continue.</p>
+          {giveEnabled ? <GiveForm currencies={currencies} presets={presets} funds={strings(c.giveFunds)} submitLabel="Give now" defaultCurrency={(c.defaultCurrency || "NGN").toUpperCase()} configured={configured} sandbox={sandbox} gatewayCurrencies={gatewayCurrencies} fallbackHref={MINISTRY.givingUrl} /> : <a href={MINISTRY.givingUrl} target="_blank" rel="noreferrer" className="btn-gold mt-8">Continue to the official giving page<ArrowUpRight size={18} /></a>}
         </div>
-      </section>
-
-      {/* THANK YOU STRIP */}
-      <section className="relative bg-midnight text-ivory overflow-hidden">
-        <div className="absolute inset-0 starfield opacity-40" />
-        <div className="relative mx-auto max-w-4xl px-6 py-20 text-center">
-          <p className="font-display italic text-3xl md:text-4xl leading-snug">
-            {c.thankQuote}
-          </p>
-          <p className="mt-4 text-[11px] tracking-[0.32em] uppercase text-gold">
-            {c.thankRef}
-          </p>
-        </div>
-      </section>
+        <aside className="space-y-5">
+          <div className="card p-6"><LockKey size={28} weight="duotone" className="text-maroon" /><h2 className="mt-3 font-display text-3xl text-maroon">Your card details stay with the provider</h2><p className="mt-3 text-sm text-slate">Card details are entered on the payment provider&apos;s hosted checkout and never touch this website. Available providers are shown before you continue.</p></div>
+          <div className="card p-6"><h2 className="font-display text-3xl text-maroon">Receipts and monthly gifts</h2><p className="mt-3 text-sm text-slate">A receipt includes the amount, currency, date, reference and fund. If it does not arrive, contact <a className="text-maroon underline" href={`mailto:${MINISTRY.email}`}>{MINISTRY.email}</a>.</p><p className="mt-3 text-sm text-slate">To cancel a monthly gift, email the team. Cancellation does not affect prayer or follow-up.</p><Link href="/refund-policy/" className="mt-4 inline-block text-sm font-semibold text-maroon underline">Read the Giving and refund policy</Link></div>
+          <div className="card p-6"><h2 className="font-display text-3xl text-maroon">Check before you give</h2><p className="mt-3 text-sm text-slate">Confirm the website, giving domain, WhatsApp number and social channels on our official notice.</p><Link href="/notice/" className="mt-4 inline-block text-sm font-semibold text-maroon underline">Is this really VOGIM?</Link></div>
+        </aside>
+      </div></section>
+      {/* Scripture strip held back until leadership approves giving wording (D6). */}
     </>
   );
 }

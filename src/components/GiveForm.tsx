@@ -113,6 +113,9 @@ export function GiveForm({
   }, [open, loading]);
 
   function proceed() {
+    if (valid) {
+      import("@/lib/tracking").then(({ track }) => track("give_start", { currency, page_type: "give" }));
+    }
     if (!valid) {
       setError(
         `Please choose an amount of ${active?.symbol}${active?.min} or more.`
@@ -287,7 +290,7 @@ export function GiveForm({
 
       <p className="mt-5 flex items-center gap-2 text-xs text-midnight/50">
         <Lock size={13} className="text-gold-deep" />
-        Secured by Flutterwave. Card details are entered on Flutterwave&rsquo;s
+        Card details are entered on the selected payment provider&rsquo;s hosted
         checkout and never touch this site.
       </p>
 
@@ -412,14 +415,7 @@ export function GiveForm({
                         placeholder="e.g. Lagos, Nigeria"
                       />
                     </label>
-                    <label className="block sm:col-span-2">
-                      <span className={labelCls}>Prayer point or note</span>
-                      <input
-                        name="note"
-                        className="input-line"
-                        placeholder="Anything you would like us to pray over"
-                      />
-                    </label>
+
                   </div>
                 ) : (
                   <button
@@ -428,7 +424,7 @@ export function GiveForm({
                     className="mt-5 inline-flex items-center gap-2 text-xs text-gold-deep hover:text-midnight transition-colors"
                   >
                     <Plus size={14} />
-                    Add phone, location or a prayer note
+                    Add phone or location
                   </button>
                 )}
 

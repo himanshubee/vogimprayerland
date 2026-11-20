@@ -9,9 +9,11 @@
     "lint": "eslint",
     "import:wp": "node scripts/import-wp.mjs",
     "test:email": "node scripts/test-email.mjs",
-    "postinstall": "node scripts/copy-tinymce.mjs"
+    "postinstall": "node scripts/copy-tinymce.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "@tinymce/tinymce-react": "^6.3.0",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.16.0",
@@ -20,7 +22,8 @@
     "nodemailer": "^8.0.10",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "tinymce": "^8.6.0"
+    "tinymce": "^8.6.0",
+    "web-vitals": "^6.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -1,78 +1,25 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/PageHeader";
-import { RequestForm } from "@/components/RequestForm";
-import { Reveal } from "@/components/Reveal";
-import { getPageContent, getPageMeta } from "@/lib/page-content";
-import { RichText } from "@/components/RichText";
+import { RequestExperience } from "@/components/RequestExperience";
+import { absoluteUrl } from "@/lib/ministry";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return getPageMeta("dream-interpretation");
-}
+export const metadata: Metadata = {
+  title: "Dream Interpretation Prayer Ministry | VOGIM Prayer Land",
+  description: "Send your dream privately to VOGIM Prayer Land for free dream interpretation prayer. Share only what you choose and receive a reply from the ministry team.",
+  alternates: { canonical: absoluteUrl("/dream-interpretation/") },
+};
 
-export const revalidate = 300;
+const FAQS = [
+  { question: "How do I send a dream?", answer: "Complete the form with your name, email and a description of the dream. You can include the date and your phone or WhatsApp number if you choose." },
+  { question: "Is dream interpretation free?", answer: "Yes. Prayer, deliverance and counselling are free. Giving is voluntary and separate from every request." },
+  { question: "Is my dream kept private?", answer: "Yes. Requests are treated with confidentiality and reverence. They are not published or shared with advertisers." },
+];
 
-export default async function DreamInterpretationPage() {
-  const c = await getPageContent("dream-interpretation");
-  return (
-    <>
-      <PageHeader
-        image={c.heroImage}
-        eyebrow={c.heroEyebrow}
-        title={<RichText text={c.heroTitle} />}
-        intro={c.heroIntro}
-        scripture={{
-          ref: "Job 33:14–15",
-          text: "For God speaketh once, yea twice, yet man perceiveth it not. In a dream, in a vision of the night…",
-        }}
-      />
-
-      <section className="bg-ivory paper-grain">
-        <div className="mx-auto max-w-6xl px-6 py-20 lg:py-28 grid lg:grid-cols-[1fr_1.4fr] gap-14">
-          <Reveal>
-            <p className="eyebrow text-gold-deep">
-              <span className="gold-rule mr-3" />
-              Before you send
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-midnight mt-4 leading-tight">
-              Be honest.
-              <br />
-              <span className="italic">Be detailed.</span>
-            </h2>
-            <ul className="mt-6 space-y-3 text-midnight/80">
-              <li>· Note the date and time of the dream if you can.</li>
-              <li>· Describe colors, objects, people, locations and emotions.</li>
-              <li>· Mention any recurring elements from previous dreams.</li>
-              <li>· Don&apos;t self-interpret — leave room for the Spirit.</li>
-            </ul>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <RequestForm
-              intent="Dream Interpretation"
-              fields={[
-                { name: "name", label: "Full Name", required: true },
-                { name: "email", label: "Email", type: "email", required: true },
-                { name: "phone", label: "Phone / WhatsApp", type: "tel" },
-                { name: "dateOfDream", label: "Date of the dream" },
-                {
-                  name: "dream",
-                  label: "Describe the dream in detail",
-                  type: "textarea",
-                  required: true,
-                  rows: 8,
-                  placeholder: "Tell us everything you remember…",
-                },
-                {
-                  name: "context",
-                  label: "Anything happening in your life right now?",
-                  type: "textarea",
-                  rows: 4,
-                },
-              ]}
-            />
-          </Reveal>
-        </div>
-      </section>
-    </>
-  );
+export default function DreamInterpretationPage() {
+  return <RequestExperience eyebrow="Dream interpretation prayer ministry" title="Send Your Dream for Interpretation" intro="Send your dream privately to the VOGIM ministry team. This service is free. Include the details you remember and share only what you choose." intent="Dream Interpretation" submitLabel="Send my dream" fields={[
+    { name: "name", label: "Name", required: true, autoComplete: "name" },
+    { name: "email", label: "Email", type: "email", inputMode: "email", required: true, autoComplete: "email" },
+    { name: "phone", label: "Phone or WhatsApp (optional)", type: "tel", inputMode: "tel", autoComplete: "tel" },
+    { name: "dateOfDream", label: "Date of the dream (optional)" },
+    { name: "dream", label: "Describe the dream", type: "textarea", required: true, rows: 7, placeholder: "Tell us what you remember" },
+  ]} steps={["Your dream goes privately to the ministry team.", "The team reviews what you have shared.", "A team member replies or follows up where needed."]} faqs={FAQS} />;
 }

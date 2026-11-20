@@ -108,7 +108,7 @@ async function downloadImage(remoteUrl, relPath) {
     downloaded.set(remoteUrl, local);
     imgOk += 1;
     return local;
-  } catch (e) {
+  } catch {
     imgFail += 1;
     return null; // leave original URL as fallback
   }

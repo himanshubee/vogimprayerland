@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { getPostBySlug } from "@/lib/posts";
-import Adsense from "@/components/Adsense";
 
 export const dynamicParams = true; // generate posts on-demand, then cache (ISR)
 export const revalidate = 300;
@@ -126,7 +125,6 @@ export default async function PostPage({
 
   return (
     <article className="bg-white">
-      {post.type === "post" && <Adsense />}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

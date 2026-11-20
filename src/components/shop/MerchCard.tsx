@@ -60,7 +60,7 @@ export function MerchCard({
           })}
           {item.colors.length > SWATCHES_SHOWN && (
             <li className="text-[10px] tracking-wider text-midnight/50">
-              +{item.colors.length - SWATCHES_SHOWN}
+              {item.colors.length - SWATCHES_SHOWN} more colours
             </li>
           )}
         </ul>

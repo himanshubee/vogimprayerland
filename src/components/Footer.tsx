@@ -1,117 +1,57 @@
+"use client";
+
 import Link from "next/link";
-import { MapPin, Mail, Phone } from "lucide-react";
+import { FacebookLogo, MapPin, Phone, WhatsappLogo, YoutubeLogo } from "@phosphor-icons/react";
 import { Logo } from "./Logo";
-import { FacebookIcon, YoutubeIcon, InstagramIcon, WhatsAppIcon } from "./SocialIcons";
-import { DEFAULT_SETTINGS, type SiteSettings } from "@/lib/settings";
-import { LEGAL_LINKS } from "@/lib/legal";
+import { COOKIE_SETTINGS_EVENT } from "@/lib/consent";
+import { MINISTRY } from "@/lib/ministry";
+import { PUBLISHED_OWNER_PAGES } from "@/lib/owner-content";
 
-export function Footer({ settings = DEFAULT_SETTINGS }: { settings?: SiteSettings }) {
-  const { social } = settings;
-  const socialLinks = [
-    { label: "Facebook", href: social.facebook, Icon: FacebookIcon },
-    { label: "YouTube", href: social.youtube, Icon: YoutubeIcon },
-    { label: "Instagram", href: social.instagram, Icon: InstagramIcon },
-    { label: "WhatsApp", href: social.whatsapp, Icon: WhatsAppIcon },
-  ].filter((s) => s.href);
+const ifPublished = (key: (typeof PUBLISHED_OWNER_PAGES)[number], label: string) =>
+  PUBLISHED_OWNER_PAGES.includes(key) ? ([[label, `/${key}/`]] as const) : [];
 
+const COLUMNS = [
+  { title: "Get prayer", links: [["Prayer request", "/prayer-request/"], ["Healing request", "/healing-request/"], ["Deliverance request", "/deliverance-request/"], ["Dream request", "/dream-interpretation/"], ["How requests work", "/how-requests-work/"]] },
+  { title: "Ministries", links: [["Online deliverance", "/online-deliverance/"], ["Marital settlement", "/marital-settlement/"], ["Healing", "/healing/"], ["Dream interpretation", "/dream-interpretation/"]] },
+  { title: "Watch and join", links: [["Services and Zoom", "/services/"], ["Media", "/media/"], ["Gallery", "/gallery/"], ["Testimonies", "/testimonies/"], ["Outreach", "/outreach/"]] },
+  { title: "About", links: [["Our story", "/about/"], ...ifPublished("what-we-believe", "What we believe"), ["Leaders", "/leaders/"], ["Visit", "/visit/"], ["Contact", "/contact/"]] },
+  { title: "Give and shop", links: [["Give", "/give/"], ["Partnership", "/partnership/"], ...ifPublished("where-gifts-go", "Where gifts go"), ["Store", "/store/"], ["Books", "/books/"], ["FAQ", "/faq/"]] },
+  { title: "Trust and legal", links: [["Privacy policy", "/privacy-policy/"], ["Cookie policy", "/cookie-policy/"], ["Giving and refund policy", "/refund-policy/"], ["Terms", "/terms-and-conditions/"], ...ifPublished("safeguarding", "Safeguarding"), ["Official channels", "/notice/"], ["Complaints", "/complaints/"], ["Privacy requests", "/privacy-requests/"], ...ifPublished("accessibility", "Accessibility")] },
+] as const;
+
+export function Footer() {
   return (
-    <footer className="relative mt-24 bg-midnight text-ivory overflow-hidden">
-      <div className="absolute inset-0 starfield opacity-40 pointer-events-none" />
-      <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
-
-      <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-10">
-        <div className="grid gap-14 md:grid-cols-[1.6fr_1fr_1fr_1.1fr]">
+    <footer className="mt-0 bg-midnight-dark text-white">
+      <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-6 sm:py-20">
+        <div className="grid gap-8 border-b border-white/15 pb-10 lg:grid-cols-[1.4fr_1fr]">
           <div>
             <Logo light />
-            <p className="mt-6 max-w-sm text-ivory/70 font-display text-lg italic leading-relaxed">
-              &ldquo;{settings.footerQuote}&rdquo;
-            </p>
-            <p className="mt-3 text-xs tracking-[0.32em] uppercase text-gold">
-              {settings.footerQuoteRef}
-            </p>
+            <p className="mt-5 text-white/75">Loving God · Loving Others · In the World</p>
           </div>
-
-          <div>
-            <h4 className="eyebrow text-gold mb-5">{settings.footerCol1Title}</h4>
-            <ul className="space-y-3 text-sm text-ivory/80">
-              {settings.footerCol1.map((l) => (
-                <li key={l.href + l.label}>
-                  <Link href={l.href} className="hover:text-gold">{l.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="eyebrow text-gold mb-5">{settings.footerCol2Title}</h4>
-            <ul className="space-y-3 text-sm text-ivory/80">
-              {settings.footerCol2.map((l) => (
-                <li key={l.href + l.label}>
-                  <Link href={l.href} className="hover:text-gold">{l.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="eyebrow text-gold mb-5">Reach Us</h4>
-            <ul className="space-y-4 text-sm text-ivory/80">
-              <li className="flex gap-3">
-                <MapPin size={16} className="mt-0.5 text-gold shrink-0" />
-                <span>
-                  {settings.address.map((line, i) => (
-                    <span key={i}>
-                      {line}
-                      {i < settings.address.length - 1 && <br />}
-                    </span>
-                  ))}
-                </span>
-              </li>
-              <li className="flex gap-3">
-                <Mail size={16} className="mt-0.5 text-gold shrink-0" />
-                <a href={`mailto:${settings.email}`} className="hover:text-gold">
-                  {settings.email}
-                </a>
-              </li>
-              <li className="flex gap-3">
-                <Phone size={16} className="mt-0.5 text-gold shrink-0" />
-                <span>{settings.phone}</span>
-              </li>
-            </ul>
-            {socialLinks.length > 0 && (
-              <div className="mt-6 flex items-center gap-3">
-                {socialLinks.map(({ label, href, Icon }) => (
-                  <a
-                    key={label}
-                    aria-label={label}
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-2 border border-ivory/20 hover:border-gold hover:text-gold transition-colors"
-                  >
-                    <Icon size={16} />
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
+          <address className="not-italic text-sm leading-7 text-white/80">
+            <p className="flex gap-3"><MapPin size={20} weight="duotone" className="mt-1 shrink-0 text-gold" />{MINISTRY.address.streetAddress}, {MINISTRY.address.addressLocality}, {MINISTRY.address.addressRegion}, Nigeria</p>
+            <a href={`tel:${MINISTRY.phone.replace(/\s/g, "")}`} className="mt-2 flex min-h-11 items-center gap-3 hover:text-gold"><Phone size={20} weight="duotone" className="text-gold" />{MINISTRY.phone}</a>
+            <div className="mt-3 flex gap-2">
+              <a href={MINISTRY.social.facebook} target="_blank" rel="noreferrer" className="icon-button border border-white/25 text-white" aria-label="Facebook"><FacebookLogo size={22} /></a>
+              <a href={MINISTRY.social.youtube} target="_blank" rel="noreferrer" className="icon-button border border-white/25 text-white" aria-label="YouTube"><YoutubeLogo size={22} /></a>
+              <a href={MINISTRY.whatsapp} target="_blank" rel="noreferrer" className="icon-button border border-white/25 text-white" aria-label="WhatsApp"><WhatsappLogo size={22} /></a>
+            </div>
+          </address>
         </div>
 
-        {/* Legal — kept out of the editable columns so it is always present. */}
-        <nav
-          aria-label="Legal"
-          className="mt-16 pt-6 border-t border-ivory/10 flex flex-wrap justify-center gap-x-7 gap-y-3 text-[11px] tracking-[0.28em] uppercase text-ivory/60"
-        >
-          {LEGAL_LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="hover:text-gold transition-colors">
-              {l.label}
-            </Link>
+        <nav aria-label="Footer" className="grid gap-4 py-10 md:grid-cols-3 xl:grid-cols-6">
+          {COLUMNS.map((column) => (
+            <details key={column.title} className="footer-group border-b border-white/10 md:border-0">
+              <summary>{column.title}</summary>
+              <ul className="space-y-1 pb-4 md:mt-4">
+                {column.links.map(([label, href]) => <li key={href}><Link href={href} className="inline-flex min-h-10 items-center text-sm text-white/75 hover:text-gold">{label}</Link></li>)}
+              </ul>
+            </details>
           ))}
         </nav>
-
-        <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] tracking-[0.28em] uppercase text-ivory/50">
-          <span>© {new Date().getFullYear()} {settings.copyrightName}</span>
-          <span className="text-gold/70">{settings.footerTagline}</span>
+        <div className="flex flex-col gap-4 border-t border-white/15 pt-6 text-sm text-white/65 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} {MINISTRY.name}</p>
+          <button type="button" className="min-h-11 self-start text-gold underline underline-offset-4 sm:self-auto" onClick={() => window.dispatchEvent(new Event(COOKIE_SETTINGS_EVENT))}>Cookie settings</button>
         </div>
       </div>
     </footer>

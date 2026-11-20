@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { listContacts, syncContactsFromSubmissions } from "@/lib/crm";
 
 export const dynamic = "force-dynamic";
 
 // GET — admin: all contacts (most recently active first).
 export async function GET() {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("pastor", "admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -20,7 +20,7 @@ export async function GET() {
 
 // POST — admin: rebuild contacts from existing submissions (idempotent).
 export async function POST(req: NextRequest) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("pastor", "admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = await req.json().catch(() => ({}));

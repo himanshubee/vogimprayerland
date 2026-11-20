@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { PAGE_SCHEMAS } from "@/lib/page-content";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { FileText, ChevronRight } from "lucide-react";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Pages — VOGIM Admin" };
 
 export default async function AdminPagesPage() {
-  if (!(await isAuthenticated())) redirect("/admin/login");
+  if (!(await requireRole("admin"))) redirect("/admin/login");
 
   return (
     <div className="min-h-screen bg-ivory-dark text-ink">

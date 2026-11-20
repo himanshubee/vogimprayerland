@@ -1,81 +1,26 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/PageHeader";
-import { RequestForm } from "@/components/RequestForm";
-import { Reveal } from "@/components/Reveal";
-import { getPageContent, getPageMeta } from "@/lib/page-content";
-import { RichText } from "@/components/RichText";
+import { RequestExperience } from "@/components/RequestExperience";
+import { absoluteUrl } from "@/lib/ministry";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return getPageMeta("healing-request");
-}
+export const metadata: Metadata = {
+  title: "Healing Prayer Request, Free Online | VOGIM Prayer Land",
+  description: "Send a free online healing prayer request. Health details are optional, your request stays private, and you can keep seeing your doctor while we pray.",
+  alternates: { canonical: absoluteUrl("/healing-request/") },
+};
 
-export const revalidate = 300;
+const FAQS = [
+  { question: "Do I have to share my condition?", answer: "No. Health information is optional. You can share as much or as little as you like, and you do not need to provide a diagnosis or medical records." },
+  { question: "Is it free?", answer: "Yes. Prayer, deliverance and counselling are free. Giving is voluntary and separate from every request." },
+  { question: "Should I keep seeing my doctor?", answer: "Yes. If you are continuing under medical care, please continue with your doctor while we stand in prayer with you." },
+  { question: "Who reads my request?", answer: "Your request goes to the prayer team. Intercessors pray over requests each morning, and a pastor may follow up where needed." },
+];
 
-export default async function HealingRequestPage() {
-  const c = await getPageContent("healing-request");
-  return (
-    <>
-      <PageHeader
-        image={c.heroImage}
-        eyebrow={c.heroEyebrow}
-        title={<RichText text={c.heroTitle} />}
-        intro={c.heroIntro}
-        scripture={{
-          ref: "Isaiah 53:5",
-          text: "And with his stripes we are healed.",
-        }}
-      />
-
-      <section className="bg-ivory paper-grain">
-        <div className="mx-auto max-w-6xl px-6 py-20 lg:py-28 grid lg:grid-cols-[1fr_1.4fr] gap-14">
-          <Reveal>
-            <p className="eyebrow text-gold-deep">
-              <span className="gold-rule mr-3" />
-              Healing ministry
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-midnight mt-4 leading-tight">
-              We believe in the
-              <br />
-              <span className="italic">Healer over the healing.</span>
-            </h2>
-            <p className="mt-6 text-midnight/75 leading-relaxed">
-              Whether you are facing a long-term illness, a sudden diagnosis,
-              chronic pain, or unseen torment — submit your healing request.
-              Our pastoral team will pray, fast, and follow up with you
-              personally.
-            </p>
-            <p className="mt-4 text-midnight/70 text-sm italic">
-              If you are continuing under medical care, please continue with
-              your doctor while we stand in prayer with you.
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <RequestForm
-              intent="Healing Request"
-              fields={[
-                { name: "name", label: "Full Name", required: true },
-                { name: "email", label: "Email", type: "email", required: true },
-                { name: "phone", label: "Phone / WhatsApp", type: "tel" },
-                { name: "age", label: "Age" },
-                {
-                  name: "condition",
-                  label: "Condition / area needing healing",
-                  type: "textarea",
-                  required: true,
-                  rows: 5,
-                },
-                {
-                  name: "story",
-                  label: "What would you like the team to know?",
-                  type: "textarea",
-                  rows: 4,
-                },
-              ]}
-            />
-          </Reveal>
-        </div>
-      </section>
-    </>
-  );
+export default function HealingRequestPage() {
+  return <RequestExperience eyebrow="Healing prayer request online" title="Send a Healing Prayer Request" intro="Ask the VOGIM team for free, private healing prayer. You do not have to share a condition. If you are continuing under medical care, please continue with your doctor while we stand in prayer with you." intent="Healing Request" submitLabel="Send my healing request" fields={[
+    { name: "name", label: "Name", required: true, autoComplete: "name" },
+    { name: "email", label: "Email", type: "email", inputMode: "email", required: true, autoComplete: "email" },
+    { name: "phone", label: "Phone or WhatsApp (optional)", type: "tel", inputMode: "tel", autoComplete: "tel" },
+    { name: "age", label: "Age (optional)", inputMode: "numeric" },
+    { name: "condition", label: "What would you like us to pray about? (optional)", type: "textarea", rows: 5 },
+  ]} steps={["Send only the details you choose.", "Intercessors pray over requests each morning.", "A pastor may follow up where needed."]} note="If you are continuing under medical care, please continue with your doctor while we stand in prayer with you." faqs={FAQS} />;
 }

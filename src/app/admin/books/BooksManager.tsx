@@ -30,7 +30,6 @@ import {
   computePrices,
   formatPrice,
   type Book,
-  type BookPrices,
 } from "@/lib/books-shared";
 import type { FxRates } from "@/lib/fx";
 

@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { getSchema, getPageContent, getPageSeo } from "@/lib/page-content";
 import { PageEditor } from "./PageEditor";
 
@@ -11,7 +11,7 @@ export default async function EditPage({
 }: {
   params: Promise<{ key: string }>;
 }) {
-  if (!(await isAuthenticated())) redirect("/admin/login");
+  if (!(await requireRole("admin"))) redirect("/admin/login");
   const { key } = await params;
   const schema = getSchema(key);
   if (!schema) notFound();

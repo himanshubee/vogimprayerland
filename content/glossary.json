@@ -1,0 +1,18 @@
+{
+  "_readme": "Glossary terms. Definitions of ministry terms are written or approved by leadership (owner_supplied true). A term renders only when its definition is filled. The /glossary/ hub stays unpublished until at least three terms are ready.",
+  "updated": "2026-11-20",
+  "terms": [
+    { "slug": "deliverance", "term": "Deliverance", "definition": "", "explanation": [], "related_pages": ["/online-deliverance/", "/deliverance-request/"], "owner_supplied": true },
+    { "slug": "intercession", "term": "Intercession", "definition": "", "explanation": [], "related_pages": ["/prayer-request/"], "owner_supplied": true },
+    { "slug": "prophetic-service", "term": "Prophetic service", "definition": "", "explanation": [], "related_pages": ["/services/"], "owner_supplied": true },
+    { "slug": "covenant-partner", "term": "Covenant partner", "definition": "", "explanation": [], "related_pages": ["/partnership/"], "owner_supplied": true },
+    { "slug": "seed", "term": "Seed (in giving)", "definition": "", "explanation": [], "related_pages": ["/give/"], "owner_supplied": true },
+    { "slug": "marital-settlement", "term": "Marital settlement", "definition": "", "explanation": [], "related_pages": ["/marital-settlement/"], "owner_supplied": true },
+    { "slug": "dream-interpretation", "term": "Dream interpretation", "definition": "", "explanation": [], "related_pages": ["/dream-interpretation/"], "owner_supplied": true },
+    { "slug": "healing-prayer", "term": "Healing prayer", "definition": "", "explanation": [], "related_pages": ["/healing/", "/healing-request/"], "owner_supplied": true },
+    { "slug": "aftercare", "term": "Aftercare", "definition": "", "explanation": [], "related_pages": ["/online-deliverance/"], "owner_supplied": true },
+    { "slug": "prayer-plan", "term": "Prayer plan", "definition": "", "explanation": [], "related_pages": ["/online-deliverance/"], "owner_supplied": true },
+    { "slug": "wat", "term": "WAT (West Africa Time)", "definition": "West Africa Time (WAT) is the time zone used in Nigeria. It is one hour ahead of Coordinated Universal Time (UTC+1) all year, with no daylight saving.", "explanation": ["VOGIM Prayer Land gives every service time in WAT. Because countries such as the United Kingdom change their clocks for summer, the gap between WAT and your local time can change during the year. The Services page shows each service in your own time zone."], "related_pages": ["/services/"], "owner_supplied": false },
+    { "slug": "confidential-request", "term": "Confidential request", "definition": "", "explanation": [], "related_pages": ["/how-requests-work/"], "owner_supplied": true }
+  ]
+}

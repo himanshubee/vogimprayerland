@@ -1,405 +1,119 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowUpRight,
-  Flame,
-  HeartHandshake,
-  Sparkles,
-  MoonStar,
-  Cross,
-  Quote,
-  Clock,
-} from "lucide-react";
-import { Reveal } from "@/components/Reveal";
-import { RichText } from "@/components/RichText";
-import { getPageContent, getPageMeta } from "@/lib/page-content";
+import { ArrowRight, Door, HandHeart, Handshake, HandsPraying, Heartbeat, Moon, VideoCamera } from "@phosphor-icons/react/dist/ssr";
+import { MINISTRY, absoluteUrl } from "@/lib/ministry";
+import { NextServiceCard } from "@/components/NextServiceCard";
+import { Reassurance } from "@/components/Reassurance";
+import { ClosingBand } from "@/components/ClosingBand";
+import { FaqList } from "@/components/FaqList";
+import { TESTIMONIES } from "@/lib/testimonies";
+import { TestimonyList } from "@/components/TestimonyList";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return getPageMeta("home");
-}
+export const metadata: Metadata = {
+  title: "VOGIM Prayer Land | Online Deliverance Ministry, Lagos",
+  description: "VOGIM Prayer Land in Ikorodu, Lagos offers free online prayer, deliverance, healing prayer, marital guidance and dream interpretation. Send a private request.",
+  alternates: { canonical: absoluteUrl() },
+};
 
-export const revalidate = 300;
+const MINISTRIES = [
+  { icon: Door, title: "Online Deliverance", body: "Request a private, one-to-one online session and receive clear next steps from the team.", href: "/online-deliverance/" },
+  { icon: Handshake, title: "Marital Settlement", body: "Ask for prayer and guidance for your marriage, relationship or family.", href: "/marital-settlement/" },
+  { icon: Heartbeat, title: "Healing", body: "Send a healing prayer request and share only the details you choose.", href: "/healing/" },
+  { icon: Moon, title: "Dream Interpretation", body: "Send your dream privately to the ministry team for interpretation.", href: "/dream-interpretation/" },
+];
 
-export default async function Home() {
-  const c = await getPageContent("home");
+const FAQS = [
+  { question: "What is VOGIM Prayer Land?", answer: "VOGIM Prayer Land is an online deliverance and prayer ministry rooted in Ikorodu, Lagos, Nigeria. It is led by Prophet Olaofe Oladele and is open to people anywhere." },
+  { question: "Is it free to request prayer?", answer: "Yes. Prayer, deliverance and counselling are free. Giving is voluntary and is never required before you can receive prayer." },
+  { question: "Who can send a request?", answer: "Anyone can ask for prayer from anywhere. The request forms are for adults. If you are under 18, please ask a parent or guardian to send the request for you." },
+  { question: "When are the online services?", answer: "Online Prophetic Services are on Mondays and Saturdays at 10:00 PM WAT. Bible Study is on Wednesdays at 7:00 PM WAT. Sunday Worship is at 9:00 AM WAT, in person and by livestream." },
+  { question: "How do I join on Zoom?", answer: "Open the Services page and choose Join on Zoom. The public service room needs no Zoom account or registration, and the passcode is built into the join link." },
+  { question: "Is my request private?", answer: "Requests are treated with confidentiality and reverence. You can share as much or as little as you like. Health, family and marriage details are optional." },
+];
 
-  const ministries = [
-    { icon: Flame, title: c.ministry1Title, body: c.ministry1Body, href: c.ministry1Href },
-    { icon: HeartHandshake, title: c.ministry2Title, body: c.ministry2Body, href: c.ministry2Href },
-    { icon: Sparkles, title: c.ministry3Title, body: c.ministry3Body, href: c.ministry3Href },
-    { icon: MoonStar, title: c.ministry4Title, body: c.ministry4Body, href: c.ministry4Href },
-  ];
-  const testimonies = [
-    { text: c.testimony1Text, name: c.testimony1Name, place: c.testimony1Place },
-    { text: c.testimony2Text, name: c.testimony2Name, place: c.testimony2Place },
-    { text: c.testimony3Text, name: c.testimony3Name, place: c.testimony3Place },
-  ];
-  const stats: [string, string][] = [
-    [c.stat1Num, c.stat1Label],
-    [c.stat2Num, c.stat2Label],
-    [c.stat3Num, c.stat3Label],
-  ];
-
+export default function Home() {
   return (
     <>
-      {/* HERO */}
-      <section className="relative bg-midnight text-white overflow-hidden">
-        {/* Background image */}
+      <section className="relative overflow-hidden bg-midnight-dark text-white">
         <div className="absolute inset-0">
-          <Image
-            src={c.heroImage}
-            alt=""
-            fill
-            priority
-            className="object-cover opacity-30"
-          />
+          <Image src="https://img.vogimprayerland.org/1780648526061-slider3.webp" alt="" fill priority fetchPriority="high" sizes="100vw" className="object-cover opacity-25" />
           <div className="absolute inset-0 hero-tint" />
         </div>
-        <div className="absolute inset-0 starfield opacity-40" />
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full breathe"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(212,164,55,0.18) 0%, transparent 60%)",
-          }}
-        />
-
-        <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-28 lg:pt-28 lg:pb-36">
-          <div className="grid lg:grid-cols-[1.5fr_1fr] gap-16 items-center">
-            <div>
-              <Reveal>
-                <p className="eyebrow text-gold">
-                  <span className="gold-rule mr-3" />
-                  {c.heroEyebrow}
-                </p>
-              </Reveal>
-              <Reveal delay={0.1}>
-                <h1 className="font-display mt-7 text-6xl md:text-7xl lg:text-[5.5rem] leading-[0.95] tracking-tight">
-                  <RichText text={c.heroTitle} />
-                </h1>
-              </Reveal>
-              <Reveal delay={0.2}>
-                <p className="mt-8 max-w-xl text-lg leading-relaxed text-white/85">
-                  {c.heroIntro}
-                </p>
-              </Reveal>
-              <Reveal delay={0.3}>
-                <div className="mt-10 flex flex-wrap items-center gap-5">
-                  <Link href={c.heroPrimaryHref} className="btn-gold">
-                    {c.heroPrimaryCta}
-                    <ArrowUpRight size={16} />
-                  </Link>
-                  <Link
-                    href={c.heroSecondaryHref}
-                    className="text-sm tracking-widest uppercase text-white/90 u-link"
-                  >
-                    {c.heroSecondaryCta}
-                  </Link>
-                </div>
-              </Reveal>
-            </div>
-
-            <Reveal delay={0.35} y={32}>
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-br from-gold/40 via-transparent to-transparent blur-2xl" />
-                <div className="relative border border-gold/40 bg-midnight-dark/80 backdrop-blur p-10">
-                  <Cross className="text-gold mb-6" size={28} />
-                  <p className="font-display italic text-2xl leading-snug text-white">
-                    {c.heroScripture}
-                  </p>
-                  <div className="mt-8 flex items-center justify-between">
-                    <span className="text-xs tracking-[0.3em] uppercase text-gold">
-                      {c.heroScriptureRef}
-                    </span>
-                    <span className="text-xs text-white/40 font-mono">
-                      Daily Word
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-4">
-                  <div className="border border-white/15 bg-midnight-dark/60 backdrop-blur p-5">
-                    <Clock className="text-gold mb-3" size={16} />
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-white/60">{c.schedule1Day}</p>
-                    <p className="font-display text-xl mt-1 text-white">{c.schedule1Time} <span className="text-gold text-sm">{c.scheduleZone}</span></p>
-                  </div>
-                  <div className="border border-gold/40 bg-gold/15 backdrop-blur p-5">
-                    <Clock className="text-gold mb-3" size={16} />
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-gold">{c.schedule2Day}</p>
-                    <p className="font-display text-xl mt-1 text-white">{c.schedule2Time} <span className="text-gold text-sm">{c.scheduleZone}</span></p>
-                  </div>
-                </div>
-              </div>
-            </Reveal>
+        <div className="relative mx-auto max-w-5xl px-5 py-16 text-center sm:px-6 sm:py-24">
+          <p className="eyebrow text-gold">Voice of God International Ministry · Est. 2021</p>
+          <h1 className="mx-auto mt-6 max-w-4xl font-display text-[2.625rem] leading-[1.1] sm:text-6xl md:text-[4rem]"><span className="mb-3 block font-sans text-sm font-semibold uppercase tracking-[0.2em] text-gold">Online deliverance ministry</span>Where the captive walks free in Jesus&apos; name.</h1>
+          <p className="mx-auto mt-6 max-w-2xl text-white/85">A place at the altar for you, wherever you are. Free online prayer, deliverance and pastoral care from Ikorodu, Lagos.</p>
+          <div data-hero-cta className="mx-auto mt-8 flex max-w-xl flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/prayer-request/" className="btn-gold justify-center" data-cta-id="hero-prayer"><HandsPraying size={23} weight="duotone" />Request prayer<ArrowRight size={19} /></Link>
+            <Link href="/services/" className="btn-ghost justify-center border-gold text-gold hover:bg-gold hover:text-ink" data-cta-id="hero-service"><VideoCamera size={23} weight="duotone" />Join the next service</Link>
           </div>
-        </div>
-
-        <div className="relative border-t border-white/10 bg-midnight-dark/70 backdrop-blur">
-          <div className="mx-auto max-w-7xl px-6 py-4 flex flex-wrap gap-x-10 gap-y-2 text-[11px] tracking-[0.3em] uppercase text-white/70">
-            <span className="text-gold">{c.keywordLead}</span>
-            {c.keywords
-              .split(",")
-              .map((k) => k.trim())
-              .filter(Boolean)
-              .map((k) => (
-                <span key={k}>{k}</span>
-              ))}
-            <span className="text-gold">{c.keywordLast}</span>
-          </div>
+          <div className="mt-7 flex justify-center"><Reassurance dark /></div>
         </div>
       </section>
 
-      {/* MISSION STRIP — with imagery */}
-      <section className="relative bg-white paper-grain">
-        <div className="mx-auto max-w-7xl px-6 py-24 lg:py-32 grid lg:grid-cols-12 gap-14 items-start">
-          <Reveal className="lg:col-span-5">
-            <p className="eyebrow text-gold-deep">
-              <span className="gold-rule mr-3" />
-              {c.missionEyebrow}
-            </p>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-midnight leading-[1.03] mt-5">
-              <RichText text={c.missionTitle} accentClass="italic text-gold-deep" />
-            </h2>
-
-            <div className="mt-10 relative aspect-[4/5] max-w-sm">
-              <div className="absolute -inset-3 border border-gold/40" />
-              <Image
-                src={c.missionImage}
-                alt="Worship at sunset — Believe"
-                fill
-                className="object-cover relative"
-                sizes="(max-width: 768px) 80vw, 400px"
-              />
-            </div>
-          </Reveal>
-
-          <div className="lg:col-span-7 lg:pt-3">
-            <Reveal delay={0.1}>
-              <p className="text-xl text-midnight/85 leading-relaxed font-light drop-cap">
-                {c.missionPara1}
-              </p>
-            </Reveal>
-            <Reveal delay={0.2}>
-              <p className="mt-6 text-ink/70 leading-relaxed">
-                {c.missionPara2}
-              </p>
-            </Reveal>
-            <Reveal delay={0.3}>
-              <div className="mt-10 grid sm:grid-cols-3 gap-6">
-                {stats.map(([num, label]) => (
-                  <div key={label} className="border-t border-midnight/15 pt-5">
-                    <p className="font-display text-4xl text-midnight">{num}</p>
-                    <p className="text-xs tracking-[0.2em] uppercase text-midnight/60 mt-2">
-                      {label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
-          </div>
-        </div>
+      <section className="bg-white px-5 py-12 sm:px-6">
+        <p className="mx-auto max-w-3xl text-center text-lg text-slate">VOGIM Prayer Land is a Christian online deliverance ministry in Ikorodu, Lagos. It offers free prayer, healing prayer, deliverance sessions, marital guidance and dream interpretation to people anywhere.</p>
+        <div className="mt-10"><NextServiceCard /></div>
       </section>
 
-      {/* MINISTRIES */}
-      <section className="relative bg-cream">
-        <div className="mx-auto max-w-7xl px-6 py-24 lg:py-32">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
-            <div>
-              <p className="eyebrow text-gold-deep">
-                <span className="gold-rule mr-3" />
-                {c.ministriesEyebrow}
-              </p>
-              <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-midnight mt-4 leading-tight">
-                <RichText text={c.ministriesTitle} accentClass="italic" />
-              </h2>
-            </div>
-            <Link href="/online-deliverance" className="btn-ghost text-midnight self-start md:self-end">
-              See all ministries
-              <ArrowUpRight size={14} />
-            </Link>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-midnight/15">
-            {ministries.map((m, i) => {
-              const Icon = m.icon;
-              return (
-                <Reveal key={m.title} delay={i * 0.08}>
-                  <Link
-                    href={m.href}
-                    className="group relative h-full bg-white p-8 lg:p-10 flex flex-col gap-6 transition-colors hover:bg-midnight hover:text-white"
-                  >
-                    <div className="flex items-start justify-between">
-                      <Icon className="text-gold-deep group-hover:text-gold transition-colors" size={28} />
-                      <span className="font-display text-3xl text-midnight/25 group-hover:text-white/40">
-                        0{i + 1}
-                      </span>
-                    </div>
-                    <h3 className="font-display text-2xl leading-tight">
-                      {m.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-ink/70 group-hover:text-white/80 mt-auto">
-                      {m.body}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs tracking-[0.28em] uppercase text-gold-deep group-hover:text-gold">
-                      Enter
-                      <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                    </div>
-                  </Link>
-                </Reveal>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* TESTIMONIES */}
-      <section className="relative bg-midnight text-white overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src="https://img.vogimprayerland.org/1780648525318-slider1.jpg"
-            alt=""
-            fill
-            className="object-cover opacity-25"
-          />
-          <div className="absolute inset-0 hero-tint" />
-        </div>
-        <div className="absolute inset-0 starfield opacity-30 pointer-events-none" />
-        <div className="mx-auto max-w-7xl px-6 py-24 lg:py-32 relative">
-          <div className="grid lg:grid-cols-[1fr_2fr] gap-14">
-            <Reveal>
-              <p className="eyebrow text-gold">
-                <span className="gold-rule mr-3" />
-                Testimonies
-              </p>
-              <h2 className="font-display text-4xl md:text-5xl mt-4 leading-tight">
-                <RichText text={c.testimoniesTitle} />
-              </h2>
-              <p className="mt-6 text-white/75 max-w-sm">
-                {c.testimoniesIntro}
-              </p>
-            </Reveal>
-
-            <div className="grid sm:grid-cols-2 gap-6">
-              {testimonies.map((t, i) => (
-                <Reveal key={t.name} delay={0.1 + i * 0.08}>
-                  <figure
-                    className={`relative border border-white/15 bg-midnight-dark/60 backdrop-blur p-7 h-full flex flex-col ${
-                      i === 1 ? "sm:mt-12" : ""
-                    } ${i === 2 ? "sm:-mt-6" : ""}`}
-                  >
-                    <Quote className="text-gold mb-4" size={22} />
-                    <blockquote className="font-display italic text-xl leading-snug text-white">
-                      &ldquo;{t.text}&rdquo;
-                    </blockquote>
-                    <figcaption className="mt-6 pt-5 border-t border-white/10">
-                      <p className="text-sm font-medium">{t.name}</p>
-                      <p className="text-[11px] tracking-[0.28em] uppercase text-gold mt-1">
-                        {t.place}
-                      </p>
-                    </figcaption>
-                  </figure>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PROPHET / FOUNDER STRIP */}
-      <section className="relative bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-24 lg:py-32 grid lg:grid-cols-[1.05fr_1fr] gap-14 items-center">
-          <Reveal>
-            <div className="relative aspect-[4/5] max-w-md mx-auto">
-              <div className="absolute -inset-4 border border-gold/50" />
-              <div className="relative w-full h-full overflow-hidden">
-                <Image
-                  src={c.founderImage}
-                  alt="Prophet Olaofe Oladele — a man of God"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 80vw, 480px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-midnight/90 via-midnight/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-                  <p className="text-[10px] tracking-[0.35em] uppercase text-gold">
-                    {c.founderRole}
-                  </p>
-                  <p className="font-display text-4xl mt-2">
-                    <RichText text={c.founderName} accentClass="italic" />
-                  </p>
-                </div>
-              </div>
-              <div className="absolute top-6 right-6 w-10 h-10 border border-gold/70 bg-midnight/70 backdrop-blur flex items-center justify-center text-gold">
-                <Cross size={18} />
-              </div>
-            </div>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <p className="eyebrow text-gold-deep">
-              <span className="gold-rule mr-3" />
-              {c.founderEyebrow}
-            </p>
-            <h2 className="font-display text-4xl md:text-5xl text-midnight mt-4 leading-[1.05]">
-              <RichText text={c.founderTitle} accentClass="italic" />
-            </h2>
-            <p className="mt-6 text-ink/75 leading-relaxed">
-              {c.founderBody}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-5">
-              <Link href="/about" className="btn-gold">
-                Read his story
-                <ArrowUpRight size={16} />
+      <section className="bg-cream">
+        <div className="mx-auto max-w-7xl px-5 py-14 sm:px-6 sm:py-20">
+          <div className="text-center"><p className="eyebrow text-gold-deep">How we can stand with you</p><h2 className="mt-3 font-display text-4xl text-maroon sm:text-5xl">Four ministries, open to everyone</h2></div>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {MINISTRIES.map(({ icon: Icon, title, body, href }) => (
+              <Link key={title} href={href} className="card group flex min-h-64 flex-col p-6 text-center hover:border-gold">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-cream text-maroon"><Icon size={27} weight="duotone" /></span>
+                <h3 className="mt-5 font-display text-2xl text-maroon">{title}</h3>
+                <p className="mt-3 text-sm text-slate">{body}</p>
+                <span className="mt-auto inline-flex items-center justify-center gap-2 pt-5 text-sm font-semibold text-maroon">Learn more<ArrowRight size={17} className="transition-transform group-hover:translate-x-1" /></span>
               </Link>
-              <Link href="/give" className="btn-ghost text-midnight">
-                Partner with the ministry
-              </Link>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="relative bg-midnight-dark text-white overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src="https://img.vogimprayerland.org/1780648526009-slider2.webp"
-            alt=""
-            fill
-            className="object-cover opacity-30"
-          />
-          <div className="absolute inset-0 hero-tint" />
-        </div>
-        <div
-          className="absolute inset-0 opacity-60"
-          style={{
-            background:
-              "radial-gradient(ellipse at top, rgba(212,164,55,0.25) 0%, transparent 60%)",
-          }}
-        />
-        <div className="relative mx-auto max-w-5xl px-6 py-24 lg:py-32 text-center">
-          <p className="eyebrow text-gold">
-            <span className="gold-rule mr-3" />
-            {c.ctaEyebrow}
-            <span className="gold-rule ml-3" />
-          </p>
-          <h2 className="font-display text-5xl md:text-6xl lg:text-7xl mt-6 leading-[1.05]">
-            <RichText text={c.ctaTitle} />
-          </h2>
-          <p className="mt-8 text-lg text-white/80 max-w-2xl mx-auto">
-            {c.ctaIntro}
-          </p>
-          <div className="mt-10 flex flex-wrap gap-5 justify-center">
-            <Link href={c.ctaPrimaryHref} className="btn-gold">
-              {c.ctaPrimary}
-            </Link>
-            <Link href={c.ctaSecondaryHref} className="btn-ghost text-white border-white/40 hover:text-midnight">
-              {c.ctaSecondary}
-            </Link>
+            ))}
           </div>
         </div>
       </section>
+
+      <section className="bg-white">
+        <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-20">
+          <div className="text-center"><p className="eyebrow text-gold-deep">Your request, step by step</p><h2 className="mt-3 font-display text-4xl text-maroon sm:text-5xl">What happens when you ask for prayer</h2></div>
+          <ol className="mt-10 grid gap-5 md:grid-cols-3">
+            {["Send only what you choose. Your request goes privately to the prayer team.", "For a deliverance request, the team confirms it and proposes a session time.", "Intercessors pray over requests each morning. Aftercare may include scripture, a prayer plan and follow-up."].map((text, index) => (
+              <li key={text} className="rounded-2xl bg-mist p-6"><span className="font-display text-4xl text-gold-deep">0{index + 1}</span><p className="mt-3 text-slate">{text}</p></li>
+            ))}
+          </ol>
+          <div className="mt-8 text-center"><Link href="/how-requests-work/" className="inline-flex min-h-12 items-center gap-2 text-maroon underline underline-offset-4">How requests work<ArrowRight size={18} /></Link></div>
+        </div>
+      </section>
+
+      <section className="bg-cream">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-14 sm:px-6 sm:py-20 md:grid-cols-2">
+          <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-2xl">
+            <Image src="/past.jpeg" alt={MINISTRY.founder.name} fill sizes="(max-width: 768px) 100vw, 480px" className="object-cover" />
+          </div>
+          <div><p className="eyebrow text-gold-deep">Our story</p><h2 className="mt-3 font-display text-4xl text-maroon sm:text-5xl">From Porto Novo to people around the world</h2><p className="mt-5 text-slate">VOGIM Prayer Land began in May 2021 as village evangelism in Porto Novo and the communities around it. Today it is based in Ikorodu, Lagos, and meets people online.</p><p className="mt-4 text-slate">It is led by {MINISTRY.founder.name}, {MINISTRY.founder.role}. Its work has three parts: deliverance, healing and restoration.</p><Link href="/about/" className="btn-ghost mt-7">Read our story<ArrowRight size={18} /></Link></div>
+        </div>
+      </section>
+
+      {TESTIMONIES.length > 0 && (
+        <section aria-labelledby="testimonies-heading" className="bg-cream">
+          <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-20">
+            <h2 id="testimonies-heading" className="text-center font-display text-3xl text-maroon sm:text-4xl">Personal accounts</h2>
+            <div className="mt-8"><TestimonyList limit={2} /></div>
+            <div className="mt-8 text-center"><Link href="/prayer-request/" className="btn-gold" data-cta-id="testimonies-request">Send your request</Link><p className="mt-3 text-sm text-slate">Personal accounts, not promises</p></div>
+          </div>
+        </section>
+      )}
+
+      <section className="bg-white">
+        <div className="mx-auto grid max-w-6xl gap-6 px-5 py-14 sm:px-6 sm:py-20 md:grid-cols-2">
+          <article className="rounded-2xl bg-mist p-7"><h2 className="font-display text-3xl text-maroon">Visit in Ikorodu</h2><p className="mt-4 text-slate">{MINISTRY.address.streetAddress}, {MINISTRY.address.addressLocality}, {MINISTRY.address.addressRegion}, Nigeria.</p><p className="mt-3 text-slate">Sunday Worship · 9:00 AM WAT · In person and livestream.</p><Link href="/visit/" className="btn-ghost mt-6">Plan your visit<ArrowRight size={18} /></Link></article>
+          <article className="rounded-2xl bg-mist p-7"><h2 className="font-display text-3xl text-maroon">Watch and join online</h2><p className="mt-4 text-slate">Follow the ministry&apos;s official Facebook and YouTube channels, or join the public Zoom service.</p><div className="mt-6 flex flex-wrap gap-3"><a href={MINISTRY.social.youtube} target="_blank" rel="noreferrer" className="btn-ghost">YouTube</a><a href={MINISTRY.social.facebook} target="_blank" rel="noreferrer" className="btn-ghost">Facebook</a></div></article>
+        </div>
+      </section>
+
+      <section className="border-y border-soft bg-cream px-5 py-8 text-center"><p className="mx-auto text-slate">If you choose to support the work, giving is voluntary and separate from every request.</p><Link href="/give/" className="mt-3 inline-flex min-h-11 items-center gap-2 font-semibold text-maroon underline underline-offset-4"><HandHeart size={20} weight="duotone" />Visit the official giving page</Link></section>
+      <FaqList faqs={FAQS} relatedPath="/about/" />
+      <ClosingBand />
     </>
   );
 }

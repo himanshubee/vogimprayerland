@@ -39,15 +39,14 @@ type View = {
  */
 /** The same four outcomes, however the gift was taken. */
 function fromResult(
-  result: Awaited<ReturnType<typeof settleDonation>>,
-  ref: string
+  result: Awaited<ReturnType<typeof settleDonation>>
 ): View {
   if (result.outcome === "successful" || result.outcome === "already_settled") {
     return {
       tone: "success",
       heading: { lead: "Your gift has been", accent: "received." },
       message:
-        "Thank you for sowing into the work of this ministry. A confirmation has been sent to your email, and our team is standing with you in prayer.",
+        "Thank you for your voluntary gift. A receipt is sent when email delivery is configured. Giving never changes the prayer or care you receive.",
       donation: result.donation,
     };
   }
@@ -104,7 +103,7 @@ async function resolve(sp: Search): Promise<View> {
         "redirect",
         txRef || undefined
       );
-      return fromResult(result, txRef);
+      return fromResult(result);
     } catch (err) {
       console.error("[give/thank-you] paypal settle failed:", err);
       return unreachable(txRef ? await getDonation(txRef).catch(() => null) : null);
@@ -117,7 +116,7 @@ async function resolve(sp: Search): Promise<View> {
   if (paystackRef) {
     try {
       const result = await settlePaystackDonation(paystackRef, "redirect");
-      return fromResult(result, paystackRef);
+      return fromResult(result);
     } catch (err) {
       console.error("[give/thank-you] paystack settle failed:", err);
       return unreachable(await getDonation(paystackRef).catch(() => null));
@@ -133,7 +132,7 @@ async function resolve(sp: Search): Promise<View> {
           tone: "success",
           heading: { lead: "Your gift has been", accent: "received." },
           message:
-            "Thank you for sowing into the work of this ministry. A confirmation has been sent to your email, and our team is standing with you in prayer.",
+            "Thank you for your voluntary gift. A receipt is sent when email delivery is configured. Giving never changes the prayer or care you receive.",
           donation: result.donation,
         };
       }

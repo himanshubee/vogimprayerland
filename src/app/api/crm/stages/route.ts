@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { getStages, updateStages } from "@/lib/crm";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("pastor", "admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return NextResponse.json({ stages: await getStages() });
 }
 
 export async function PUT(req: NextRequest) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("pastor", "admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = await req.json().catch(() => null);

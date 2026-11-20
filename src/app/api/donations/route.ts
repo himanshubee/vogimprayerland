@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { listDonations, reconcilePendingDonations } from "@/lib/donations";
 
 export const dynamic = "force-dynamic";
 
 /** GET — admin only: every gift, newest first. */
 export async function GET() {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("finance", "admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -19,7 +19,7 @@ export async function GET() {
 
 /** POST — admin only: { action: "reconcile" } re-checks every pending gift. */
 export async function POST(req: NextRequest) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("finance", "admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

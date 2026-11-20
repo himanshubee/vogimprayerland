@@ -42,8 +42,17 @@ type PostDoc = {
   modified?: Date | string;
 };
 
+const publicCopy = (value: string) => value.replace(/Prophet Olaofe Emmanuel/g, "Prophet Olaofe Oladele");
+
 function serializeSeo(s?: Partial<PostSeo>): PostSeo {
-  return { ...EMPTY_SEO, ...(s ?? {}) };
+  const seo = { ...EMPTY_SEO, ...(s ?? {}) };
+  return {
+    ...seo,
+    title: publicCopy(seo.title),
+    description: publicCopy(seo.description),
+    ogTitle: publicCopy(seo.ogTitle),
+    ogDescription: publicCopy(seo.ogDescription),
+  };
 }
 
 /** Normalize an incoming SEO payload into a complete, typed object. */
@@ -77,9 +86,9 @@ function serialize(d: PostDoc): Post {
     wpId: d.wpId ?? null,
     type: d.type ?? "post",
     slug: d.slug,
-    title: d.title ?? "(untitled)",
-    content: d.content ?? "",
-    excerpt: d.excerpt ?? "",
+    title: publicCopy(d.title ?? "(untitled)"),
+    content: publicCopy(d.content ?? ""),
+    excerpt: publicCopy(d.excerpt ?? ""),
     status: d.status ?? "draft",
     categories: d.categories ?? [],
     featuredImage: d.featuredImage ?? null,
@@ -101,11 +110,15 @@ export function slugify(input: string): string {
 
 /** Public: a single published post/page by slug. */
 export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const db = await getDb();
-  const doc = await db
-    .collection<PostDoc>(COLLECTION)
-    .findOne({ slug, status: "publish" });
-  return doc ? serialize(doc) : null;
+  try {
+    const db = await getDb();
+    const doc = await db
+      .collection<PostDoc>(COLLECTION)
+      .findOne({ slug, status: "publish" });
+    return doc ? serialize(doc) : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Public: published posts, newest first, with optional pagination. */

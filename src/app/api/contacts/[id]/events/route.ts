@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { addEvent, type EventType } from "@/lib/crm";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("pastor", "admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await ctx.params;

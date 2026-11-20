@@ -13,6 +13,7 @@ const TABS = [
   { href: "/admin/posts", label: "Posts" },
   { href: "/admin/media", label: "Media" },
   { href: "/admin/settings", label: "Settings" },
+  { href: "/admin/privacy", label: "Privacy" },
 ];
 
 export function AdminTabs() {

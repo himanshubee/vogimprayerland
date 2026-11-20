@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import {
   getPageContent,
   getPageSeo,
@@ -14,7 +14,7 @@ export async function GET(
   _req: NextRequest,
   ctx: { params: Promise<{ key: string }> }
 ) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { key } = await ctx.params;
@@ -28,7 +28,7 @@ export async function PUT(
   req: NextRequest,
   ctx: { params: Promise<{ key: string }> }
 ) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { key } = await ctx.params;

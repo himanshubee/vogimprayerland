@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { deletePdf, savePdf } from "@/lib/books";
 import { revalidateShop } from "../../route";
 
@@ -25,7 +25,7 @@ export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await ctx.params;
@@ -75,7 +75,7 @@ export async function DELETE(
   _req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await ctx.params;

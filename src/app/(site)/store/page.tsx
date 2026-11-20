@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { absoluteUrl } from "@/lib/ministry";
 import Link from "next/link";
 import { ArrowUpRight, Palette, ShieldCheck, Shirt, Truck } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,7 +11,8 @@ import type { CurrencyCode } from "@/lib/currencies";
 export const metadata: Metadata = {
   title: "Store — VOGIM Prayer Land",
   description:
-    "T-shirts and caps from VOGIM Prayer Land — choose a design, pick your colour and size, and wear the word.",
+    "T-shirts and caps from VOGIM Prayer Land, made to order. Choose a design, colour and size, then pay on the payment partner's secure checkout page.",
+  alternates: { canonical: absoluteUrl("/store/") },
 };
 
 export const revalidate = 300;

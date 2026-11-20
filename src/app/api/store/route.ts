@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import {
   createMerch,
   getMerchPricing,
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 // GET — admin: the full catalogue, drafts included, plus store-wide pricing.
 export async function GET() {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -33,7 +33,7 @@ export async function GET() {
 
 // POST — admin: create a design, reorder the catalogue, or save pricing.
 export async function POST(req: NextRequest) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = await req.json().catch(() => null);

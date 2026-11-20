@@ -105,6 +105,11 @@ export function AdminDashboard({ initial }: { initial: Submission[] }) {
   }
 
   function exportCsv() {
+    fetch("/api/admin/audit/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ count: filtered.length }),
+    }).catch(() => {});
     const cols = new Set<string>();
     filtered.forEach((s) => Object.keys(s.fields).forEach((k) => cols.add(k)));
     const headers = ["date", "intent", "status", ...Array.from(cols)];

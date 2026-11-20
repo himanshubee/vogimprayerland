@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { getSettings, updateSettings, type SiteSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 // GET — admin only: current settings for the editor.
 export async function GET() {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const settings = await getSettings();
@@ -16,7 +16,7 @@ export async function GET() {
 
 // PUT — admin only: save settings, then refresh the chrome everywhere.
 export async function PUT(req: NextRequest) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -7,6 +7,7 @@
  * Responds 503 + Retry-After to every request (so crawlers don't deindex) and
  * serves a branded "we'll be right back" page in the white/red/gold palette.
  */
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- CommonJS is intentional for the standalone PM2 process.
 const http = require("http");
 
 const PORT = Number(process.env.PORT) || 4400;

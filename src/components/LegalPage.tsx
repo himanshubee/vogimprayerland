@@ -19,6 +19,28 @@ const SITE_URL = (
 
 const host = (url: string) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
+const SUMMARIES: Record<string, string[]> = {
+  "refund-policy": [
+    "Giving is voluntary. Prayer, deliverance and counselling are free.",
+    "Gifts are ordinarily non-refundable, with specific exceptions listed below.",
+    "Ask within 30 days, or within 90 days for an unauthorised transaction.",
+    "We acknowledge requests within 3 business days and aim to decide within 7.",
+  ],
+  "privacy-policy": [
+    "You choose how much sensitive information to share.",
+    "Requests are not sold, published or shared with advertisers.",
+    "Optional analytics and chat require your consent.",
+    "You can ask for access, correction or deletion through the Privacy requests page.",
+    "The policy describes retention, service providers and your NDPC complaint route.",
+  ],
+  "terms-and-conditions": [
+    "The request forms are for adults; under-18s need a parent or guardian.",
+    "Spiritual care does not replace professional or emergency care.",
+    "Giving is voluntary and uses only the official channels.",
+    "Do not misuse the website, private session links or another person's information.",
+  ],
+};
+
 type Tokens = {
   ministry: string;
   email: string;
@@ -192,6 +214,11 @@ export async function LegalPage({ doc }: { doc: LegalDoc }) {
 
           {/* BODY */}
           <div className="max-w-3xl">
+            <aside className="mb-8 rounded-2xl bg-mist p-6">
+              <h2 className="font-display text-2xl text-maroon">In brief</h2>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate">{SUMMARIES[doc.slug]?.map((item) => <li key={item}>{item}</li>)}</ul>
+              <p className="mt-4 text-xs text-slate">Draft for legal review. Last updated {LEGAL_UPDATED}.</p>
+            </aside>
             {doc.sections.map((s, i) => (
               <Reveal key={s.id} delay={i < 4 ? i * 0.04 : 0}>
                 <section

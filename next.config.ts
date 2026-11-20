@@ -14,35 +14,61 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.chatway.app",
+              "style-src 'self' 'unsafe-inline'",
+              "font-src 'self' data:",
+              "img-src 'self' data: blob: https://img.vogimprayerland.org https://www.google-analytics.com https://www.googletagmanager.com https://*.chatway.app",
+              "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.chatway.app wss://*.chatway.app",
+              "frame-src 'self' https://www.youtube.com https://www.facebook.com https://*.chatway.app",
+              "frame-ancestors 'self'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "upgrade-insecure-requests",
+            ].join("; "),
+          },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
-      // The site answers on both hosts, so every page exists twice. The
-      // canonical tags all point at www, which mostly holds the index
-      // together, but the bare host should never have served a 200 in the
-      // first place — send it on before Google has to decide.
+      // Send the bare host to the canonical www host before content is served.
       // Next normalises the trailing slash off a redirect destination, so a
       // deep URL lands on www and then takes one more hop to get its slash
-      // back. Harmless, but if this is ever moved up to a Cloudflare rule it
-      // becomes a single hop.
+      // back. Moving this to Cloudflare would make it a single hop.
       {
         source: "/:path*",
         has: [{ type: "host", value: "vogimprayerland.org" }],
         destination: "https://www.vogimprayerland.org/:path*",
-        permanent: true,
+        statusCode: 301,
       },
 
       // The basket and checkout used to live under /books; they now serve
       // the store as well. Query strings carry over, so an old gateway return
       // URL still lands on the receipt.
-      { source: "/books/cart", destination: "/cart/", permanent: true },
-      { source: "/books/checkout", destination: "/checkout/", permanent: true },
-      { source: "/books/thank-you", destination: "/checkout/thank-you/", permanent: true },
+      { source: "/books/cart", destination: "/cart/", statusCode: 301 },
+      { source: "/books/checkout", destination: "/checkout/", statusCode: 301 },
+      { source: "/books/thank-you", destination: "/checkout/thank-you/", statusCode: 301 },
 
       // Individual posts that the WordPress import left behind.
       ...LEGACY_REDIRECTS.map(([from, to]) => ({
         source: `/${from}`,
         destination: `/${to}/`,
-        permanent: true,
+        statusCode: 301,
       })),
 
       // WordPress archive and feed shapes. None of these exist here, and
@@ -50,12 +76,12 @@ const nextConfig: NextConfig = {
       // friends all appear in Search Console, each spending crawl budget to
       // reach a 404. The articles themselves are in the sitemap, so the
       // archives only need to land somewhere sensible.
-      { source: "/category/:path*", destination: "/blog/", permanent: true },
-      { source: "/tag/:path*", destination: "/blog/", permanent: true },
-      { source: "/author/:path*", destination: "/blog/", permanent: true },
-      { source: "/blogs/page/:path*", destination: "/blog/", permanent: true },
-      { source: "/feed", destination: "/blog/", permanent: true },
-      { source: "/:path*/feed", destination: "/blog/", permanent: true },
+      { source: "/category/:path*", destination: "/blog/", statusCode: 301 },
+      { source: "/tag/:path*", destination: "/blog/", statusCode: 301 },
+      { source: "/author/:path*", destination: "/blog/", statusCode: 301 },
+      { source: "/blogs/page/:path*", destination: "/blog/", statusCode: 301 },
+      { source: "/feed", destination: "/blog/", statusCode: 301 },
+      { source: "/:path*/feed", destination: "/blog/", statusCode: 301 },
     ];
   },
 };

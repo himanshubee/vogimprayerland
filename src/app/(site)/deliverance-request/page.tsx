@@ -1,101 +1,27 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/PageHeader";
-import { RequestForm } from "@/components/RequestForm";
-import { Reveal } from "@/components/Reveal";
-import { ShieldCheck, Lock, Clock } from "lucide-react";
-import { getPageContent, getPageMeta } from "@/lib/page-content";
-import { RichText } from "@/components/RichText";
+import { RequestExperience } from "@/components/RequestExperience";
+import { absoluteUrl } from "@/lib/ministry";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return getPageMeta("deliverance-request");
-}
+export const metadata: Metadata = {
+  title: "Online Deliverance Request, Free and Private | VOGIM",
+  description: "Request a free, private online deliverance session with VOGIM Prayer Land. Tell the team how to contact you and share only what you choose about your situation.",
+  alternates: { canonical: absoluteUrl("/deliverance-request/") },
+};
 
-export const revalidate = 300;
+const FAQS = [
+  { question: "Is a deliverance session free?", answer: "Yes. Prayer, deliverance and counselling are free. Giving is voluntary and is never a condition for a session." },
+  { question: "What happens before a session?", answer: "The team confirms your request and proposes a session slot. You receive scripture to read before the session." },
+  { question: "What happens afterwards?", answer: "Aftercare may include scripture, a prayer plan and follow-up. The team will explain the next steps for your situation." },
+  { question: "Is my request private?", answer: "Yes. Your request is treated with confidentiality and reverence. Health, family and marriage details are optional." },
+];
 
-export default async function DeliveranceRequestPage() {
-  const c = await getPageContent("deliverance-request");
-  return (
-    <>
-      <PageHeader
-        image={c.heroImage}
-        eyebrow={c.heroEyebrow}
-        title={<RichText text={c.heroTitle} />}
-        intro={c.heroIntro}
-        scripture={{
-          ref: "John 8:36",
-          text: "If the Son therefore shall make you free, ye shall be free indeed.",
-        }}
-      />
-
-      <section className="bg-ivory paper-grain">
-        <div className="mx-auto max-w-6xl px-6 py-20 lg:py-28 grid lg:grid-cols-[1fr_1.4fr] gap-14">
-          <Reveal>
-            <p className="eyebrow text-gold-deep">
-              <span className="gold-rule mr-3" />
-              What happens next
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-midnight mt-4 leading-tight">
-              From form to <span className="italic">freedom.</span>
-            </h2>
-            <ul className="mt-8 space-y-6">
-              <li className="flex gap-4">
-                <Clock className="text-gold-deep shrink-0 mt-1" size={20} />
-                <div>
-                  <p className="font-display text-xl text-midnight">Within 24 hours</p>
-                  <p className="text-sm text-midnight/70">
-                    Our team confirms your request and proposes a session slot.
-                  </p>
-                </div>
-              </li>
-              <li className="flex gap-4">
-                <ShieldCheck className="text-gold-deep shrink-0 mt-1" size={20} />
-                <div>
-                  <p className="font-display text-xl text-midnight">Pastoral preparation</p>
-                  <p className="text-sm text-midnight/70">
-                    You receive scripture to read and pray ahead of the session.
-                  </p>
-                </div>
-              </li>
-              <li className="flex gap-4">
-                <Lock className="text-gold-deep shrink-0 mt-1" size={20} />
-                <div>
-                  <p className="font-display text-xl text-midnight">Held in confidence</p>
-                  <p className="text-sm text-midnight/70">
-                    Your story is held with discretion, reverence, and grace.
-                  </p>
-                </div>
-              </li>
-            </ul>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <RequestForm
-              intent="Deliverance Request"
-              submitLabel="Send Deliverance Request"
-              fields={[
-                { name: "name", label: "Full Name", required: true },
-                { name: "email", label: "Email", type: "email", required: true },
-                { name: "phone", label: "Phone / WhatsApp", type: "tel", required: true },
-                { name: "country", label: "City & Country" },
-                {
-                  name: "concerns",
-                  label: "What are you walking through?",
-                  type: "textarea",
-                  required: true,
-                  rows: 6,
-                  placeholder: "Describe the oppression, attack, or stronghold…",
-                },
-                {
-                  name: "expectations",
-                  label: "What are you believing God for?",
-                  type: "textarea",
-                  rows: 4,
-                },
-              ]}
-            />
-          </Reveal>
-        </div>
-      </section>
-    </>
-  );
+export default function DeliveranceRequestPage() {
+  return <RequestExperience eyebrow="Online deliverance request" title="Request an Online Deliverance Session" intro="Request a free, private online deliverance session. The team will confirm your request and propose a time. Share only what you choose, and read what happens before and after the session." intent="Deliverance Request" submitLabel="Request my session" timezone fields={[
+    { name: "name", label: "Name", required: true, autoComplete: "name" },
+    { name: "email", label: "Email", type: "email", inputMode: "email", required: true, autoComplete: "email" },
+    { name: "phone", label: "Phone or WhatsApp", type: "tel", inputMode: "tel", required: true, autoComplete: "tel" },
+    { name: "country", label: "City and country (optional)", autoComplete: "country-name" },
+    { name: "preferredTime", label: "Preferred session time (optional)", placeholder: "Tell us a suitable day or time" },
+    { name: "concerns", label: "What are you walking through?", type: "textarea", required: true, rows: 6 },
+  ]} steps={["The team confirms your request and proposes a session slot.", "You receive scripture to read before the session.", "After the one-to-one online session, aftercare may include scripture, a prayer plan and follow-up."]} faqs={FAQS} />;
 }

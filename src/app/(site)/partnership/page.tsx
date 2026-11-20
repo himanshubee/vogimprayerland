@@ -1,12 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
-  Hash,
-  BellRing,
-  PhoneCall,
-  Globe2,
-  HeartHandshake,
-  CalendarDays,
   Sprout,
   UserPlus,
   CreditCard,
@@ -31,29 +25,16 @@ const PARTNER_FIELDS = [
   { name: "phone", label: "Phone or WhatsApp", type: "tel" as const, required: true, placeholder: "+234 …" },
   { name: "country", label: "City & Country", placeholder: "e.g. Lagos, Nigeria" },
   {
-    name: "partnership_level",
-    label: "Partnership Level (Seed / Covenant / Kingdom)",
-    placeholder: "e.g. Covenant — ₦10,000 monthly",
-  },
-  {
     name: "message",
-    label: "Your testimony or prayer request",
+    label: "Partnership question (optional)",
     type: "textarea" as const,
     rows: 4,
-    placeholder: "Share what the Lord is doing, or how we can pray with you…",
+    placeholder: "Ask about partnership or the official giving channel",
   },
 ];
 
 export default async function PartnershipPage() {
   const c = await getPageContent("partnership");
-  const BENEFITS = [
-    { icon: Hash, title: c.benefit1Title, body: c.benefit1Body },
-    { icon: BellRing, title: c.benefit2Title, body: c.benefit2Body },
-    { icon: CalendarDays, title: c.benefit3Title, body: c.benefit3Body },
-    { icon: PhoneCall, title: c.benefit4Title, body: c.benefit4Body },
-    { icon: Globe2, title: c.benefit5Title, body: c.benefit5Body },
-    { icon: HeartHandshake, title: c.benefit6Title, body: c.benefit6Body },
-  ];
   const STEPS = [
     { icon: UserPlus, step: "01", title: c.step1Title, body: c.step1Body },
     { icon: CreditCard, step: "02", title: c.step2Title, body: c.step2Body },
@@ -97,27 +78,11 @@ export default async function PartnershipPage() {
           </Reveal>
 
           <Reveal delay={0.1}>
-            <div className="border border-midnight/15 bg-ivory p-8">
-              <p className="eyebrow text-gold-deep">{c.benefitsEyebrow}</p>
-              <h3 className="font-display text-3xl text-midnight mt-3 leading-tight">
-                {c.benefitsTitle}
-              </h3>
-              <ul className="mt-6 space-y-5">
-                {BENEFITS.map((b) => {
-                  const Icon = b.icon;
-                  return (
-                    <li key={b.title} className="flex gap-4">
-                      <Icon className="text-gold-deep shrink-0 mt-1" size={22} />
-                      <div>
-                        <p className="font-display text-xl text-midnight">{b.title}</p>
-                        <p className="text-midnight/70 text-sm leading-relaxed mt-1">
-                          {b.body}
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+            <div className="rounded-2xl border border-soft bg-cream p-8">
+              <p className="eyebrow text-gold-deep">Giving and prayer stay separate</p>
+              <h3 className="mt-3 font-display text-3xl text-midnight">No one receives less prayer for giving less.</h3>
+              <p className="mt-4 text-slate">Partnership is voluntary. Prayer, deliverance and counselling are free, whether or not you become a partner.</p>
+              <Link href="/notice/" className="btn-ghost mt-6">Check our official channels</Link>
             </div>
           </Reveal>
         </div>
@@ -132,7 +97,7 @@ export default async function PartnershipPage() {
             {c.seedQuote}
           </p>
           <p className="mt-4 text-[11px] tracking-[0.32em] uppercase text-gold">
-            {c.seedRef}
+            {c.seedRef} · KJV
           </p>
         </div>
       </section>
@@ -191,6 +156,7 @@ export default async function PartnershipPage() {
         <div className="mx-auto max-w-3xl px-5 sm:px-6 py-20 lg:py-28">
           <RequestForm
             intent="Partner Form"
+            purpose="response"
             fields={PARTNER_FIELDS}
             submitLabel="Become a Partner"
           />

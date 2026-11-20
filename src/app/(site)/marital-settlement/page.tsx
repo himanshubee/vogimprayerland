@@ -6,12 +6,20 @@ import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
+import { FaqList } from "@/components/FaqList";
 
 export async function generateMetadata(): Promise<Metadata> {
   return getPageMeta("marital-settlement");
 }
 
 export const revalidate = 300;
+
+const FAQS = [
+  { question: "Can I send a request for my spouse?", answer: "Yes. You can ask for prayer for your spouse or family. Share only the details you have permission and need to share." },
+  { question: "Is it confidential?", answer: "Yes. Requests are treated with confidentiality and reverence. Health, family and marriage details are optional, and requests are not published or shared with advertisers." },
+  { question: "Is there a fee?", answer: "No. Prayer, deliverance and counselling are free. Giving is voluntary and separate from every request." },
+  { question: "How do I ask for marital guidance?", answer: "Use the prayer request page and explain what you would like the team to pray about. You can share as much or as little as you choose." },
+];
 
 export default async function MaritalSettlementPage() {
   const c = await getPageContent("marital-settlement");
@@ -203,6 +211,8 @@ export default async function MaritalSettlementPage() {
           </Reveal>
         </div>
       </section>
+
+      <FaqList faqs={FAQS} relatedPath="/marital-settlement/" />
 
       {/* CTA */}
       <section className="relative bg-midnight-dark text-ivory overflow-hidden">

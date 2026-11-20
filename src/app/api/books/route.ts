@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { createBook, listBooksAdmin, reorderBooks } from "@/lib/books";
 import { refreshRates } from "@/lib/fx";
 
@@ -24,7 +24,7 @@ export function revalidateShop(slug?: string) {
 
 // GET — admin: the full catalogue, drafts included.
 export async function GET() {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -37,7 +37,7 @@ export async function GET() {
 
 // POST — admin: create a book, or reorder the catalogue.
 export async function POST(req: NextRequest) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = await req.json().catch(() => null);

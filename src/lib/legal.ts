@@ -21,7 +21,7 @@ const SITE_URL = (
 export const GIVE_URL = "https://give.vogimprayerland.org/";
 
 /** Shown as "Last updated" on every legal page. Bump when the copy changes. */
-export const LEGAL_UPDATED = "30 July 2026";
+export const LEGAL_UPDATED = "20 November 2026";
 
 export type LegalBlock =
   | { type: "p"; text: string }
@@ -54,14 +54,14 @@ const HERO_SLIDER3 = "https://img.vogimprayerland.org/1780648526061-slider3.webp
 
 const REFUND: LegalDoc = {
   slug: "refund-policy",
-  eyebrow: "Refund Policy",
-  title: "Every gift is held\nin _trust and honour._",
+  eyebrow: "Giving and Refund Policy",
+  title: "Giving and refund policy",
   intro:
-    "Offerings, seeds, and partnership gifts to VOGIM are freewill donations to the work of the gospel. This policy explains when a gift can be returned, how to ask, and how long it takes.",
+    "Giving is voluntary. Prayer, deliverance and counselling are free. This policy explains when a gift can be returned, how to ask, and how long the review takes.",
   heroImage: HERO_WORSHIP,
-  seoTitle: "Refund Policy — VOGIM Prayer Land",
+  seoTitle: "Giving and Refund Policy | VOGIM Prayer Land",
   seoDescription:
-    "How VOGIM Deliverance Ministries handles refunds on donations, offerings, partnership seeds, and recurring giving — including how to request one and how long it takes.",
+    "Read how VOGIM Prayer Land reviews donation refunds, duplicate charges, errors, unauthorised use and recurring gifts. Prayer, deliverance and counselling are free.",
   sections: [
     {
       id: "overview",
@@ -69,7 +69,7 @@ const REFUND: LegalDoc = {
       blocks: [
         {
           type: "p",
-          text: "{ministry} (“VOGIM”, “the ministry”, “we”, “us”) receives donations, offerings, partnership seeds, and other freewill gifts through the giving page on this website, at {site}/give, and through our partner giving channel at {giveUrl}. Card and bank payments made on this website are processed securely by Flutterwave; we never see or store your card details.",
+          text: "{ministry} (“VOGIM”, “the ministry”, “we”, “us”) receives donations, offerings, partnership seeds, and other freewill gifts through the giving page on this website, at {site}/give, and through our partner giving channel at {giveUrl}. Card and bank payments are processed by the provider shown at checkout: Flutterwave, Paystack or PayPal. We never see or store your full card details.",
         },
         {
           type: "p",
@@ -87,7 +87,7 @@ const REFUND: LegalDoc = {
         },
         {
           type: "note",
-          text: "No pastor, prophet, intercessor, or staff member of VOGIM will ever demand a private payment, a “deliverance fee”, gift cards, or cryptocurrency in exchange for prayer. If anyone contacts you claiming to represent this ministry and asks for such a payment, do not pay — report it to us immediately at {email} or {phone}. The only authorised giving channels are the giving page at {site}/give and {giveUrl}; any stablecoin wallet addresses we accept gifts through are published only on {site}/give and will never be sent to you privately.",
+          text: "No pastor, prophet, intercessor, or staff member of VOGIM will ever demand a private payment, a “deliverance fee”, gift cards, or cryptocurrency in exchange for prayer. If anyone contacts you claiming to represent this ministry and asks for such a payment, do not pay — report it to us immediately at {email} or {phone}. The only authorised online giving channels are the giving page at {site}/give and {giveUrl}.",
         },
       ],
     },
@@ -172,7 +172,7 @@ const REFUND: LegalDoc = {
           items: [
             "We acknowledge every refund request within 3 business days.",
             "We aim to decide on the request within 7 business days of receiving the details above.",
-            "Approved refunds are returned through the payment provider that processed the gift — Flutterwave for gifts made on this website — and to the original payment method. We cannot refund to a different card, account, or person.",
+            "Approved refunds are returned through the payment provider that processed the gift and to the original payment method. We cannot refund to a different card, account, or person.",
             "Once issued, funds typically appear within 5–10 business days for cards and 3–7 business days for bank transfers, depending on your bank and country.",
             "Where the gift was made in a currency other than our settlement currency, the refunded amount may differ slightly because of exchange-rate movement between the date of the gift and the date of the refund.",
             "Payment processor or gateway fees, and any bank charges applied at your end, may not be recoverable. Where that is the case, we will tell you before processing.",
@@ -191,7 +191,7 @@ const REFUND: LegalDoc = {
         {
           type: "list",
           items: [
-            "Cancel from within your account on the giving platform, or write to {email} — we will action it and confirm in writing.",
+            "Write to {email} to cancel — we will action it and confirm in writing. A self-service cancellation page is not currently published.",
             "Please allow up to 5 business days before your next scheduled date so the instruction reaches the processor in time.",
             "Cancellation stops future debits. Gifts already collected are treated under sections 3 and 4 above.",
           ],
@@ -214,13 +214,23 @@ const REFUND: LegalDoc = {
       blocks: [
         {
           type: "p",
-          text: "You will receive an electronic acknowledgement for gifts made through our official giving channel. If you need a written acknowledgement for your records, ask us at {email} and we will provide one. VOGIM does not give tax advice — whether a gift is deductible depends on the law of the country in which you are resident, and you should confirm the position with your own adviser.",
+          text: "Our system sends an email receipt when SMTP delivery is configured. It includes the amount, currency, date, reference and fund. If it does not arrive, ask us at {email} and we will provide an acknowledgement. VOGIM does not give tax advice — whether a gift is deductible depends on the law of the country in which you are resident, and you should confirm the position with your own adviser.",
+        },
+      ],
+    },
+    {
+      id: "store-orders",
+      heading: "11. Store orders and made-to-order returns",
+      blocks: [
+        {
+          type: "p",
+          text: "Store items are made to order. Contact us before returning an item, and include your order reference, delivery address and a description of the problem. Do not post an item until the team confirms the returns address and process. Shipping regions, fees, delivery times and any product-specific return restrictions must be shown with the store's fulfilment information.",
         },
       ],
     },
     {
       id: "changes",
-      heading: "11. Changes to this policy",
+      heading: "12. Changes to this policy",
       blocks: [
         {
           type: "p",
@@ -230,7 +240,7 @@ const REFUND: LegalDoc = {
     },
     {
       id: "contact",
-      heading: "12. Contact us",
+      heading: "13. Contact us",
       blocks: [
         {
           type: "p",
@@ -340,7 +350,7 @@ const TERMS: LegalDoc = {
             "Conduct yourself respectfully towards the ministers and other participants.",
             "Not record, screenshot, stream, or redistribute a session — particularly a one-to-one session — without our prior written consent and the consent of everyone appearing in it.",
             "Not share a private meeting link, meeting ID, or passcode with anyone who was not invited.",
-            "Accept that services and group meetings may be recorded or livestreamed by the ministry for teaching and outreach; if you prefer not to appear, keep your camera off.",
+            "Follow any recording notice given before a service. A one-to-one session may be recorded only with the person's clear, prior consent.",
             "Use of that platform is also subject to the platform's own terms and privacy policy, over which we have no control.",
           ],
         },
@@ -352,7 +362,7 @@ const TERMS: LegalDoc = {
       blocks: [
         {
           type: "p",
-          text: "Gifts are voluntary. Our authorised online giving channels are the giving page on this website ({site}/give) and {giveUrl}; treat any other channel claiming to collect on our behalf as fraudulent and report it to us. Payments made on this website are handled by Flutterwave under their own terms and privacy policy — card details are entered on Flutterwave's checkout, and we never see or store them.",
+          text: "Gifts are voluntary. Our authorised online giving channels are the giving page on this website ({site}/give) and {giveUrl}; treat any other channel claiming to collect on our behalf as fraudulent and report it to us. Payments are handled by the provider shown at checkout — Flutterwave, Paystack or PayPal — under its own terms and privacy policy. Card details are entered on the hosted checkout, and we never see or store them.",
         },
         {
           type: "p",
@@ -412,7 +422,7 @@ const TERMS: LegalDoc = {
       blocks: [
         {
           type: "p",
-          text: "This site relies on and links to third-party services, including Zoom for meetings, a live-chat widget, Google Analytics for statistics, Google AdSense for advertising, and an external giving platform. Advertisements shown on this site are served by Google and their content is not selected, endorsed, or vetted by VOGIM.",
+          text: "This site relies on and links to third-party services, including Zoom for meetings, Chatway for optional live chat, Google Analytics after consent, and the payment provider shown at checkout. Advertising is not currently served by this application.",
         },
         {
           type: "p",
@@ -543,13 +553,13 @@ const PRIVACY: LegalDoc = {
         {
           type: "list",
           items: [
-            "Your IP address and browser user-agent string, recorded with each form submission as a safeguard against abuse and spam.",
+            "A short-lived, hashed network identifier used for form rate limiting. The raw IP address and browser user-agent are not stored with your request.",
             "Device, browser, approximate location, referring page, pages viewed, and time on page, through analytics cookies.",
           ],
         },
         {
           type: "p",
-          text: "Payments: gifts made on this website are processed by Flutterwave on their own systems, under their privacy policy. We record your name, email, phone, the amount, currency, the fund you chose, any note you added, and the transaction reference Flutterwave returns to us. We never receive or store your full card number, CVV, PIN, or banking password.",
+          text: "Payments: gifts are processed by the provider shown at checkout — Flutterwave, Paystack or PayPal — on its own systems. We record your name, email, optional phone and country, the amount, currency, fund and transaction reference. We never receive or store your full card number, CVV, PIN, or banking password.",
         },
       ],
     },
@@ -613,7 +623,7 @@ const PRIVACY: LegalDoc = {
           type: "list",
           items: [
             "The VOGIM pastoral and intercessory team — limited to those who pray over and follow up your request. They are bound to confidence.",
-            "Service providers who operate the systems we use: web and database hosting, our email delivery provider, the live-chat provider, our analytics provider, and Flutterwave, our payment processor. They act on our instructions and may not use your data for their own purposes.",
+            "Service providers who operate the systems we use: web and MongoDB database hosting, SMTP email or FormSubmit for internal alerts, Chatway after a visitor opts in and taps chat, Google Analytics after consent, Zoom, Cloudflare, and Flutterwave, Paystack or PayPal at checkout. Their processing locations and transfer safeguards are listed where confirmed; outstanding details are being reviewed with counsel.",
             "Law enforcement or regulators, where we are legally required to disclose, or where disclosure is necessary to protect someone from serious harm.",
           ],
         },
@@ -634,15 +644,15 @@ const PRIVACY: LegalDoc = {
         {
           type: "list",
           items: [
-            "Essential cookies — needed for the site and the administrator login to work.",
-            "Analytics cookies — Google Analytics (GA4), which tells us in aggregate how the site is used. See Google's privacy policy for how they handle that data.",
-            "Advertising cookies — Google AdSense serves advertising on parts of this site and may use cookies to show relevant ads. You can control personalised advertising in your Google Ads Settings.",
-            "Live chat — our chat widget sets a cookie so a conversation continues across pages.",
+            "Strictly necessary storage — the administrator session, consent record, form drafts you choose to keep and anti-spam protection.",
+            "Analytics cookies — Google Analytics (GA4), loaded only after analytics consent. It tells us in aggregate how the site is used.",
+            "Functional storage — Chatway may set a cookie after functional consent and your tap to open chat. Embedded maps and videos also require a tap where offered.",
+            "Advertising — this application does not currently load Google AdSense or advertising cookies.",
           ],
         },
         {
           type: "p",
-          text: "You can block or delete cookies in your browser settings at any time. Blocking analytics and advertising cookies does not affect your ability to use this site or to submit a request.",
+          text: "Use Cookie settings in the footer to accept, reject or change optional categories. Your choice is stored with a timestamp and policy version for up to 12 months. See {site}/cookie-policy/ for the storage table.",
         },
       ],
     },
@@ -698,7 +708,7 @@ const PRIVACY: LegalDoc = {
         },
         {
           type: "p",
-          text: "To exercise any of these rights, write to {email}. We will respond within 30 days. There is no charge, and asking will never affect the ministry you receive from us.",
+          text: "To exercise any of these rights, use the form at {site}/privacy-requests/ or write to {email}. We will respond within 30 days. There is no charge, and asking will never affect the ministry you receive from us.",
         },
       ],
     },
@@ -761,7 +771,7 @@ export const LEGAL_DOCS: LegalDoc[] = [REFUND, TERMS, PRIVACY];
 
 /** Footer / sitemap links, in display order. */
 export const LEGAL_LINKS = [
-  { label: "Refund Policy", href: "/refund-policy/" },
+  { label: "Giving & Refund Policy", href: "/refund-policy/" },
   { label: "Terms & Conditions", href: "/terms-and-conditions/" },
   { label: "Privacy Policy", href: "/privacy-policy/" },
 ];

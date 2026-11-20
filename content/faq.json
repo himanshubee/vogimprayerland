@@ -1,0 +1,431 @@
+{
+  "_readme": "FAQ source. Answers come only from the Facts Register (brief section 2) or owner answers. Entries with owner_supplied true and an empty answer are held back until leadership writes them; they never render. Slugs never change after publishing; if one must, add a 301.",
+  "updated": "2026-11-20",
+  "categories": [
+    { "slug": "first-time-here", "name": "First time here", "intro": "New to VOGIM Prayer Land? Start here. These answers cover who we are, what we offer and how to take a first step." },
+    { "slug": "online-services", "name": "Online services", "intro": "Service days, times and how to join on Zoom. Times are in West Africa Time (WAT)." },
+    { "slug": "prayer-requests", "name": "Prayer requests", "intro": "How to send a prayer request, who prays over it and how it is kept private." },
+    { "slug": "deliverance", "name": "Deliverance", "intro": "How an online deliverance session is arranged, what to prepare and what happens afterwards." },
+    { "slug": "healing", "name": "Healing", "intro": "Sending a healing prayer request, what you need to share and continuing medical care." },
+    { "slug": "marriage-and-family", "name": "Marriage and family", "intro": "Asking for prayer and guidance about a marriage or family matter." },
+    { "slug": "dreams", "name": "Dreams", "intro": "Sending a dream for prayerful interpretation." },
+    { "slug": "giving-and-partnership", "name": "Giving and partnership", "intro": "Giving is voluntary and separate from any request. These answers explain the official channel and refunds." },
+    { "slug": "store-and-books", "name": "Store and books", "intro": "Buying from the ministry store and what to do if something goes wrong with an order." },
+    { "slug": "privacy-and-safety", "name": "Privacy and safety", "intro": "What we keep, for how long, who sees it and how to protect yourself from impersonators." }
+  ],
+  "questions": [
+    {
+      "category": "first-time-here",
+      "slug": "what-is-vogim-prayer-land",
+      "question": "What is VOGIM Prayer Land?",
+      "short_answer": "VOGIM Prayer Land, also known as Voice of God International Ministry, is a Christian ministry based in Ikorodu, Lagos State, Nigeria. It began in May 2021 and offers prayer, healing prayer, online deliverance sessions, marital guidance and dream interpretation to people anywhere. Prayer, deliverance and counselling are free.",
+      "full_answer": [
+        "The ministry began in May 2021 as village evangelism in Porto Novo and the communities around it. Today it is based at 18 Association Avenue, Owutu-Agric, Ikorodu, Lagos State, and meets people online.",
+        "Its work has three parts: deliverance, healing and restoration. Online prophetic services run on Zoom every Monday and Saturday at 10:00 PM WAT. Sunday worship is at 9:00 AM WAT, in person and by livestream."
+      ],
+      "related_pages": ["/about/", "/services/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "first-time-here",
+      "slug": "who-can-send-a-request",
+      "question": "Who can send a request?",
+      "short_answer": "Any adult, from any country, can send a request through this website. You do not need to be a member. If you are under 18, please ask a parent or guardian to send the request for you.",
+      "full_answer": [
+        "There are separate forms for prayer, healing, deliverance and dream interpretation. Each one asks only for what the team needs to pray and reply. Health, family and marriage details are optional."
+      ],
+      "related_pages": ["/how-requests-work/", "/online-deliverance/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "first-time-here",
+      "slug": "is-it-free",
+      "question": "Is it free?",
+      "short_answer": "Yes. Prayer, deliverance and counselling are free. No prayer, session or follow-up depends on a gift. Giving is voluntary and separate from any request.",
+      "full_answer": [
+        "The ministry's giving and refund policy states that prayer, deliverance and counselling are free of charge. If anyone asks you to pay for prayer in the ministry's name, do not pay, and check our official channels."
+      ],
+      "related_pages": ["/notice/", "/refund-policy/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "first-time-here",
+      "slug": "how-do-i-join-a-service",
+      "question": "How do I join a service?",
+      "short_answer": "Online services run on Zoom. Open the join link on our Services page at the service time. You do not need a Zoom account or to register. The meeting ID is 788 5810 191, and the passcode is built into the link.",
+      "full_answer": [
+        "The Online Prophetic Service is on Mondays and Saturdays at 10:00 PM WAT. Bible study is on Wednesdays at 7:00 PM WAT. The Services page shows each time in your own time zone and lets you add it to your calendar."
+      ],
+      "related_pages": ["/services/", "/zoom/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "first-time-here",
+      "slug": "where-is-the-church",
+      "question": "Where is the church?",
+      "short_answer": "The church is at 18 Association Avenue, Owutu-Agric, Ikorodu, Lagos State, Nigeria. Sunday worship is at 9:00 AM WAT, in person and by livestream. You can call or message +234 815 074 3998.",
+      "full_answer": [],
+      "related_pages": ["/visit/", "/contact/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "online-services",
+      "slug": "when-are-the-services",
+      "question": "When are the services?",
+      "short_answer": "The Online Prophetic Service is on Mondays and Saturdays at 10:00 PM WAT, on Zoom. Bible study is on Wednesdays at 7:00 PM WAT, on Zoom. Sunday worship is at 9:00 AM WAT, in person in Ikorodu and by livestream.",
+      "full_answer": [],
+      "related_pages": ["/services/", "/visit/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "online-services",
+      "slug": "what-time-is-it-in-my-country",
+      "question": "What time is the service in my country?",
+      "short_answer": "Service times are in West Africa Time (WAT), which is one hour ahead of UTC all year. WAT does not change for daylight saving, but some countries do, so the gap can change. Our Services page shows each service in your own local time.",
+      "full_answer": [],
+      "related_pages": ["/services/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "online-services",
+      "slug": "do-i-need-a-zoom-account",
+      "question": "Do I need a Zoom account?",
+      "short_answer": "No. You do not need a Zoom account or to register. Open the join link at the service time. The passcode is built into the link.",
+      "full_answer": [],
+      "related_pages": ["/zoom/", "/services/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "online-services",
+      "slug": "can-i-join-by-phone",
+      "question": "Can I join by phone?",
+      "short_answer": "",
+      "full_answer": [],
+      "related_pages": ["/zoom/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": true
+    },
+    {
+      "category": "online-services",
+      "slug": "is-there-a-recording",
+      "question": "Is there a recording?",
+      "short_answer": "",
+      "full_answer": [],
+      "related_pages": ["/media/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": true
+    },
+    {
+      "category": "prayer-requests",
+      "slug": "how-do-i-send-a-request",
+      "question": "How do I send a prayer request?",
+      "short_answer": "Use the prayer request form on this website. It asks for your name, your email and what you would like us to pray about. Your phone number and city are optional. You can share as much or as little as you choose.",
+      "full_answer": [
+        "There are also forms for healing, deliverance and dream interpretation. If you prefer, you can message the ministry on WhatsApp at +234 815 074 3998."
+      ],
+      "related_pages": ["/how-requests-work/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "prayer-requests",
+      "slug": "who-reads-my-request",
+      "question": "Who reads my request?",
+      "short_answer": "Your request goes privately to the ministry's prayer team. Intercessors gather each morning to pray over requests. Urgent matters go to the prayer team and, where needed, a pastor may call you.",
+      "full_answer": [],
+      "related_pages": ["/how-requests-work/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "prayer-requests",
+      "slug": "how-fast-is-the-reply",
+      "question": "How quickly will I hear back?",
+      "short_answer": "",
+      "full_answer": [],
+      "related_pages": ["/how-requests-work/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": true
+    },
+    {
+      "category": "prayer-requests",
+      "slug": "is-my-request-private",
+      "question": "Is my request private?",
+      "short_answer": "Yes. Requests are treated with confidentiality and reverence. We do not sell your information, we do not share your prayer request with advertisers, and we never publish it. Request text is never sent to analytics or included in notification emails.",
+      "full_answer": [],
+      "related_pages": ["/how-requests-work/", "/privacy-policy/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "prayer-requests",
+      "slug": "can-i-ask-for-someone-else",
+      "question": "Can I request prayer for someone else?",
+      "short_answer": "",
+      "full_answer": [],
+      "related_pages": [],
+      "request_page": "/prayer-request/",
+      "owner_supplied": true
+    },
+    {
+      "category": "prayer-requests",
+      "slug": "what-if-it-is-urgent",
+      "question": "What if my need is urgent?",
+      "short_answer": "For urgent spiritual needs, message us on WhatsApp at +234 815 074 3998. For a medical or other emergency, contact your local emergency services or someone you trust now. Spiritual care does not replace emergency help.",
+      "full_answer": [],
+      "related_pages": ["/contact/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "deliverance",
+      "slug": "what-is-online-deliverance",
+      "question": "What is online deliverance?",
+      "short_answer": "",
+      "full_answer": [],
+      "related_pages": ["/online-deliverance/"],
+      "request_page": "/deliverance-request/",
+      "owner_supplied": true
+    },
+    {
+      "category": "deliverance",
+      "slug": "how-does-a-session-work",
+      "question": "How does an online deliverance session work?",
+      "short_answer": "You send a deliverance request. The team confirms it and proposes a time. Before the session, you receive scripture to read. The session is one to one, online, and led by the prophet. Afterwards you receive aftercare: scripture, a prayer plan and follow-up.",
+      "full_answer": [],
+      "related_pages": ["/online-deliverance/"],
+      "request_page": "/deliverance-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "deliverance",
+      "slug": "what-should-i-prepare",
+      "question": "What should I prepare before a session?",
+      "short_answer": "Once your session is confirmed, the team sends you scripture to read before it. Keep your phone or WhatsApp available so the team can confirm the time with you.",
+      "full_answer": [],
+      "related_pages": ["/online-deliverance/"],
+      "request_page": "/deliverance-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "deliverance",
+      "slug": "what-happens-afterwards",
+      "question": "What happens after a session?",
+      "short_answer": "After the session you receive aftercare: scripture, a prayer plan and follow-up from the team.",
+      "full_answer": [],
+      "related_pages": ["/online-deliverance/"],
+      "request_page": "/deliverance-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "deliverance",
+      "slug": "is-a-session-free",
+      "question": "Is a deliverance session free?",
+      "short_answer": "Yes. Prayer, deliverance and counselling are free. A session never depends on a gift.",
+      "full_answer": [],
+      "related_pages": ["/online-deliverance/", "/notice/"],
+      "request_page": "/deliverance-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "healing",
+      "slug": "what-can-i-send",
+      "question": "What can I send in a healing request?",
+      "short_answer": "Tell us what you would like us to pray about. You choose how much to share. Health details are optional, and the team can pray without them.",
+      "full_answer": [],
+      "related_pages": ["/healing/"],
+      "request_page": "/healing-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "healing",
+      "slug": "do-i-have-to-share-my-condition",
+      "question": "Do I have to share my condition?",
+      "short_answer": "No. Sharing a condition is optional. If you choose to share health details, they are used only to pray for you and reply, and they are kept private.",
+      "full_answer": [],
+      "related_pages": ["/healing/", "/how-requests-work/"],
+      "request_page": "/healing-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "healing",
+      "slug": "should-i-keep-seeing-my-doctor",
+      "question": "Should I keep seeing my doctor?",
+      "short_answer": "Yes. If you are continuing under medical care, please continue with your doctor while we stand in prayer with you.",
+      "full_answer": [],
+      "related_pages": ["/healing/"],
+      "request_page": "/healing-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "healing",
+      "slug": "is-healing-prayer-free",
+      "question": "Is healing prayer free?",
+      "short_answer": "Yes. Prayer, deliverance and counselling are free.",
+      "full_answer": [],
+      "related_pages": ["/healing/"],
+      "request_page": "/healing-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "marriage-and-family",
+      "slug": "what-is-marital-settlement",
+      "question": "What is marital settlement?",
+      "short_answer": "",
+      "full_answer": [],
+      "related_pages": ["/marital-settlement/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": true
+    },
+    {
+      "category": "marriage-and-family",
+      "slug": "is-a-marriage-request-confidential",
+      "question": "Is a marriage request confidential?",
+      "short_answer": "Yes. Requests are treated with confidentiality and reverence. Family and marriage details are optional, and we never publish a request or share it with advertisers.",
+      "full_answer": [],
+      "related_pages": ["/marital-settlement/", "/how-requests-work/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "dreams",
+      "slug": "how-do-i-send-a-dream",
+      "question": "How do I send a dream?",
+      "short_answer": "Use the dream interpretation form on this website. Include the details you remember. Share only what you choose. The service is free.",
+      "full_answer": [],
+      "related_pages": ["/dream-interpretation/"],
+      "request_page": "/dream-interpretation/",
+      "owner_supplied": false
+    },
+    {
+      "category": "dreams",
+      "slug": "is-my-dream-kept-private",
+      "question": "Is my dream kept private?",
+      "short_answer": "Yes. Dreams are treated with the same confidentiality as every other request. We never publish them or share them with advertisers.",
+      "full_answer": [],
+      "related_pages": ["/dream-interpretation/", "/how-requests-work/"],
+      "request_page": "/dream-interpretation/",
+      "owner_supplied": false
+    },
+    {
+      "category": "dreams",
+      "slug": "how-long-is-the-reply",
+      "question": "How long is the reply for a dream?",
+      "short_answer": "",
+      "full_answer": [],
+      "related_pages": ["/dream-interpretation/"],
+      "request_page": "/dream-interpretation/",
+      "owner_supplied": true
+    },
+    {
+      "category": "giving-and-partnership",
+      "slug": "is-giving-required",
+      "question": "Is giving required?",
+      "short_answer": "No. Giving is voluntary and separate from any request. Prayer, deliverance and counselling are free, and no one receives less prayer for giving less.",
+      "full_answer": [],
+      "related_pages": ["/give/", "/partnership/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "giving-and-partnership",
+      "slug": "which-channel-is-official",
+      "question": "Which giving channel is official?",
+      "short_answer": "The only official way to give online is the Give page on this website, which continues to give.vogimprayerland.org. Card details are entered on the payment partner's secure page and never touch this website. We will never ask for your card PIN, CVV, password or a one-time code.",
+      "full_answer": [],
+      "related_pages": ["/give/", "/notice/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "giving-and-partnership",
+      "slug": "what-do-seed-covenant-and-kingdom-mean",
+      "question": "What do Seed, Covenant and Kingdom mean?",
+      "short_answer": "",
+      "full_answer": [],
+      "related_pages": ["/partnership/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": true
+    },
+    {
+      "category": "giving-and-partnership",
+      "slug": "how-do-i-get-a-refund-after-an-error",
+      "question": "How do I get a refund after an error?",
+      "short_answer": "Gifts are ordinarily non-refundable once processed. Exceptions include a duplicate charge, a wrong amount, unauthorised use, a gateway error, or a debit after cancelling a recurring gift. Ask within 30 days, or 90 days for an unauthorised transaction, using the form on the refund policy page.",
+      "full_answer": [
+        "Requests are acknowledged within 3 business days, and a decision is targeted within 7 business days. Never send a full card number, CVV or PIN."
+      ],
+      "related_pages": ["/refund-policy/", "/give/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "store-and-books",
+      "slug": "how-do-i-pay",
+      "question": "How do I pay in the store?",
+      "short_answer": "Checkout is on the payment partner's hosted page. The provider shown at checkout may be Flutterwave, Paystack or PayPal. Card details never touch this website.",
+      "full_answer": [],
+      "related_pages": ["/store/", "/books/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "store-and-books",
+      "slug": "problem-with-my-order",
+      "question": "What if there is a problem with my order?",
+      "short_answer": "Use the Complaints page or message us on WhatsApp at +234 815 074 3998. Include your order reference. Never send card details.",
+      "full_answer": [],
+      "related_pages": ["/complaints/", "/store/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    },
+    {
+      "category": "privacy-and-safety",
+      "slug": "how-long-do-you-keep-requests",
+      "question": "How long do you keep my request?",
+      "short_answer": "Requests are usually deleted or anonymised within 5 years of last contact. Enquiries are kept for 2 years. Giving records are kept for about 7 years for accounting. You can ask us to delete your data sooner.",
+      "full_answer": [],
+      "related_pages": ["/privacy-policy/", "/how-requests-work/"],
+      "request_page": "/privacy-requests/",
+      "owner_supplied": false
+    },
+    {
+      "category": "privacy-and-safety",
+      "slug": "do-you-share-my-information",
+      "question": "Do you share my information?",
+      "short_answer": "We do not sell, rent or trade your personal information. We do not share your prayer request with advertisers, and we never publish it. Service providers such as hosting and email process data only to run the site, as the privacy policy explains.",
+      "full_answer": [],
+      "related_pages": ["/privacy-policy/"],
+      "request_page": "/privacy-requests/",
+      "owner_supplied": false
+    },
+    {
+      "category": "privacy-and-safety",
+      "slug": "how-do-i-delete-my-data",
+      "question": "How do I delete my data?",
+      "short_answer": "Use the privacy requests form to ask for access, correction or deletion of your data, or to withdraw consent. We will respond within 30 days. There is no charge, and asking never affects the ministry you receive.",
+      "full_answer": [],
+      "related_pages": ["/privacy-policy/"],
+      "request_page": "/privacy-requests/",
+      "owner_supplied": false
+    },
+    {
+      "category": "privacy-and-safety",
+      "slug": "how-do-i-spot-an-impersonator",
+      "question": "How do I know a message is really from VOGIM?",
+      "short_answer": "Check our official channels on the Notice page. We will never charge for prayer, ask for your card PIN, CVV, password or one-time code, or promise a result in return for money. If something looks wrong, do not pay. Tell us on WhatsApp or through the Complaints page.",
+      "full_answer": [],
+      "related_pages": ["/notice/", "/complaints/"],
+      "request_page": "/prayer-request/",
+      "owner_supplied": false
+    }
+  ]
+}

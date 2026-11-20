@@ -1,0 +1,43 @@
+{
+  "_readme": "Pages whose words belong to ministry leadership or an adviser. Each page stays unpublished (404, not in the sitemap) until 'approvedBy' and 'approvedOn' are filled and at least one section exists. Do not draft doctrine, policy promises or figures here on the ministry's behalf.",
+  "what-we-believe": {
+    "title": "What We Believe",
+    "eyebrow": "Statement of faith",
+    "intro": "",
+    "metaDescription": "",
+    "sections": [],
+    "approvedBy": "",
+    "approvedOn": "",
+    "lastUpdated": ""
+  },
+  "safeguarding": {
+    "title": "Safeguarding and Care",
+    "eyebrow": "How we protect people",
+    "intro": "",
+    "metaDescription": "",
+    "sections": [],
+    "approvedBy": "",
+    "approvedOn": "",
+    "lastUpdated": ""
+  },
+  "where-gifts-go": {
+    "title": "Where Gifts Go",
+    "eyebrow": "Stewardship",
+    "intro": "",
+    "metaDescription": "",
+    "sections": [],
+    "approvedBy": "",
+    "approvedOn": "",
+    "lastUpdated": ""
+  },
+  "accessibility": {
+    "title": "Accessibility Statement",
+    "eyebrow": "Accessibility",
+    "intro": "",
+    "metaDescription": "",
+    "sections": [],
+    "approvedBy": "",
+    "approvedOn": "",
+    "lastUpdated": ""
+  }
+}

@@ -1,16 +1,20 @@
 import type { MetadataRoute } from "next";
-
-const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.vogimprayerland.org"
-).replace(/\/$/, "");
+import { SITE_URL } from "@/lib/ministry";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: ["/admin", "/api"],
-    },
+    rules: [
+      {
+        userAgent: ["Googlebot", "Bingbot", "OAI-SearchBot", "ChatGPT-User", "PerplexityBot", "ClaudeBot", "Claude-SearchBot", "Applebot"],
+        allow: "/",
+      },
+      { userAgent: ["GPTBot", "Google-Extended"], disallow: "/" },
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/admin/", "/api/", "/checkout/", "/cart/", "/faq/search/", "/give/thank-you/", "/checkout/thank-you/"],
+      },
+    ],
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,
   };

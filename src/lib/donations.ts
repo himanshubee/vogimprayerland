@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { getDb } from "@/lib/mongodb";
 import { linkSubmissionToContact } from "@/lib/crm";
-import { sendSubmissionEmail } from "@/lib/mailer";
+import { sendEmail, sendSubmissionEmail } from "@/lib/mailer";
 import {
   CURRENCIES,
   verifyTransaction,
@@ -398,7 +398,12 @@ async function notifyAndLink(d: DonationDoc) {
   if (d.note) fields.note = d.note;
 
   await Promise.allSettled([
-    sendSubmissionEmail({ intent: "Donation", fields }),
+    sendEmail({
+      to: d.email,
+      subject: `Your VOGIM Prayer Land gift receipt (${d._id})`,
+      text: `Thank you for your voluntary gift to VOGIM Prayer Land.\n\nAmount: ${pretty} ${d.currency}\nDate: ${(d.paidAt ?? d.createdAt).toISOString()}\nReference: ${d._id}\nFund: ${d.fund}\n\nGiving is voluntary. Prayer, deliverance and counselling are free. Reply to this email if you have a question about your gift.`,
+    }),
+    sendSubmissionEmail({ intent: "Donation", id: d._id }),
     linkSubmissionToContact({
       id: d._id,
       intent: "Donation",

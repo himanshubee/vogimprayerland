@@ -1,77 +1,26 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/PageHeader";
-import { RequestForm } from "@/components/RequestForm";
-import { Reveal } from "@/components/Reveal";
-import { getPageContent, getPageMeta } from "@/lib/page-content";
-import { RichText } from "@/components/RichText";
+import { RequestExperience } from "@/components/RequestExperience";
+import { absoluteUrl } from "@/lib/ministry";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return getPageMeta("prayer-request");
-}
+export const metadata: Metadata = {
+  title: "Send a Prayer Request Online (Free) | VOGIM Prayer Land",
+  description: "Send a free, private online prayer request to VOGIM Prayer Land. Share as much or as little as you choose. Intercessors pray over requests each morning.",
+  alternates: { canonical: absoluteUrl("/prayer-request/") },
+};
 
-export const revalidate = 300;
+const FAQS = [
+  { question: "Who reads my request?", answer: "Your request goes to the prayer team. Intercessors gather each morning to pray over requests, and a pastor may follow up where needed." },
+  { question: "Can I request prayer for someone else?", answer: "Yes. You can ask for prayer for another person. Share only the details you have permission and need to share; their name and personal details are not required for you to contact us." },
+  { question: "Is my request private?", answer: "Requests are treated with confidentiality and reverence. They are not published or shared with advertisers. You can ask for your information to be deleted through the Privacy requests page." },
+  { question: "Is prayer free?", answer: "Yes. Prayer, deliverance and counselling are free. Giving is voluntary and is never required before you can receive prayer." },
+];
 
-export default async function PrayerRequestPage() {
-  const c = await getPageContent("prayer-request");
-  return (
-    <>
-      <PageHeader
-        image={c.heroImage}
-        eyebrow={c.heroEyebrow}
-        title={<RichText text={c.heroTitle} />}
-        intro={c.heroIntro}
-        scripture={{
-          ref: "Matthew 18:19",
-          text: "If two of you shall agree on earth as touching any thing that they shall ask, it shall be done for them.",
-        }}
-      />
-
-      <section className="bg-ivory paper-grain">
-        <div className="mx-auto max-w-6xl px-6 py-20 lg:py-28 grid lg:grid-cols-[1fr_1.4fr] gap-14">
-          <Reveal>
-            <p className="eyebrow text-gold-deep">
-              <span className="gold-rule mr-3" />
-              How we pray
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-midnight mt-4 leading-tight">
-              Every request is read.
-              <br />
-              <span className="italic">Every name is prayed.</span>
-            </h2>
-            <p className="mt-6 text-midnight/75 leading-relaxed">
-              Our intercessors gather every morning to lift up requests
-              submitted through this page. Urgent matters receive immediate
-              attention from the prayer team and, where needed, a personal
-              call from a pastor.
-            </p>
-            <ul className="mt-8 space-y-3 text-midnight/80 text-sm">
-              <li>· Confidentiality is sacred to us.</li>
-              <li>· You will hear back within 24 hours.</li>
-              <li>· Need urgent help? Use WhatsApp on the contact page.</li>
-            </ul>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <RequestForm
-              intent="Prayer Request"
-              fields={[
-                { name: "name", label: "Full Name", required: true },
-                { name: "email", label: "Email", type: "email", required: true },
-                { name: "phone", label: "Phone / WhatsApp", type: "tel" },
-                { name: "country", label: "City & Country" },
-                {
-                  name: "request",
-                  label: "Your prayer request",
-                  type: "textarea",
-                  required: true,
-                  rows: 6,
-                  placeholder: "Share what is on your heart…",
-                },
-              ]}
-            />
-          </Reveal>
-        </div>
-      </section>
-    </>
-  );
+export default function PrayerRequestPage() {
+  return <RequestExperience eyebrow="Online prayer request" title="Send a Prayer Request Online" intro="Tell us what you would like us to pray about. It is free and private, and you can share as much or as little as you choose. Intercessors pray over requests each morning." intent="Prayer Request" submitLabel="Send my prayer request" fields={[
+    { name: "name", label: "Name", required: true, autoComplete: "name" },
+    { name: "email", label: "Email", type: "email", inputMode: "email", required: true, autoComplete: "email" },
+    { name: "phone", label: "Phone or WhatsApp (optional)", type: "tel", inputMode: "tel", autoComplete: "tel" },
+    { name: "country", label: "City and country (optional)", autoComplete: "country-name" },
+    { name: "request", label: "Your prayer request", type: "textarea", required: true, rows: 6, placeholder: "Share what is on your heart" },
+  ]} steps={["Your request goes privately to the prayer team.", "Intercessors pray over requests each morning.", "A pastor may follow up where needed."]} faqs={FAQS} />;
 }

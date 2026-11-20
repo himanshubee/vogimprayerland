@@ -1,77 +1,40 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
+import { Cormorant_Garamond, Geist } from "next/font/google";
 import "./globals.css";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
-import {
-  GoogleTagManagerBody,
-  GoogleTagManagerHead,
-} from "@/components/GoogleTagManager";
+import { DEFAULT_OG_IMAGE, MINISTRY, SITE_NAME, SITE_URL } from "@/lib/ministry";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  style: ["normal", "italic"],
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600"],
   display: "swap",
 });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.vogimprayerland.org"
-).replace(/\/$/, "");
-
-const SITE_NAME = "VOGIM Prayer Land";
-const DEFAULT_TITLE = "VOGIM Prayer Land — Online Deliverance Ministry";
+const DEFAULT_TITLE = "VOGIM Prayer Land | Online Deliverance Ministry, Lagos";
 const DEFAULT_DESCRIPTION =
-  "Voice of God International Ministry (VOGIM) — Online deliverance, healing, and restoration through the power of Jesus Christ. Lagos, Nigeria.";
-const DEFAULT_OG_IMAGE = "/icon.png";
+  "VOGIM Prayer Land in Ikorodu, Lagos offers free online prayer, deliverance, healing prayer, marital guidance and dream interpretation. Send a private request.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: DEFAULT_TITLE,
+  title: { default: DEFAULT_TITLE, template: "%s" },
   description: DEFAULT_DESCRIPTION,
   applicationName: SITE_NAME,
-  keywords: [
-    "VOGIM",
-    "Online Deliverance Ministry",
-    "Prayer Request",
-    "Healing",
-    "Prophet Olaofe",
-    "Lagos Nigeria church",
-  ],
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
   },
-  // Webmaster-tool site verifications carried over from the previous
-  // WordPress site (old.vogimprayerland.org).
   verification: {
-    google: [
-      "p3zMtdgse25dnwQksgqNy3BV5w7kL4CF7xhmdJ9_fFk",
-      "v-EZmIPBsPuWYP_O9UnRJVBglFVwuGg8fAvZnad9k1g",
-    ],
+    google: ["p3zMtdgse25dnwQksgqNy3BV5w7kL4CF7xhmdJ9_fFk", "v-EZmIPBsPuWYP_O9UnRJVBglFVwuGg8fAvZnad9k1g"],
     yandex: "4fbdd97331c78d4e",
     other: {
       "msvalidate.01": "EC93E391DA3A3C520BA7E94F01CEF220",
@@ -79,36 +42,26 @@ export const metadata: Metadata = {
       "google-adsense-account": "ca-pub-7788632056034755",
     },
   },
-  openGraph: {
-    type: "website",
-    siteName: SITE_NAME,
-    title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
-    url: SITE_URL,
-    locale: "en_US",
-    images: [{ url: DEFAULT_OG_IMAGE }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
-    images: [DEFAULT_OG_IMAGE],
-  },
+  openGraph: { type: "website", siteName: SITE_NAME, title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, url: SITE_URL, locale: "en_NG", images: [{ url: DEFAULT_OG_IMAGE }] },
+  twitter: { card: "summary_large_image", title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, images: [DEFAULT_OG_IMAGE] },
 };
 
-// Sitewide structured data, mirroring what Rank Math emits on every page:
-// the publishing Organization and the WebSite entity (with a search action).
 const ORG_AND_SITE_JSONLD = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Organization",
+      "@type": "Church",
       "@id": `${SITE_URL}/#organization`,
-      name: "Voice of God International Ministry (VOGIM)",
-      alternateName: SITE_NAME,
+      name: SITE_NAME,
+      alternateName: MINISTRY.alternateName,
       url: SITE_URL,
-      logo: `${SITE_URL}/icon.png`,
-      description: DEFAULT_DESCRIPTION,
+      logo: `${SITE_URL}${DEFAULT_OG_IMAGE}`,
+      description: MINISTRY.description,
+      telephone: MINISTRY.phone,
+      foundingDate: MINISTRY.foundingDate,
+      founder: { "@type": "Person", name: MINISTRY.founder.name, jobTitle: MINISTRY.founder.role },
+      address: { "@type": "PostalAddress", ...MINISTRY.address },
+      sameAs: [MINISTRY.social.facebook, MINISTRY.social.youtube],
     },
     {
       "@type": "WebSite",
@@ -117,40 +70,21 @@ const ORG_AND_SITE_JSONLD = {
       name: SITE_NAME,
       description: DEFAULT_DESCRIPTION,
       publisher: { "@id": `${SITE_URL}/#organization` },
-      inLanguage: "en-US",
+      inLanguage: "en-NG",
     },
   ],
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${cormorant.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en-NG" className={`${cormorant.variable} ${geistSans.variable} h-full antialiased`}>
       <head>
-        <GoogleTagManagerHead />
-        <GoogleAnalytics />
+        <script id="consent-defaults" dangerouslySetInnerHTML={{ __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};window.gtag=window.gtag||gtag;gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied'});` }} />
       </head>
-      <body className="min-h-full flex flex-col bg-white text-ink">
-        <GoogleTagManagerBody />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(ORG_AND_SITE_JSONLD),
-          }}
-        />
+      <body className="flex min-h-full flex-col bg-white text-ink">
+        <a href="#main-content" className="skip-link">Skip to content</a>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_AND_SITE_JSONLD) }} />
         {children}
-        <Script
-          id="google-adsense"
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7788632056034755"
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
-        />
       </body>
     </html>
   );

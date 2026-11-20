@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { getPostById } from "@/lib/posts";
 import { PostEditor } from "../PostEditor";
 
@@ -11,7 +11,7 @@ export default async function EditPostPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  if (!(await isAuthenticated())) redirect("/admin/login");
+  if (!(await requireRole("admin"))) redirect("/admin/login");
   const { id } = await params;
   const post = await getPostById(id);
   if (!post) notFound();

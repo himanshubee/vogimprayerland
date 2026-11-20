@@ -4,6 +4,9 @@ import { listPublishedBooks } from "@/lib/books";
 import { listPublishedMerch } from "@/lib/merch";
 import { PAGE_SCHEMAS, getPageModifiedMap } from "@/lib/page-content";
 import { LEGAL_DOCS } from "@/lib/legal";
+import { TESTIMONIES } from "@/lib/testimonies";
+import { PUBLISHED_QUESTIONS, FAQ_CATEGORIES } from "@/lib/faq";
+import { GLOSSARY_PUBLISHED, GLOSSARY_TERMS, PUBLISHED_OWNER_PAGES } from "@/lib/owner-content";
 
 export const revalidate = 3600;
 
@@ -18,6 +21,7 @@ const STATIC_PATHS = [
   "online-deliverance",
   "marital-settlement",
   "dream-interpretation",
+  "healing",
   "healing-request",
   "prayer-request",
   "deliverance-request",
@@ -26,6 +30,20 @@ const STATIC_PATHS = [
   "store",
   "war-against-marine-kingdom",
   "zoom",
+  "services",
+  "visit",
+  "leaders",
+  ...(TESTIMONIES.length ? ["testimonies"] : []),
+  "how-requests-work",
+  "notice",
+  "complaints",
+  "privacy-requests",
+  "cookie-policy",
+  "faq",
+  ...FAQ_CATEGORIES.map((c) => `faq/${c.slug}`),
+  ...PUBLISHED_QUESTIONS.map((q) => `faq/${q.category}/${q.slug}`),
+  ...(GLOSSARY_PUBLISHED ? ["glossary", ...GLOSSARY_TERMS.map((t) => `glossary/${t.slug}`)] : []),
+  ...PUBLISHED_OWNER_PAGES,
   "media",
   "gallery",
   "give",

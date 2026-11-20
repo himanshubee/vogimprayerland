@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { absoluteUrl } from "@/lib/ministry";
 import Link from "next/link";
 import { ArrowUpRight, BookOpen, Download, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -11,7 +12,8 @@ import type { CurrencyCode } from "@/lib/flutterwave";
 export const metadata: Metadata = {
   title: "Books — VOGIM Prayer Land",
   description:
-    "Books by the ministry of VOGIM Prayer Land, delivered as PDFs you can download the moment your payment clears.",
+    "Books from the ministry of VOGIM Prayer Land, delivered as PDFs you can download once payment clears. Pay securely on the payment partner's checkout.",
+  alternates: { canonical: absoluteUrl("/books/") },
 };
 
 export const revalidate = 300;

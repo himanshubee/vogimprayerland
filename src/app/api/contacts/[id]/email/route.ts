@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { getContact, addEvent } from "@/lib/crm";
 import { sendEmail } from "@/lib/mailer";
 
@@ -10,7 +10,7 @@ export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  if (!(await isAuthenticated())) {
+  if (!(await requireRole("pastor", "admin"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await ctx.params;

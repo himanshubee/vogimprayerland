@@ -617,7 +617,7 @@ async function deliverAndLink(order: BookOrderDoc): Promise<void> {
       subject: `Your order from VOGIM Prayer Land (${order._id})`,
       text: deliveryEmailText(order),
     }),
-    sendSubmissionEmail({ intent, fields }),
+    sendSubmissionEmail({ intent, id: order._id }),
     linkSubmissionToContact({
       id: order._id,
       intent,

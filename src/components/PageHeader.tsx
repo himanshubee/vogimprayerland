@@ -10,7 +10,7 @@ type Props = {
 
 export function PageHeader({ eyebrow, title, intro, scripture, image }: Props) {
   return (
-    <header className="relative bg-midnight text-white overflow-hidden">
+    <header className="page-header relative overflow-hidden bg-midnight-dark text-white">
       {image && (
         <div className="absolute inset-0">
           <Image
@@ -42,7 +42,7 @@ export function PageHeader({ eyebrow, title, intro, scripture, image }: Props) {
           <span className="gold-rule mr-3" />
           {eyebrow}
         </p>
-        <h1 className="font-display mt-5 sm:mt-6 text-[2.25rem] sm:text-5xl md:text-6xl lg:text-7xl leading-[1.05] sm:leading-[1.02] tracking-tight max-w-4xl">
+        <h1 className="mx-auto max-w-4xl font-display mt-5 text-[2.375rem] leading-[1.15] tracking-tight sm:mt-6 sm:text-5xl md:text-6xl md:leading-[1.1]">
           {title}
         </h1>
         {intro && (
@@ -56,7 +56,7 @@ export function PageHeader({ eyebrow, title, intro, scripture, image }: Props) {
               &ldquo;{scripture.text}&rdquo;
             </blockquote>
             <figcaption className="mt-3 text-[11px] tracking-[0.28em] uppercase text-gold">
-              {scripture.ref}
+              {scripture.ref}{!scripture.ref.includes("KJV") && " · KJV"}
             </figcaption>
           </figure>
         )}

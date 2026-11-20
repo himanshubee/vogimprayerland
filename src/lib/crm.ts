@@ -299,9 +299,8 @@ export async function linkSubmissionToContact(
   if (phone) or.push({ phone });
   const existing = or.length ? await contacts.findOne({ $or: or }) : null;
 
-  const preview =
-    str(sub.fields.request || sub.fields.message || sub.fields.subject || "", 140) ||
-    sub.intent;
+  // Request text stays in the protected, audited inbox only; the CRM timeline records that a request arrived.
+  const preview = "received";
 
   if (existing) {
     const id = String(existing._id);

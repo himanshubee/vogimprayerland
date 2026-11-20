@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isAuthenticated } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { listOrders } from "@/lib/book-orders";
 import { isFlutterwaveConfigured, isTestMode } from "@/lib/flutterwave";
 import { isPaystackConfigured, isPaystackTestMode } from "@/lib/paystack";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Orders — VOGIM Admin" };
 
 export default async function AdminBookOrdersPage() {
-  if (!(await isAuthenticated())) redirect("/admin/login");
+  if (!(await requireRole("finance", "admin"))) redirect("/admin/login");
 
   // Never let an unreachable DB blank the whole admin — show an empty table.
   const items = await listOrders().catch((err) => {

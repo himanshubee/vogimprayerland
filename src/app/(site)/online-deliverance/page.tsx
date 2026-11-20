@@ -15,12 +15,21 @@ import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 import { getPageContent, getPageMeta } from "@/lib/page-content";
 import { RichText } from "@/components/RichText";
+import { FaqList } from "@/components/FaqList";
 
 export async function generateMetadata(): Promise<Metadata> {
   return getPageMeta("online-deliverance");
 }
 
 export const revalidate = 300;
+
+const FAQS = [
+  { question: "How does an online deliverance session work?", answer: "Send a request and the team confirms it and proposes a session slot. You receive scripture to read before a one-to-one online session led by the prophet. Aftercare may include scripture, a prayer plan and follow-up." },
+  { question: "Is a session free?", answer: "Yes. Prayer, deliverance and counselling are free. Giving is voluntary and is never a condition for a session." },
+  { question: "What happens before and after a session?", answer: "Beforehand, the team confirms the time and provides scripture to read. Afterwards, aftercare may include scripture, a prayer plan and follow-up." },
+  { question: "Is my request private?", answer: "Yes. Requests are treated with confidentiality and reverence. You can share as much or as little as you like, and health, family and marriage details are optional." },
+  { question: "What if I am also under a doctor's care?", answer: "Continue with your doctor and professional care. Spiritual and pastoral ministry is not a substitute for professional medical, psychiatric, legal or financial advice, diagnosis or treatment." },
+];
 
 export default async function OnlineDeliverancePage() {
   const c = await getPageContent("online-deliverance");
@@ -195,10 +204,15 @@ export default async function OnlineDeliverancePage() {
               <p className="text-midnight/70 mt-5 text-sm italic">
                 {c.signsFootnote}
               </p>
+              <p className="mt-5 rounded-xl bg-cream p-4 text-sm text-slate">
+                Spiritual and pastoral ministry is not a substitute for professional medical, psychiatric, legal or financial advice, diagnosis or treatment. If you are in a medical emergency, or at risk of harming yourself or another person, contact your local emergency services immediately.
+              </p>
             </div>
           </Reveal>
         </div>
       </section>
+
+      <FaqList faqs={FAQS} relatedPath="/online-deliverance/" />
 
       {/* CTA */}
       <section className="relative bg-midnight-dark text-ivory overflow-hidden">
