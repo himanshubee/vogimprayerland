@@ -86,3 +86,20 @@ test("alt text names the keyword without repeating it", () => {
 test("keyword uses are counted case-insensitively across tags", () => {
   assert.deepEqual(fixes.keywordUses("<p>Soul <strong>ties</strong> matter. SOUL TIES break.</p>", "soul ties"), { uses: 2, words: 6 });
 });
+
+const { readdirSync, statSync } = await import("node:fs");
+const seoPaths = await import("../src/lib/seo-paths.ts");
+
+test("HAND_BUILT_ROUTES matches the route folders, so the sitemap never lists a shadowed post", () => {
+  const dir = new URL("../src/app/(site)/", import.meta.url);
+  const folders = readdirSync(dir)
+    .filter((n) => !n.startsWith("[") && !n.startsWith("(") && statSync(new URL(n, dir)).isDirectory())
+    .sort();
+  assert.deepEqual([...seoPaths.HAND_BUILT_ROUTES].sort(), folders);
+});
+
+test("robots-blocked paths are recognised for the sitemap filter", () => {
+  assert.equal(seoPaths.robotsBlocked("/cart/"), true);
+  assert.equal(seoPaths.robotsBlocked("/checkout/thank-you"), true);
+  assert.equal(seoPaths.robotsBlocked("/prayer-request/"), false);
+});

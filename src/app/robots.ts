@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/ministry";
+import { ROBOTS_DISALLOW } from "@/lib/seo-paths";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -15,12 +16,12 @@ export default function robots(): MetadataRoute.Robots {
           "Google-Extended", "DuckAssistBot", "Meta-ExternalAgent",
         ],
         allow: "/",
-        disallow: ["/admin/", "/api/", "/checkout/", "/cart/", "/faq/search/", "/give/thank-you/", "/checkout/thank-you/"],
+        disallow: ROBOTS_DISALLOW,
       },
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/api/", "/checkout/", "/cart/", "/faq/search/", "/give/thank-you/", "/checkout/thank-you/"],
+        disallow: ROBOTS_DISALLOW,
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

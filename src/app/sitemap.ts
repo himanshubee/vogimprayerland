@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getAllPublishedSlugs } from "@/lib/posts";
 import { RESTORED_POSTS } from "@/lib/restored-posts";
 import { REDIRECTED_SLUGS } from "@/lib/legacy-redirects";
+import { HAND_BUILT_ROUTES, robotsBlocked } from "@/lib/seo-paths";
 import { listPublishedBooks } from "@/lib/books";
 import { listPublishedMerch } from "@/lib/merch";
 import { PAGE_SCHEMAS, getPageModifiedMap } from "@/lib/page-content";
@@ -87,14 +88,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let postEntries: MetadataRoute.Sitemap = [];
   try {
     const slugs = await getAllPublishedSlugs();
-    // A slug that answers with a 301 must not be listed: a sitemap full of
-    // redirects tells Google the sitemap cannot be trusted.
-    postEntries = slugs.filter((s) => !REDIRECTED_SLUGS.has(s.slug)).map((s) => ({
-      url: `${SITE_URL}/${s.slug}/`,
-      lastModified: new Date(s.modified),
-      changeFrequency: "weekly",
-      priority: s.type === "page" ? 0.6 : 0.8,
-    }));
+    // Every URL listed must be one Google may index as itself. Search
+    // Console reports each exception as an error and trusts the sitemap less.
+    // Left out: a slug that 301s; a post shadowed by a hand-built route (the
+    // route serves, and STATIC_PATHS decides whether it is listed); a post
+    // set to noindex; a post whose canonical names another URL; anything
+    // robots.txt blocks.
+    const hidden = new Set(HAND_BUILT_ROUTES);
+    postEntries = slugs
+      .filter((s) => !REDIRECTED_SLUGS.has(s.slug) && !hidden.has(s.slug) && !s.noindex)
+      .filter((s) => !s.canonical || s.canonical.replace(/\/?$/, "/") === `${SITE_URL}/${s.slug}/`)
+      .filter((s) => !robotsBlocked(`/${s.slug}/`))
+      .map((s) => ({
+        url: `${SITE_URL}/${s.slug}/`,
+        lastModified: new Date(s.modified),
+        changeFrequency: "weekly",
+        priority: s.type === "page" ? 0.6 : 0.8,
+        // Image sitemap entry, so the featured image can rank in Google Images.
+        ...(s.featuredImage && /^https:\/\//.test(s.featuredImage) ? { images: [s.featuredImage] } : {}),
+      }));
   } catch {
     // DB unreachable at build time — ship the static sitemap only.
   }
@@ -106,6 +118,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(p.modified),
     changeFrequency: "weekly",
     priority: 0.8,
+    ...(p.featuredImage ? { images: [p.featuredImage] } : {}),
   }));
 
   // Book pages. listPublishedBooks swallows its own errors and returns [], so
@@ -115,6 +128,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(b.updatedAt),
     changeFrequency: "weekly",
     priority: 0.7,
+    ...(b.coverImage && /^https:\/\//.test(b.coverImage) ? { images: [b.coverImage] } : {}),
   }));
 
   // Store designs — listPublishedMerch swallows its own errors the same way.
@@ -123,6 +137,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(m.updatedAt),
     changeFrequency: "weekly",
     priority: 0.7,
+    ...(m.design && /^https:\/\//.test(m.design) ? { images: [m.design] } : {}),
   }));
 
   // Several WordPress "pages" were imported as posts under slugs that are also

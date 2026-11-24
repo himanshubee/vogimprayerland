@@ -161,22 +161,39 @@ export async function countPublishedPosts(type: PostType = "post"): Promise<numb
     .countDocuments({ status: "publish", type, slug: { $nin: [...REDIRECTED_SLUGS] } });
 }
 
-/** All published slugs with last-modified (for sitemap / static params). */
+/** All published slugs with what the sitemap needs to decide whether, and how, to list each. */
 export async function getAllPublishedSlugs(): Promise<
-  { slug: string; type: PostType; modified: string }[]
+  {
+    slug: string;
+    type: PostType;
+    modified: string;
+    title: string;
+    featuredImage: string | null;
+    noindex: boolean;
+    canonical: string;
+  }[]
 > {
   const db = await getDb();
   const docs = await db
     .collection<PostDoc>(COLLECTION)
     .find(
       { status: "publish" },
-      { projection: { slug: 1, type: 1, modified: 1, date: 1 } }
+      {
+        projection: {
+          slug: 1, type: 1, modified: 1, date: 1, title: 1, featuredImage: 1,
+          "seo.noindex": 1, "seo.canonical": 1, "seo.ogImage": 1,
+        },
+      }
     )
     .toArray();
   return docs.map((d) => ({
     slug: d.slug,
     type: d.type ?? "post",
     modified: toISO(d.modified ?? d.date),
+    title: publicCopy(d.title ?? ""),
+    featuredImage: d.featuredImage ?? d.seo?.ogImage ?? null,
+    noindex: Boolean(d.seo?.noindex),
+    canonical: String(d.seo?.canonical ?? "").trim(),
   }));
 }
 
