@@ -65,6 +65,17 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
     await load();
   }
 
+  async function removeRuns(body: { removeRunIds: string[] } | { clearFailed: true }) {
+    const res = await fetch("/api/admin/autoblog/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).catch(() => null);
+    const json = await res?.json().catch(() => null);
+    setMessage(res?.ok ? `Removed ${json.removed} from the list.` : json?.error || "Could not remove.");
+    await load();
+  }
+
   async function improve(idOrUrl: string) {
     const id = idOrUrl.match(/[a-f0-9]{24}/i)?.[0];
     if (!id) {
@@ -203,7 +214,14 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
       <p role="status" aria-live="polite" className="text-sm">{message}</p>
 
       <section>
-        <h2 className="font-display text-2xl">Recent runs</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-2xl">Recent runs</h2>
+          {data.runs.some((r) => r.status === "failed") && (
+            <button onClick={() => removeRuns({ clearFailed: true })} disabled={busy !== null} className="btn-ghost disabled:opacity-40">
+              Clear failed runs
+            </button>
+          )}
+        </div>
         <div className="mt-4 overflow-x-auto bg-white border border-midnight/10">
           <table className="w-full text-sm">
             <thead className="text-left text-xs uppercase tracking-[0.12em] text-slate">
@@ -237,6 +255,13 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
                           Optimise SEO + image
                         </button>
                       )}
+                      <button
+                        onClick={() => removeRuns({ removeRunIds: [r.id] })}
+                        disabled={busy !== null}
+                        className="mt-2 block text-slate underline disabled:opacity-40"
+                      >
+                        Remove from list
+                      </button>
                     </td>
                   </tr>
                 ))

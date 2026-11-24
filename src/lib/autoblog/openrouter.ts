@@ -77,20 +77,26 @@ export async function completeJson<T>(messages: Message[], maxTokens = 12000): P
   const errors: string[] = [];
   for (const model of TEXT_MODELS) {
     try {
-      const res = await call(
-        {
-          model,
-          messages,
-          max_tokens: maxTokens,
-          temperature: 0.6,
-          response_format: { type: "json_object" },
-          // Reasoning models otherwise spend the whole budget thinking and
-          // return an empty answer (seen with Nemotron: 8,000 reasoning
-          // tokens, no content). The prompt is specific enough not to need it.
-          reasoning: { enabled: false },
-        },
-        300_000
-      );
+      const body = {
+        model,
+        messages,
+        max_tokens: maxTokens,
+        temperature: 0.6,
+        response_format: { type: "json_object" },
+        // Reasoning models otherwise spend the whole budget thinking and
+        // return an empty answer (seen with Nemotron: 8,000 reasoning tokens,
+        // no content). The prompt is specific enough not to need it.
+        reasoning: { enabled: false } as Record<string, unknown>,
+      };
+      let res;
+      try {
+        res = await call(body, 300_000);
+      } catch (err) {
+        // Some models (Claude Sonnet 5.5) refuse to run without reasoning:
+        // keep it on but small, so the article still fits the budget.
+        if (!(err instanceof Error && /reasoning is mandatory|cannot be disabled/i.test(err.message))) throw err;
+        res = await call({ ...body, reasoning: { effort: "low", exclude: true } }, 300_000);
+      }
       const choice = res?.choices?.[0];
       const text: string = choice?.message?.content ?? "";
       try {

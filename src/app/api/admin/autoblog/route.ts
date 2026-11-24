@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
 import { runAutoblog } from "@/lib/autoblog/run";
 import { dryRun, improvePost, BUILT_IN_TOPICS, topicFromText } from "@/lib/autoblog/generate";
-import { getAutoblogSettings, listRuns, saveAutoblogSettings } from "@/lib/autoblog/settings";
+import { clearFailedRuns, getAutoblogSettings, listRuns, removeRuns, saveAutoblogSettings } from "@/lib/autoblog/settings";
 import { openrouterConfigured } from "@/lib/autoblog/openrouter";
 
 export const dynamic = "force-dynamic";
@@ -44,14 +44,26 @@ export async function PUT(req: NextRequest) {
  *   { force: true }       write now (admin button)
  *   { dryRun: "topic" }   write one article and return it, saving nothing
  *   { improvePostId }     add an image and fix the SEO checks on an existing post (admin only)
+ *   { removeRunIds }      take runs off the list: failed ones deleted, others hidden (admin only)
+ *   { clearFailed: true } delete every failed run (admin only)
  */
 export async function POST(req: NextRequest) {
   const admin = await requireRole("admin");
   if (!admin && !schedulerAllowed(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!openrouterConfigured()) return NextResponse.json({ error: "OPENROUTER_API_KEY is not set on the server" }, { status: 500 });
-
-  const body = (await req.json().catch(() => ({}))) as { force?: boolean; dryRun?: string; improvePostId?: string };
+  const body = (await req.json().catch(() => ({}))) as {
+    force?: boolean;
+    dryRun?: string;
+    improvePostId?: string;
+    removeRunIds?: string[];
+    clearFailed?: boolean;
+  };
   try {
+    if (body.removeRunIds || body.clearFailed) {
+      if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const removed = body.clearFailed ? await clearFailedRuns() : await removeRuns(body.removeRunIds!.map(String));
+      return NextResponse.json({ ok: true, removed });
+    }
+    if (!openrouterConfigured()) return NextResponse.json({ error: "OPENROUTER_API_KEY is not set on the server" }, { status: 500 });
     if (body.improvePostId) {
       if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       return NextResponse.json({ ok: true, improved: await improvePost(body.improvePostId) });

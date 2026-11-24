@@ -60,7 +60,7 @@ export async function recordRun(run: Omit<AutoblogRun, "id">) {
 
 export async function listRuns(limit = 30): Promise<AutoblogRun[]> {
   const db = await getDb();
-  const docs = await db.collection(RUNS).find({}).sort({ at: -1 }).limit(limit).toArray();
+  const docs = await db.collection(RUNS).find({ hidden: { $ne: true } }).sort({ at: -1 }).limit(limit).toArray();
   return docs.map((d) => ({
     id: String(d._id),
     at: new Date(d.at).toISOString(),
@@ -71,6 +71,28 @@ export async function listRuns(limit = 30): Promise<AutoblogRun[]> {
     title: d.title ?? null,
     detail: String(d.detail ?? ""),
   }));
+}
+
+/**
+ * Take runs off the admin list. A run that produced an article is only
+ * hidden: its record is what stops that topic being written a second time.
+ * Failed runs carry nothing worth keeping and are deleted.
+ */
+export async function removeRuns(ids: string[]): Promise<number> {
+  const { ObjectId } = await import("mongodb");
+  const oids = ids.filter((id) => ObjectId.isValid(id)).map((id) => new ObjectId(id));
+  if (oids.length === 0) return 0;
+  const db = await getDb();
+  const runs = db.collection(RUNS);
+  const deleted = await runs.deleteMany({ _id: { $in: oids }, status: "failed" });
+  const hidden = await runs.updateMany({ _id: { $in: oids }, status: { $ne: "failed" } }, { $set: { hidden: true } });
+  return deleted.deletedCount + hidden.modifiedCount;
+}
+
+/** Delete every failed run. */
+export async function clearFailedRuns(): Promise<number> {
+  const db = await getDb();
+  return (await db.collection(RUNS).deleteMany({ status: "failed" })).deletedCount;
 }
 
 /** Built-in topic ids already written (or deliberately skipped), so none is attempted twice. */
