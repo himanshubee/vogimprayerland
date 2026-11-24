@@ -103,3 +103,13 @@ test("robots-blocked paths are recognised for the sitemap filter", () => {
   assert.equal(seoPaths.robotsBlocked("/checkout/thank-you"), true);
   assert.equal(seoPaths.robotsBlocked("/prayer-request/"), false);
 });
+
+const reading = await import("../src/lib/reading-time.ts");
+
+test("reading time counts only readable words and rounds up", () => {
+  const words = (n) => Array.from({ length: n }, (_, i) => `word${i}`).join(" ");
+  assert.equal(reading.countWords("<p>Hello <strong>world</strong> &amp; friends</p><script>var x = 1;</script>"), 3);
+  assert.equal(reading.readingMinutes(`<p>${words(200)}</p>`), 1);
+  assert.equal(reading.readingMinutes(`<p>${words(201)}</p>`), 2);
+  assert.equal(reading.readingMinutes(""), 1);
+});

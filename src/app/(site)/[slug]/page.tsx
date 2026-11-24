@@ -6,6 +6,7 @@ import { getPostBySlug, getRelatedPosts } from "@/lib/posts";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/ministry";
 import { AUTHOR, articleAuthor } from "@/lib/authors";
 import { extractFaq } from "@/lib/clean-content";
+import { countWords, readingMinutes } from "@/lib/reading-time";
 
 export const dynamicParams = true; // generate posts on-demand, then cache (ISR)
 export const revalidate = 300;
@@ -86,9 +87,11 @@ export default async function PostPage({
 
   const canonical = post.seo.canonical || `${SITE_URL}/${post.slug}/`;
   const isArticle = post.type === "post";
+  const wasUpdated = new Date(post.modified).getTime() > new Date(post.date).getTime() && fmtDate(post.modified) !== fmtDate(post.date);
   const related = isArticle ? await getRelatedPosts(post) : [];
   const faq = isArticle ? extractFaq(post.content) : [];
-  const wordCount = post.content.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
+  const wordCount = countWords(post.content);
+  const minutes = readingMinutes(post.content);
   // The sitewide <Breadcrumbs> already emits the BreadcrumbList for this URL;
   // a second, different one here made the two disagree.
   const jsonLd = {
@@ -106,6 +109,7 @@ export default async function PostPage({
         articleSection: post.categories.length ? post.categories : undefined,
         author: articleAuthor(),
         wordCount,
+        timeRequired: `PT${minutes}M`,
         publisher: { "@id": `${SITE_URL}/#organization` },
         inLanguage: "en-NG",
       },
@@ -181,11 +185,22 @@ export default async function PostPage({
               <span>By {SITE_NAME}</span>
             )}
             <span aria-hidden="true">·</span>
-            <span>Published <time dateTime={new Date(post.date).toISOString()}>{fmtDate(post.date)}</time></span>
-            {post.modified && fmtDate(post.modified) !== fmtDate(post.date) && (
+            {/* The last real update leads, so readers see how current the
+                article is; the original publish date stays beside it. Both
+                are true dates and match the Article schema. */}
+            {wasUpdated ? (
+              <>
+                <span>Updated <time dateTime={new Date(post.modified).toISOString()}>{fmtDate(post.modified)}</time></span>
+                <span aria-hidden="true">·</span>
+                <span className="text-white/55">First published <time dateTime={new Date(post.date).toISOString()}>{fmtDate(post.date)}</time></span>
+              </>
+            ) : (
+              <span>Published <time dateTime={new Date(post.date).toISOString()}>{fmtDate(post.date)}</time></span>
+            )}
+            {isArticle && (
               <>
                 <span aria-hidden="true">·</span>
-                <span>Updated <time dateTime={new Date(post.modified).toISOString()}>{fmtDate(post.modified)}</time></span>
+                <span>{minutes} min read</span>
               </>
             )}
           </p>

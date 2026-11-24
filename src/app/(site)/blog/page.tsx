@@ -4,6 +4,7 @@ import { ArrowUpRight, Calendar } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Reveal } from "@/components/Reveal";
 import { getPublishedPosts, countPublishedPosts } from "@/lib/posts";
+import { readingMinutes } from "@/lib/reading-time";
 
 export const revalidate = 300;
 
@@ -113,7 +114,15 @@ export default async function BlogIndex({
                     </div>
                     <div className="flex flex-col flex-1 p-5">
                       <p className="flex items-center gap-1.5 text-[11px] text-midnight/45">
-                        <Calendar size={12} /> {fmtDate(p.date)}
+                        <Calendar size={12} />{" "}
+                        {/* The last real update, so the listing shows how current each article is. */}
+                        {new Date(p.modified).getTime() > new Date(p.date).getTime() && fmtDate(p.modified) !== fmtDate(p.date) ? (
+                          <>Updated <time dateTime={new Date(p.modified).toISOString()}>{fmtDate(p.modified)}</time></>
+                        ) : (
+                          <time dateTime={new Date(p.date).toISOString()}>{fmtDate(p.date)}</time>
+                        )}
+                        <span aria-hidden="true">·</span>
+                        <span>{readingMinutes(p.content)} min read</span>
                       </p>
                       <h2 className="font-display text-xl text-midnight mt-2 leading-snug line-clamp-3 group-hover:text-midnight-soft transition-colors">
                         {p.title}
