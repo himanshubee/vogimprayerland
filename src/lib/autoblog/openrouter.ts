@@ -149,16 +149,34 @@ async function openrouterImage(prompt: string): Promise<GeneratedImage | null> {
 async function pollinationsImage(prompt: string): Promise<GeneratedImage | null> {
   const seed = Math.floor(Math.random() * 1_000_000);
   const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt.slice(0, 900))}?width=1600&height=900&nologo=true&seed=${seed}`;
-  let res = await fetch(url, { signal: AbortSignal.timeout(180_000) });
-  // The free tier allows one image per 45 seconds per IP. With 2-3 articles
-  // per run the next image can arrive too soon; wait as told and retry once.
-  if (res.status === 402 || res.status === 429) {
-    const body = await res.text().catch(() => "");
-    const wait = Math.min(90, Number(body.match(/Retry after (\d+)s/i)?.[1] ?? 46) + 2);
-    console.warn(`[autoblog] Pollinations rate limit, retrying in ${wait}s`);
-    await new Promise((r) => setTimeout(r, wait * 1000));
-    res = await fetch(url, { signal: AbortSignal.timeout(180_000) });
+  const get = () => fetch(url, { signal: AbortSignal.timeout(180_000) });
+  const sleep = (s: number) => new Promise((r) => setTimeout(r, s * 1000));
+  // A failed connection or a 5xx is usually a brief outage (503s seen in
+  // production), so try up to three times before going without an image.
+  let res: Response | null = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      res = await get();
+    } catch (err) {
+      res = null;
+      console.warn(`[autoblog] Pollinations request failed (attempt ${attempt}):`, err instanceof Error ? err.message : err);
+    }
+    // The free tier allows one image per 45 seconds per IP. With 2-3 articles
+    // per run the next image can arrive too soon; wait as told and retry.
+    if (res && (res.status === 402 || res.status === 429)) {
+      const body = await res.text().catch(() => "");
+      const wait = Math.min(90, Number(body.match(/Retry after (\d+)s/i)?.[1] ?? 46) + 2);
+      console.warn(`[autoblog] Pollinations rate limit, retrying in ${wait}s`);
+      await sleep(wait);
+      continue;
+    }
+    if (res && res.status < 500) break;
+    if (attempt < 3) {
+      console.warn(`[autoblog] Pollinations returned ${res?.status ?? "no response"}, retrying in ${attempt * 15}s`);
+      await sleep(attempt * 15);
+    }
   }
+  if (!res) return null;
   const type = res.headers.get("content-type") || "";
   if (!res.ok) console.warn(`[autoblog] Pollinations returned ${res.status}`);
   if (!res.ok || !type.startsWith("image/")) return null;
