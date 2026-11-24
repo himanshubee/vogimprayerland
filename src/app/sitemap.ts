@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllPublishedSlugs } from "@/lib/posts";
+import { RESTORED_POSTS } from "@/lib/restored-posts";
+import { REDIRECTED_SLUGS } from "@/lib/legacy-redirects";
 import { listPublishedBooks } from "@/lib/books";
 import { listPublishedMerch } from "@/lib/merch";
 import { PAGE_SCHEMAS, getPageModifiedMap } from "@/lib/page-content";
@@ -33,6 +35,7 @@ const STATIC_PATHS = [
   "services",
   "visit",
   "leaders",
+  "author/prophet-olaofe-oladele",
   ...(TESTIMONIES.length ? ["testimonies"] : []),
   "how-requests-work",
   "notice",
@@ -84,7 +87,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let postEntries: MetadataRoute.Sitemap = [];
   try {
     const slugs = await getAllPublishedSlugs();
-    postEntries = slugs.map((s) => ({
+    // A slug that answers with a 301 must not be listed: a sitemap full of
+    // redirects tells Google the sitemap cannot be trusted.
+    postEntries = slugs.filter((s) => !REDIRECTED_SLUGS.has(s.slug)).map((s) => ({
       url: `${SITE_URL}/${s.slug}/`,
       lastModified: new Date(s.modified),
       changeFrequency: "weekly",
@@ -93,6 +98,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch {
     // DB unreachable at build time — ship the static sitemap only.
   }
+
+  // Articles rewritten in code after the import lost them. Listed outside the
+  // try so they stay in the sitemap even when the database is unreachable.
+  const restoredEntries: MetadataRoute.Sitemap = RESTORED_POSTS.map((p) => ({
+    url: `${SITE_URL}/${p.slug}/`,
+    lastModified: new Date(p.modified),
+    changeFrequency: "weekly",
+    priority: 0.8,
+  }));
 
   // Book pages. listPublishedBooks swallows its own errors and returns [], so
   // an unreachable DB costs the shop entries but never the whole sitemap.
@@ -116,7 +130,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // The hand-built route is what actually serves, so the post row is a second
   // copy of a URL already listed. First entry wins.
   const seen = new Set<string>();
-  return [...staticEntries, ...postEntries, ...bookEntries, ...storeEntries].filter((e) => {
+  return [...staticEntries, ...postEntries, ...restoredEntries, ...bookEntries, ...storeEntries].filter((e) => {
     if (seen.has(e.url)) return false;
     seen.add(e.url);
     return true;

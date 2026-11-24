@@ -1,5 +1,14 @@
 import type { NextConfig } from "next";
-import { LEGACY_REDIRECTS } from "./src/lib/legacy-redirects";
+import { CONSOLIDATED_REDIRECTS, LEGACY_REDIRECTS } from "./src/lib/legacy-redirects";
+
+const REDIRECT_MAP = new Map<string, string>([...LEGACY_REDIRECTS, ...CONSOLIDATED_REDIRECTS]);
+
+/** Follow a slug through the redirect lists to the page that actually serves. */
+function resolveRedirect(from: string): string {
+  let to = REDIRECT_MAP.get(from) ?? "";
+  for (let hops = 0; REDIRECT_MAP.has(to) && hops < 10; hops++) to = REDIRECT_MAP.get(to)!;
+  return to ? `/${to}/` : "/";
+}
 
 const nextConfig: NextConfig = {
   // Match the old WordPress permalinks exactly: /slug/ with a trailing slash.
@@ -66,10 +75,12 @@ const nextConfig: NextConfig = {
       { source: "/books/checkout", destination: "/checkout/", statusCode: 301 },
       { source: "/books/thank-you", destination: "/checkout/thank-you/", statusCode: 301 },
 
-      // Individual posts that the WordPress import left behind.
-      ...LEGACY_REDIRECTS.map(([from, to]) => ({
+      // Individual posts that the WordPress import left behind, plus the
+      // leftovers and duplicates consolidated into stronger pages. Each one
+      // is resolved to its final page so Google never walks a chain.
+      ...[...LEGACY_REDIRECTS, ...CONSOLIDATED_REDIRECTS].map(([from]) => ({
         source: `/${from}`,
-        destination: `/${to}/`,
+        destination: resolveRedirect(from),
         statusCode: 301,
       })),
 
@@ -80,7 +91,10 @@ const nextConfig: NextConfig = {
       // archives only need to land somewhere sensible.
       { source: "/category/:path*", destination: "/blog/", statusCode: 301 },
       { source: "/tag/:path*", destination: "/blog/", statusCode: 301 },
-      { source: "/author/:path*", destination: "/blog/", statusCode: 301 },
+      // WordPress author archives. The one real author profile lives under
+      // /author/ too, so it is excluded, and /author/ itself goes to it.
+      { source: "/author", destination: "/author/prophet-olaofe-oladele/", statusCode: 301 },
+      { source: "/author/:path((?!prophet-olaofe-oladele(?:/|$)).*)", destination: "/blog/", statusCode: 301 },
       { source: "/blogs/page/:path*", destination: "/blog/", statusCode: 301 },
       { source: "/feed", destination: "/blog/", statusCode: 301 },
       { source: "/:path*/feed", destination: "/blog/", statusCode: 301 },

@@ -42,6 +42,8 @@ export const PAGE_TITLES: Record<string, string> = {
   "healing-request": "Healing request",
   "how-requests-work": "How requests work",
   leaders: "Leaders",
+  author: "Author",
+  "prophet-olaofe-oladele": MINISTRY.founder.name,
   "marital-settlement": "Marital settlement",
   media: "Media",
   notice: "Official channels",

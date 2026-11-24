@@ -88,7 +88,9 @@ const ORG_AND_SITE_JSONLD = {
       name: MINISTRY.founder.name,
       jobTitle: MINISTRY.founder.role,
       worksFor: { "@id": `${SITE_URL}/#organization` },
-      url: `${SITE_URL}/leaders/`,
+      url: `${SITE_URL}/author/prophet-olaofe-oladele/`,
+      image: `${SITE_URL}/past.jpeg`,
+      mainEntityOfPage: `${SITE_URL}/author/prophet-olaofe-oladele/`,
     },
     {
       "@type": "WebSite",

@@ -1,6 +1,9 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { EMPTY_SEO, type PostSeo } from "@/lib/seo-analysis";
+import { getReplacedPost, getRestoredPost, listRewrittenPosts } from "@/lib/restored-posts";
+import { cleanPostContent } from "@/lib/clean-content";
+import { REDIRECTED_SLUGS } from "@/lib/legacy-redirects";
 
 export type { PostSeo } from "@/lib/seo-analysis";
 export { EMPTY_SEO } from "@/lib/seo-analysis";
@@ -87,7 +90,7 @@ function serialize(d: PostDoc): Post {
     type: d.type ?? "post",
     slug: d.slug,
     title: publicCopy(d.title ?? "(untitled)"),
-    content: publicCopy(d.content ?? ""),
+    content: cleanPostContent(publicCopy(d.content ?? "")),
     excerpt: publicCopy(d.excerpt ?? ""),
     status: d.status ?? "draft",
     categories: d.categories ?? [],
@@ -108,17 +111,23 @@ export function slugify(input: string): string {
     .slice(0, 120);
 }
 
-/** Public: a single published post/page by slug. */
+/**
+ * Public: a single published post/page by slug. Falls back to the articles
+ * rewritten in code after the WordPress import lost them.
+ */
 export async function getPostBySlug(slug: string): Promise<Post | null> {
+  const replaced = getReplacedPost(slug);
+  if (replaced) return replaced;
   try {
     const db = await getDb();
     const doc = await db
       .collection<PostDoc>(COLLECTION)
       .findOne({ slug, status: "publish" });
-    return doc ? serialize(doc) : null;
+    if (doc) return serialize(doc);
   } catch {
-    return null;
+    // fall through to the restored copy
   }
+  return getRestoredPost(slug);
 }
 
 /** Public: published posts, newest first, with optional pagination. */
@@ -129,7 +138,9 @@ export async function getPublishedPosts(opts?: {
   category?: string;
 }): Promise<Post[]> {
   const db = await getDb();
-  const query: Record<string, unknown> = { status: "publish" };
+  // Posts whose URL now 301s elsewhere must not be listed: a listing link to
+  // a redirect wastes the crawl and shows readers a page they never reach.
+  const query: Record<string, unknown> = { status: "publish", slug: { $nin: [...REDIRECTED_SLUGS] } };
   query.type = opts?.type ?? "post";
   if (opts?.category) query.categories = opts.category;
 
@@ -145,7 +156,9 @@ export async function getPublishedPosts(opts?: {
 
 export async function countPublishedPosts(type: PostType = "post"): Promise<number> {
   const db = await getDb();
-  return db.collection(COLLECTION).countDocuments({ status: "publish", type });
+  return db
+    .collection(COLLECTION)
+    .countDocuments({ status: "publish", type, slug: { $nin: [...REDIRECTED_SLUGS] } });
 }
 
 /** All published slugs with last-modified (for sitemap / static params). */
@@ -165,6 +178,60 @@ export async function getAllPublishedSlugs(): Promise<
     type: d.type ?? "post",
     modified: toISO(d.modified ?? d.date),
   }));
+}
+
+export type RelatedPost = Pick<Post, "slug" | "title" | "featuredImage" | "excerpt">;
+
+// Words that say nothing about what an article is about.
+const STOP = new Set(
+  "a an and are at be by for from how in is it its of on or the to what when why with you your my me i we our this that do does can who prayer prayers points point powerful bible verse verses meaning 2025 2026 vs".split(" ")
+);
+const terms = (s: string) =>
+  new Set(s.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").split(/[\s-]+/).filter((w) => w.length > 2 && !STOP.has(w)));
+
+/**
+ * Up to `limit` articles on the same subject, for the "Related articles"
+ * block. Scored by shared title and slug words, so a monitoring-spirit
+ * article links to other monitoring-spirit articles. Most posts were
+ * imported with no category and no internal links; this gives every article
+ * crawlable links to its neighbours.
+ */
+export async function getRelatedPosts(post: Pick<Post, "slug" | "title">, limit = 4): Promise<RelatedPost[]> {
+  let candidates: RelatedPost[] = [];
+  try {
+    const db = await getDb();
+    const docs = await db
+      .collection<PostDoc>(COLLECTION)
+      .find(
+        { status: "publish", type: "post", slug: { $nin: [post.slug, ...REDIRECTED_SLUGS] } },
+        { projection: { slug: 1, title: 1, featuredImage: 1, excerpt: 1 } }
+      )
+      .toArray();
+    candidates = docs.map((d) => ({
+      slug: d.slug,
+      title: publicCopy(d.title ?? ""),
+      featuredImage: d.featuredImage ?? null,
+      excerpt: publicCopy(d.excerpt ?? ""),
+    }));
+  } catch {
+    // Database unreachable: fall back to the rewritten articles alone.
+  }
+  for (const r of listRewrittenPosts()) {
+    if (r.slug !== post.slug && !candidates.some((c) => c.slug === r.slug)) candidates.push(r);
+  }
+
+  const mine = terms(`${post.title} ${post.slug}`);
+  return candidates
+    .map((c) => {
+      const theirs = terms(`${c.title} ${c.slug}`);
+      let score = 0;
+      for (const w of theirs) if (mine.has(w)) score++;
+      return { c, score: score / Math.sqrt(theirs.size || 1) };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || a.c.slug.localeCompare(b.c.slug))
+    .slice(0, limit)
+    .map((x) => x.c);
 }
 
 export async function getDistinctCategories(): Promise<string[]> {

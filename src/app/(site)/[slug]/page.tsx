@@ -2,8 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar } from "lucide-react";
-import { getPostBySlug } from "@/lib/posts";
-import { SITE_NAME } from "@/lib/ministry";
+import { getPostBySlug, getRelatedPosts } from "@/lib/posts";
+import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/ministry";
+import { AUTHOR, articleAuthor } from "@/lib/authors";
 
 export const dynamicParams = true; // generate posts on-demand, then cache (ISR)
 export const revalidate = 300;
@@ -40,6 +41,7 @@ export async function generateMetadata({
       ? seo.keywords.split(",").map((k) => k.trim()).filter(Boolean)
       : undefined,
     alternates: { canonical },
+    authors: AUTHOR.bylineApproved ? [{ name: AUTHOR.name, url: AUTHOR.url }] : [{ name: SITE_NAME }],
     robots: {
       index: !seo.noindex,
       follow: !seo.nofollow,
@@ -52,6 +54,7 @@ export async function generateMetadata({
       siteName: "VOGIM Prayer Land",
       publishedTime: post.date,
       modifiedTime: post.modified,
+      authors: AUTHOR.bylineApproved ? [AUTHOR.url] : undefined,
       images: ogImage ? [{ url: ogImage }] : undefined,
     },
     twitter: {
@@ -81,6 +84,11 @@ export default async function PostPage({
   if (!post) notFound();
 
   const canonical = post.seo.canonical || `${SITE_URL}/${post.slug}/`;
+  const isArticle = post.type === "post";
+  const related = isArticle ? await getRelatedPosts(post) : [];
+  const wordCount = post.content.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
+  // The sitewide <Breadcrumbs> already emits the BreadcrumbList for this URL;
+  // a second, different one here made the two disagree.
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -88,39 +96,17 @@ export default async function PostPage({
         "@type": "Article",
         headline: post.seo.title || post.title,
         description: post.seo.description || post.excerpt || undefined,
-        image: post.seo.ogImage || post.featuredImage || undefined,
+        image: post.seo.ogImage || post.featuredImage || `${SITE_URL}${DEFAULT_OG_IMAGE}`,
         datePublished: post.date,
         dateModified: post.modified,
         url: canonical,
         mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
         articleSection: post.categories.length ? post.categories : undefined,
-        author: { "@id": `${SITE_URL}/#organization` },
+        author: articleAuthor(),
+        wordCount,
         publisher: { "@id": `${SITE_URL}/#organization` },
         inLanguage: "en-NG",
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: "Home",
-            item: `${SITE_URL}/`,
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "Blog",
-            item: `${SITE_URL}/blog/`,
-          },
-          {
-            "@type": "ListItem",
-            position: 3,
-            name: post.title,
-            item: canonical,
-          },
-        ],
-      },
+      }
     ],
   };
 
@@ -169,7 +155,16 @@ export default async function PostPage({
           </h1>
           <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-white/75 text-sm">
             <Calendar size={15} className="text-gold" aria-hidden="true" />
-            <span>By {SITE_NAME}</span>
+            {AUTHOR.bylineApproved ? (
+              <span>
+                By{" "}
+                <Link href={AUTHOR.path} rel="author" className="text-gold hover:underline">
+                  {AUTHOR.name}
+                </Link>
+              </span>
+            ) : (
+              <span>By {SITE_NAME}</span>
+            )}
             <span aria-hidden="true">·</span>
             <span>Published <time dateTime={new Date(post.date).toISOString()}>{fmtDate(post.date)}</time></span>
             {post.modified && fmtDate(post.modified) !== fmtDate(post.date) && (
@@ -189,6 +184,53 @@ export default async function PostPage({
           className="post-content"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
+
+        {isArticle && AUTHOR.bylineApproved && (
+          <aside aria-label="About the author" className="mt-14 flex gap-5 border border-midnight/10 bg-ivory p-5 sm:p-6">
+            <Image
+              src={AUTHOR.image}
+              alt={AUTHOR.name}
+              width={72}
+              height={72}
+              className="h-[72px] w-[72px] shrink-0 rounded-full object-cover"
+            />
+            <div>
+              <p className="text-[11px] tracking-[0.24em] uppercase text-gold-deep">Written by</p>
+              <p className="font-display text-xl text-midnight mt-1">
+                <Link href={AUTHOR.path} rel="author" className="hover:underline">
+                  {AUTHOR.name}
+                </Link>
+              </p>
+              <p className="mt-1 text-sm text-midnight/70">
+                {AUTHOR.role} of {SITE_NAME}, a prayer and deliverance ministry based in Ikorodu, Lagos.{" "}
+                <Link href={AUTHOR.path} className="text-maroon underline">
+                  More about him
+                </Link>
+              </p>
+            </div>
+          </aside>
+        )}
+
+        {related.length > 0 && (
+          <nav aria-labelledby="related-heading" className="mt-14">
+            <h2 id="related-heading" className="font-display text-2xl sm:text-3xl text-midnight">
+              Related articles
+            </h2>
+            <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+              {related.map((r) => (
+                <li key={r.slug}>
+                  <Link
+                    href={`/${r.slug}/`}
+                    className="block h-full border border-midnight/10 bg-white p-4 hover:border-gold/60 transition-colors"
+                  >
+                    <span className="font-display text-lg text-midnight leading-snug line-clamp-2">{r.title}</span>
+                    {r.excerpt && <span className="mt-1 block text-sm text-midnight/60 line-clamp-2">{r.excerpt}</span>}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
 
         <div className="mt-16 border-t border-midnight/10 pt-10 text-center">
           <p className="eyebrow text-gold-deep">
