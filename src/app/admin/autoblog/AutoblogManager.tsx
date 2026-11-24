@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { FREQUENCIES, type AutoblogRun, type AutoblogSettings, type Frequency } from "@/lib/autoblog/settings-shared";
 
@@ -21,6 +21,23 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
   const [busy, setBusy] = useState<"save" | "run" | "improve" | null>(null);
   const [improveInput, setImproveInput] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [finished, setFinished] = useState<"run" | "improve" | null>(null);
+  const working = busy === "run" || busy === "improve";
+
+  /** Show the loader at 100% for a moment before the result replaces it. */
+  async function complete(kind: "run" | "improve") {
+    setFinished(kind);
+    await new Promise((r) => setTimeout(r, 1200));
+    setFinished(null);
+  }
+
+  // A run takes minutes and is lost from view if the page is closed.
+  useEffect(() => {
+    if (!working) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [working]);
 
   async function load() {
     const res = await fetch("/api/admin/autoblog/").catch(() => null);
@@ -55,6 +72,7 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
       body: JSON.stringify({ force: true }),
     }).catch(() => null);
     const json = await res?.json().catch(() => null);
+    await complete("run");
     if (!res?.ok) setMessage(json?.error || "The run failed.");
     else if (!json.ran) setMessage(json.reason);
     else {
@@ -90,6 +108,7 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
       body: JSON.stringify({ improvePostId: id }),
     }).catch(() => null);
     const json = await res?.json().catch(() => null);
+    await complete("improve");
     if (!res?.ok) setMessage(json?.error || "Optimising failed.");
     else {
       const r = json.improved;
@@ -183,9 +202,10 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
             {busy === "save" ? "Saving..." : "Save settings"}
           </button>
           <button onClick={runNow} disabled={busy !== null || !data.configured} className="btn-ghost disabled:opacity-40">
-            {busy === "run" ? "Writing..." : "Write one now"}
+            {busy === "run" ? <><Spinner /> Writing...</> : "Write one now"}
           </button>
         </div>
+        {busy === "run" && <Progress steps={RUN_STEPS} done={finished === "run"} />}
         <p className="mt-3 text-xs text-slate">
           Last run: {form.lastRunAt ? new Date(form.lastRunAt).toLocaleString() : "never"}.
         </p>
@@ -206,12 +226,13 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
             className="min-h-11 flex-1 min-w-[16rem] border border-input px-3 text-sm"
           />
           <button onClick={() => improve(improveInput)} disabled={busy !== null || !improveInput.trim()} className="btn-ghost disabled:opacity-40">
-            {busy === "improve" ? "Optimising..." : "Optimise SEO + image"}
+            {busy === "improve" ? <><Spinner /> Optimising...</> : "Optimise SEO + image"}
           </button>
         </div>
+        {busy === "improve" && <Progress steps={IMPROVE_STEPS} done={finished === "improve"} />}
       </section>
 
-      <p role="status" aria-live="polite" className="text-sm">{message}</p>
+      <p role="status" aria-live="polite" className="text-sm">{working ? null : message}</p>
 
       <section>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -271,6 +292,75 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
         </div>
       </section>
     </Shell>
+  );
+}
+
+// Rough timings of a run, so the panel can say what is likely happening.
+// The server does not report progress; these are estimates, not live status.
+const RUN_STEPS: [number, string][] = [
+  [0, "Choosing a topic and checking the site for duplicates"],
+  [10, "Writing the article"],
+  [70, "Checking and revising the SEO"],
+  [100, "Creating the featured image"],
+  [140, "Saving the post"],
+  [200, "Still working: free models are sometimes slow, please wait"],
+];
+const IMPROVE_STEPS: [number, string][] = [
+  [0, "Reading the post"],
+  [5, "Creating the featured image if missing"],
+  [50, "Checking and revising the SEO"],
+  [150, "Saving the post"],
+  [200, "Still working: free models are sometimes slow, please wait"],
+];
+
+function Spinner() {
+  return (
+    <span
+      aria-hidden
+      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent align-[-0.15em] mr-1.5"
+    />
+  );
+}
+
+function Progress({ steps, done }: { steps: [number, string][]; done: boolean }) {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const started = Date.now();
+    const t = setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const step = done ? "Finished" : [...steps].reverse().find(([at]) => seconds >= at)?.[1] ?? steps[0][1];
+  // Estimated from elapsed time (the server does not report progress): rises
+  // quickly, then slows so it never reaches 100% until the reply arrives.
+  // About 76% at 110s and 90% at 3 minutes.
+  const pct = done ? 100 : Math.min(99, Math.round(99 * (1 - Math.exp(-seconds / 75))));
+  const mm = Math.floor(seconds / 60);
+  const ss = String(seconds % 60).padStart(2, "0");
+  return (
+    <div role="status" aria-live="polite" className="mt-4 border border-gold/40 bg-gold/10 p-4 text-sm">
+      <div className="flex items-center gap-3">
+        {done ? <span aria-hidden className="text-emerald-700">✓</span> : <Spinner />}
+        <span className="font-medium">{step}{done ? "" : "..."}</span>
+        <span className="ml-auto flex items-baseline gap-3 tabular-nums">
+          <span className="text-slate text-xs">{mm}:{ss}</span>
+          <span className="text-lg font-semibold text-midnight">{pct}%</span>
+        </span>
+      </div>
+      <div
+        className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-midnight/10"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+        aria-label="Estimated progress"
+      >
+        <div
+          className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${done ? "bg-emerald-600" : "bg-gold"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="mt-2 text-xs text-slate">This usually takes one to three minutes. Keep this page open until it finishes.</p>
+    </div>
   );
 }
 
