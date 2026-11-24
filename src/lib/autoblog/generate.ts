@@ -7,7 +7,7 @@ import { createPost, findSimilarPosts, getPostBySlug, slugify, type SimilarPost 
 import { revalidatePostCaches } from "@/lib/revalidate";
 import { REDIRECTED_SLUGS } from "@/lib/legacy-redirects";
 import { sanitiseArticleHtml } from "./sanitize";
-import { completeJson, generateImage, IMAGE_MODEL, TEXT_MODEL } from "./openrouter";
+import { completeJson, generateImage } from "./openrouter";
 
 export type Topic = { id: string; topic: string; focusKeyword: string; angle: string; category: string };
 
@@ -45,10 +45,10 @@ type Draft = {
 };
 
 export type GenerateResult =
-  | { status: "draft" | "published"; topic: string; postId: string; slug: string; title: string; image: boolean; seoScore: number }
+  | { status: "draft" | "published"; topic: string; postId: string; slug: string; title: string; image: boolean; seoScore: number; model: string }
   | { status: "skipped"; topic: string; reason: string; similar?: string };
 
-export type DryRunResult = { topic: Topic; draft: Draft; imageBytes: number | null; seoScore: number; links: string[] };
+export type DryRunResult = { topic: Topic; draft: Draft; model: string; imageBytes: number | null; imageSource: string | null; seoScore: number; links: string[] };
 
 /** Turn a free-typed admin topic into the same shape as a built-in one. */
 export function topicFromText(text: string): Topic {
@@ -145,7 +145,7 @@ async function writeDraft(topic: Topic) {
   const links = [...similar.map((p) => ({ href: `/${p.slug}/`, label: p.title })), ...SERVICE_PAGES];
   const allowed = new Set(links.map((l) => l.href));
 
-  const draft = await completeJson<Draft>([
+  const { data: draft, model } = await completeJson<Draft>([
     { role: "system", content: systemPrompt() },
     { role: "user", content: userPrompt(topic, links) },
   ]);
@@ -164,13 +164,16 @@ async function writeDraft(topic: Topic) {
   if (words < 900) throw new Error(`The article came back too short (${words} words)`);
 
   const usedLinks = [...draft.html.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
-  return { draft, usedLinks };
+  return { draft, usedLinks, model };
 }
 
 /** Write one article and return it without saving anything. For checking output before switching the schedule on. */
 export async function dryRun(topic: Topic): Promise<DryRunResult> {
-  const { draft, usedLinks } = await writeDraft(topic);
-  const image = await generateImage(draft.imagePrompt).catch(() => null);
+  const { draft, usedLinks, model } = await writeDraft(topic);
+  const image = await generateImage(draft.imagePrompt).catch((err) => {
+    console.warn("[autoblog] image failed:", err);
+    return null;
+  });
   const seoScore = analyzeSeo({
     focusKeyword: draft.focusKeyword,
     seoTitle: draft.seoTitle,
@@ -179,7 +182,7 @@ export async function dryRun(topic: Topic): Promise<DryRunResult> {
     contentHtml: draft.html,
     hasImage: Boolean(image),
   }).score;
-  return { topic, draft, imageBytes: image ? image.bytes.length : null, seoScore, links: usedLinks };
+  return { topic, draft, model, imageBytes: image ? image.bytes.length : null, imageSource: image?.source ?? null, seoScore, links: usedLinks };
 }
 
 /** Write, illustrate and save one article for `topic`. */
@@ -187,7 +190,7 @@ export async function generateArticle(topic: Topic, publish: boolean): Promise<G
   const covered = await existingCoverage(topic);
   if (covered) return { status: "skipped", topic: topic.id, reason: "The site already has an article on this", similar: covered.slug };
 
-  const { draft } = await writeDraft(topic);
+  const { draft, model } = await writeDraft(topic);
 
   // The model may still pick a slug that is taken or redirected; createPost
   // would then append "-2", which is how the old duplicates were born.
@@ -196,9 +199,13 @@ export async function generateArticle(topic: Topic, publish: boolean): Promise<G
   }
 
   let featuredImage: string | null = null;
+  let imageSource = "none";
   try {
     const image = await generateImage(draft.imagePrompt);
-    if (image) featuredImage = await uploadImage(image.bytes, image.type, draft.slug);
+    if (image) {
+      featuredImage = await uploadImage(image.bytes, image.type, draft.slug);
+      if (featuredImage) imageSource = image.source;
+    }
   } catch (err) {
     console.error("[autoblog] image failed:", err);
   }
@@ -235,7 +242,7 @@ export async function generateArticle(topic: Topic, publish: boolean): Promise<G
   });
   if (publish) revalidatePostCaches(post.slug);
 
-  console.log(`[autoblog] ${publish ? "published" : "drafted"} /${post.slug}/ (${TEXT_MODEL}, image ${featuredImage ? IMAGE_MODEL : "none"}) by ${AUTHOR.name}`);
+  console.log(`[autoblog] ${publish ? "published" : "drafted"} /${post.slug}/ (text ${model}, image ${imageSource}) by ${AUTHOR.name}`);
   return {
     status: publish ? "published" : "draft",
     topic: topic.id,
@@ -244,5 +251,6 @@ export async function generateArticle(topic: Topic, publish: boolean): Promise<G
     title: post.title,
     image: Boolean(featuredImage),
     seoScore: seo.score,
+    model,
   };
 }
