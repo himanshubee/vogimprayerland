@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar } from "lucide-react";
 import { getPostBySlug, getRelatedPosts } from "@/lib/posts";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/ministry";
 import { AUTHOR, articleAuthor } from "@/lib/authors";
+import { extractFaq } from "@/lib/clean-content";
 
 export const dynamicParams = true; // generate posts on-demand, then cache (ISR)
 export const revalidate = 300;
@@ -86,6 +87,7 @@ export default async function PostPage({
   const canonical = post.seo.canonical || `${SITE_URL}/${post.slug}/`;
   const isArticle = post.type === "post";
   const related = isArticle ? await getRelatedPosts(post) : [];
+  const faq = isArticle ? extractFaq(post.content) : [];
   const wordCount = post.content.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
   // The sitewide <Breadcrumbs> already emits the BreadcrumbList for this URL;
   // a second, different one here made the two disagree.
@@ -106,7 +108,20 @@ export default async function PostPage({
         wordCount,
         publisher: { "@id": `${SITE_URL}/#organization` },
         inLanguage: "en-NG",
-      }
+      },
+      ...(faq.length >= 2
+        ? [
+            {
+              "@type": "FAQPage",
+              "@id": `${canonical}#faq`,
+              mainEntity: faq.map((f) => ({
+                "@type": "Question",
+                name: f.q,
+                acceptedAnswer: { "@type": "Answer", text: f.a },
+              })),
+            },
+          ]
+        : []),
     ],
   };
 

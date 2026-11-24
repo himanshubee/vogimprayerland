@@ -186,24 +186,18 @@ export type RelatedPost = Pick<Post, "slug" | "title" | "featuredImage" | "excer
 const STOP = new Set(
   "a an and are at be by for from how in is it its of on or the to what when why with you your my me i we our this that do does can who prayer prayers points point powerful bible verse verses meaning 2025 2026 vs".split(" ")
 );
-const terms = (s: string) =>
+export const subjectTerms = (s: string) =>
   new Set(s.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").split(/[\s-]+/).filter((w) => w.length > 2 && !STOP.has(w)));
 
-/**
- * Up to `limit` articles on the same subject, for the "Related articles"
- * block. Scored by shared title and slug words, so a monitoring-spirit
- * article links to other monitoring-spirit articles. Most posts were
- * imported with no category and no internal links; this gives every article
- * crawlable links to its neighbours.
- */
-export async function getRelatedPosts(post: Pick<Post, "slug" | "title">, limit = 4): Promise<RelatedPost[]> {
+/** Every published article that can be linked to: database rows plus the rewrites. */
+async function listLinkablePosts(): Promise<RelatedPost[]> {
   let candidates: RelatedPost[] = [];
   try {
     const db = await getDb();
     const docs = await db
       .collection<PostDoc>(COLLECTION)
       .find(
-        { status: "publish", type: "post", slug: { $nin: [post.slug, ...REDIRECTED_SLUGS] } },
+        { status: "publish", type: "post", slug: { $nin: [...REDIRECTED_SLUGS] } },
         { projection: { slug: 1, title: 1, featuredImage: 1, excerpt: 1 } }
       )
       .toArray();
@@ -217,21 +211,52 @@ export async function getRelatedPosts(post: Pick<Post, "slug" | "title">, limit 
     // Database unreachable: fall back to the rewritten articles alone.
   }
   for (const r of listRewrittenPosts()) {
-    if (r.slug !== post.slug && !candidates.some((c) => c.slug === r.slug)) candidates.push(r);
+    if (!candidates.some((c) => c.slug === r.slug)) candidates.push(r);
   }
+  return candidates;
+}
 
-  const mine = terms(`${post.title} ${post.slug}`);
-  return candidates
+export type SimilarPost = RelatedPost & {
+  /** Ranking score: shared words, damped for long titles. */
+  score: number;
+  /** Share of the query's subject words this article's title and slug contain (0-1). */
+  coverage: number;
+};
+
+/**
+ * Published articles on the same subject as `text`, most similar first,
+ * judged by shared title and slug words. Used for the related-articles block,
+ * for choosing internal links, and for refusing to write an article the site
+ * already has.
+ */
+export async function findSimilarPosts(
+  text: string,
+  opts: { exclude?: string[]; limit?: number } = {}
+): Promise<SimilarPost[]> {
+  const exclude = new Set(opts.exclude ?? []);
+  const mine = subjectTerms(text);
+  if (mine.size === 0) return [];
+  return (await listLinkablePosts())
+    .filter((c) => !exclude.has(c.slug))
     .map((c) => {
-      const theirs = terms(`${c.title} ${c.slug}`);
-      let score = 0;
-      for (const w of theirs) if (mine.has(w)) score++;
-      return { c, score: score / Math.sqrt(theirs.size || 1) };
+      const theirs = subjectTerms(`${c.title} ${c.slug}`);
+      let shared = 0;
+      for (const w of theirs) if (mine.has(w)) shared++;
+      return { ...c, score: shared / Math.sqrt(theirs.size || 1), coverage: shared / mine.size };
     })
     .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score || a.c.slug.localeCompare(b.c.slug))
-    .slice(0, limit)
-    .map((x) => x.c);
+    .sort((a, b) => b.score - a.score || a.slug.localeCompare(b.slug))
+    .slice(0, opts.limit ?? 10);
+}
+
+/**
+ * Up to `limit` articles on the same subject, for the "Related articles"
+ * block. Most posts were imported with no category and no internal links;
+ * this gives every article crawlable links to its neighbours.
+ */
+export async function getRelatedPosts(post: Pick<Post, "slug" | "title">, limit = 4): Promise<RelatedPost[]> {
+  const similar = await findSimilarPosts(`${post.title} ${post.slug}`, { exclude: [post.slug], limit });
+  return similar.map(({ slug, title, featuredImage, excerpt }) => ({ slug, title, featuredImage, excerpt }));
 }
 
 export async function getDistinctCategories(): Promise<string[]> {

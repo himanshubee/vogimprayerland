@@ -11,6 +11,7 @@ const TABS = [
   { href: "/admin/store", label: "Store" },
   { href: "/admin/pages", label: "Pages" },
   { href: "/admin/posts", label: "Posts" },
+  { href: "/admin/autoblog", label: "Auto-blog" },
   { href: "/admin/media", label: "Media" },
   { href: "/admin/settings", label: "Settings" },
   { href: "/admin/privacy", label: "Privacy" },

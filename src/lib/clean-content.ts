@@ -60,3 +60,25 @@ export function cleanPostContent(html: string): string {
 
   return out;
 }
+
+/**
+ * Question-and-answer pairs from an article's FAQ section: the H3s and the
+ * paragraph after each, under an H2 with id="faq". Used for FAQPage schema,
+ * which answer engines and AI search read even where Google no longer shows
+ * an FAQ rich result.
+ */
+export function extractFaq(html: string): { q: string; a: string }[] {
+  const start = html.search(/<h2[^>]*\bid="faq"[^>]*>/i);
+  if (start < 0) return [];
+  const rest = html.slice(start).replace(/^<h2[^>]*>[\s\S]*?<\/h2>/i, "");
+  const section = rest.split(/<h2[\s>]/i)[0];
+  const text = (s: string) =>
+    s.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&rsquo;|&lsquo;/g, "'").replace(/&ldquo;|&rdquo;/g, '"').replace(/\s+/g, " ").trim();
+  const pairs: { q: string; a: string }[] = [];
+  for (const m of section.matchAll(/<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi)) {
+    const q = text(m[1]);
+    const a = text(m[2]);
+    if (q && a) pairs.push({ q, a });
+  }
+  return pairs.slice(0, 10);
+}
