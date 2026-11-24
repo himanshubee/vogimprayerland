@@ -1,64 +1,418 @@
 {
-  "_readme": "Topics the auto-blog writes from, in order. Each was checked in Nov 2026 against the 700 existing URLs: none has a dedicated article yet, so writing one adds a page rather than competing with one. The generator still re-checks against live posts before writing and skips any topic the site already covers. Topics typed into Admin > Auto-blog run before these. 'angle' tells the writer what makes the article useful; 'category' is the post category.",
+  "_readme": "Topics the auto-blog writes from, in order. Each was checked in Nov 2026 against the 700 existing URLs: none has a dedicated article yet, so writing one adds a page rather than competing with one. The generator still re-checks against live posts before writing and skips any topic the site already covers. Topics typed into Admin > Auto-blog run before these. 'angle' tells the writer what makes the article useful; 'category' is the post category. Keywords are the core phrase without 'how to': the exact phrase has to recur through the article, and 'break soul ties' fits natural sentences where 'how to break soul ties' does not.",
   "topics": [
-    { "id": "psalm-91-prayer-protection", "topic": "Psalm 91 prayer for protection: verse by verse", "focusKeyword": "psalm 91 prayer for protection", "angle": "Walk through Psalm 91 verse by verse with what each promise means and a short prayer after each section.", "category": "Prayer" },
-    { "id": "prayer-for-travelling-mercies", "topic": "Prayer for travelling mercies before a journey", "focusKeyword": "prayer for travelling mercies", "angle": "Short prayers for road, air and long-distance travel, with the scriptures behind each.", "category": "Prayer" },
-    { "id": "prayer-before-sleep-protection", "topic": "Prayer before sleep for protection at night", "focusKeyword": "prayer before sleep for protection", "angle": "A night routine of scripture and prayer for people troubled by bad dreams or fear at night.", "category": "Prayer" },
-    { "id": "how-to-fast-and-pray", "topic": "How to fast and pray: a biblical guide for beginners", "focusKeyword": "how to fast and pray", "angle": "Types of biblical fasts, how to start safely, what to pray, and who should not fast without medical advice.", "category": "Teaching" },
-    { "id": "armour-of-god-prayer", "topic": "The armour of God: Ephesians 6 explained with a daily prayer", "focusKeyword": "armour of god prayer", "angle": "Each piece of the armour in Ephesians 6:10-18, what it means in daily life, and a prayer to put it on.", "category": "Teaching" },
-    { "id": "breaking-soul-ties", "topic": "How to break ungodly soul ties: signs and prayer", "focusKeyword": "how to break soul ties", "angle": "What Christians mean by a soul tie, the signs, the biblical basis, and a prayer of renunciation.", "category": "Deliverance" },
-    { "id": "prayer-for-court-case", "topic": "Prayer for a court case: scriptures for justice and favour", "focusKeyword": "prayer for court case", "angle": "Prayers and scriptures for anyone facing a legal matter, with a reminder to also follow legal advice.", "category": "Prayer" },
-    { "id": "prayer-for-job-interview", "topic": "Prayer for a job interview and favour with employers", "focusKeyword": "prayer for job interview", "angle": "Prayers for before, during and after an interview, with practical preparation alongside prayer.", "category": "Prayer" },
-    { "id": "prayer-for-career-promotion", "topic": "Prayer for promotion at work", "focusKeyword": "prayer for promotion at work", "angle": "Biblical promotion (Psalm 75:6-7, Joseph, Daniel) and prayers for favour and excellence at work.", "category": "Prayer" },
-    { "id": "prayer-for-exam-success", "topic": "Prayer for exam success for students", "focusKeyword": "prayer for exam success", "angle": "Prayers for study, memory, calm and the exam day, with scriptures students can hold on to.", "category": "Prayer" },
-    { "id": "prayer-to-conceive", "topic": "Prayer to conceive: scriptures for the fruit of the womb", "focusKeyword": "prayer to conceive", "angle": "Women in the Bible who waited (Hannah, Sarah, Elizabeth), prayers for conception, and gentle encouragement to seek medical care too.", "category": "Healing" },
-    { "id": "prayer-for-safe-delivery", "topic": "Prayer for a safe delivery during pregnancy", "focusKeyword": "prayer for safe delivery", "angle": "Prayers for each trimester, labour and the baby, alongside good antenatal care.", "category": "Healing" },
-    { "id": "prayer-for-unsaved-husband", "topic": "Prayer for an unsaved husband", "focusKeyword": "prayer for unsaved husband", "angle": "How to pray and live (1 Peter 3:1-2) for a husband who does not yet know Christ, without nagging or despair.", "category": "Marriage" },
-    { "id": "prayer-for-salvation-of-family", "topic": "Prayer for the salvation of family members", "focusKeyword": "prayer for salvation of family", "angle": "Acts 16:31 and other promises, with prayers for parents, siblings and children who are far from God.", "category": "Prayer" },
-    { "id": "prayer-for-forgiveness", "topic": "Prayer for forgiveness and a clean heart", "focusKeyword": "prayer for forgiveness", "angle": "Psalm 51 and 1 John 1:9, how to receive forgiveness, and how to forgive others.", "category": "Prayer" },
-    { "id": "how-to-forgive-someone-who-hurt-you", "topic": "How to forgive someone who hurt you: a Christian guide", "focusKeyword": "how to forgive someone who hurt you", "angle": "What forgiveness is and is not, why unforgiveness binds us, steps to forgive, and when to seek safety or counselling.", "category": "Teaching" },
-    { "id": "prayer-for-grief-and-loss", "topic": "Prayer for comfort in grief and loss", "focusKeyword": "prayer for grief", "angle": "Prayers for the bereaved, scriptures of comfort, and how to support someone who is grieving.", "category": "Prayer" },
-    { "id": "prayer-for-widows", "topic": "Prayer for widows and God's promises to them", "focusKeyword": "prayer for widows", "angle": "God's care for widows in Scripture (Psalm 68:5, James 1:27), prayers, and how the church can help.", "category": "Prayer" },
-    { "id": "prayer-for-orphans", "topic": "Prayer for orphans and vulnerable children", "focusKeyword": "prayer for orphans", "angle": "God as father to the fatherless, prayers for orphans and carers, and practical ways to help.", "category": "Prayer" },
-    { "id": "blood-of-jesus-prayer", "topic": "Pleading the blood of Jesus: meaning and prayer", "focusKeyword": "pleading the blood of jesus", "angle": "What Scripture says about the blood of Jesus (Revelation 12:11, Hebrews 9), what the practice means, and a prayer.", "category": "Deliverance" },
-    { "id": "prayer-for-divine-intervention", "topic": "Prayer for divine intervention in a hopeless situation", "focusKeyword": "prayer for divine intervention", "angle": "Bible stories of God stepping in (Red Sea, Daniel, Peter in prison) and prayers for urgent situations.", "category": "Prayer" },
-    { "id": "prayer-for-favour", "topic": "Prayer for favour with God and people", "focusKeyword": "prayer for favour", "angle": "What biblical favour is (Esther, Nehemiah, Ruth), and prayers for favour in work, family and ministry.", "category": "Prayer" },
-    { "id": "open-heavens-prayer", "topic": "Prayer for an open heaven: meaning and scriptures", "focusKeyword": "open heaven prayer", "angle": "What an open heaven means in Scripture (Deuteronomy 28:12, Malachi 3:10, Luke 3:21) and prayers for it.", "category": "Prayer" },
-    { "id": "prayer-against-debt", "topic": "Prayer for freedom from debt", "focusKeyword": "prayer for debt cancellation", "angle": "Biblical teaching on debt, prayers for provision and release, and sensible practical steps alongside prayer.", "category": "Finance" },
-    { "id": "prayer-for-visa-approval", "topic": "Prayer for visa approval and travel documents", "focusKeyword": "prayer for visa approval", "angle": "Prayers for applications, interviews and waiting periods, with a reminder to use only official channels.", "category": "Prayer" },
-    { "id": "prayer-for-business-growth", "topic": "Prayer for business growth and customers", "focusKeyword": "prayer for business growth", "angle": "Stewardship, integrity and prayers for a business, grounded in Deuteronomy 8:18 and Proverbs.", "category": "Finance" },
-    { "id": "prayer-against-alcohol-addiction", "topic": "Prayer for deliverance from alcohol addiction", "focusKeyword": "prayer for alcohol addiction", "angle": "Prayers for the person and their family, scriptures for strength, and why medical and support-group help matters too.", "category": "Deliverance" },
-    { "id": "prayer-against-gambling-addiction", "topic": "Prayer for freedom from gambling addiction", "focusKeyword": "prayer against gambling addiction", "angle": "Prayers and scriptures for breaking a gambling habit, with practical steps and where to find help.", "category": "Deliverance" },
-    { "id": "sleep-paralysis-christian-view", "topic": "Sleep paralysis: a Christian view and prayer", "focusKeyword": "sleep paralysis christian", "angle": "Explain the medical understanding honestly, what believers experience, and prayers for peaceful sleep.", "category": "Dreams" },
-    { "id": "how-to-keep-a-dream-journal", "topic": "How to keep a dream journal as a Christian", "focusKeyword": "christian dream journal", "angle": "Why and how to record dreams, how to pray over them, and how to test them against Scripture.", "category": "Dreams" },
-    { "id": "dream-of-being-chased", "topic": "Dream of being chased: biblical meaning and prayer", "focusKeyword": "dream of being chased", "angle": "Possible meanings, what to pray, and when a recurring dream calls for prayer support.", "category": "Dreams" },
-    { "id": "dream-of-flying", "topic": "Dream of flying: biblical meaning", "focusKeyword": "dream of flying meaning", "angle": "Common interpretations in a Christian frame, and how to pray over the dream.", "category": "Dreams" },
-    { "id": "dream-of-teeth-falling-out", "topic": "Dream of teeth falling out: biblical meaning", "focusKeyword": "dream of teeth falling out biblical meaning", "angle": "Possible meanings, common anxieties behind the dream, and a prayer.", "category": "Dreams" },
-    { "id": "dream-of-water-flood", "topic": "Dream of flood water: biblical meaning", "focusKeyword": "dream of flood water meaning", "angle": "Water in Scripture, what flood dreams may signify, and a prayer of protection.", "category": "Dreams" },
-    { "id": "dream-of-dead-relative", "topic": "Dreaming of a dead relative: what does it mean?", "focusKeyword": "dreaming of dead relative", "angle": "A careful, pastoral answer covering grief, what Scripture says about the dead, and when to pray.", "category": "Dreams" },
-    { "id": "dream-of-wedding", "topic": "Dream of a wedding: biblical meaning", "focusKeyword": "dream of wedding meaning", "angle": "Positive and warning meanings, including the deliverance view of dream marriages, and a prayer.", "category": "Dreams" },
-    { "id": "dream-of-church", "topic": "Dream of being in church: spiritual meaning", "focusKeyword": "dream of being in church", "angle": "What a church dream may mean for your walk with God, and how to respond.", "category": "Dreams" },
-    { "id": "dream-of-eating-food", "topic": "Dream of eating food: biblical meaning", "focusKeyword": "eating in the dream meaning", "angle": "Why deliverance ministers treat dream eating seriously, other possible meanings, and a prayer.", "category": "Dreams" },
-    { "id": "jezebel-spirit-signs", "topic": "The Jezebel spirit: signs and how to overcome it", "focusKeyword": "jezebel spirit signs", "angle": "Who Jezebel was (1 Kings, Revelation 2:20), the traits teachers describe, and a balanced, non-accusatory response.", "category": "Deliverance" },
-    { "id": "spirit-of-leviathan", "topic": "The spirit of Leviathan: meaning and prayer", "focusKeyword": "spirit of leviathan", "angle": "Leviathan in Job 41, Psalm 74 and Isaiah 27:1, how teachers apply it to pride and confusion, and a prayer.", "category": "Deliverance" },
-    { "id": "spirit-of-heaviness", "topic": "The spirit of heaviness: Isaiah 61:3 and prayer", "focusKeyword": "spirit of heaviness", "angle": "The garment of praise for the spirit of heaviness, with care to point people to mental-health help as well.", "category": "Deliverance" },
-    { "id": "prayer-for-anxiety-and-worry", "topic": "Prayer for anxiety and worry", "focusKeyword": "prayer for anxiety", "angle": "Philippians 4:6-7 and Matthew 6, short prayers for anxious moments, and encouragement to seek professional support.", "category": "Healing" },
-    { "id": "prayer-for-peace-of-mind", "topic": "Prayer for peace of mind", "focusKeyword": "prayer for peace of mind", "angle": "Isaiah 26:3 and John 14:27 with prayers for a troubled mind.", "category": "Prayer" },
-    { "id": "evening-prayer", "topic": "Evening prayer to end the day with God", "focusKeyword": "evening prayer", "angle": "A simple evening pattern of thanksgiving, confession, protection and rest.", "category": "Prayer" },
-    { "id": "prayer-of-thanksgiving", "topic": "Prayer of thanksgiving to God", "focusKeyword": "prayer of thanksgiving", "angle": "Why thanksgiving matters (1 Thessalonians 5:18), examples from the Psalms, and prayers of thanks.", "category": "Prayer" },
-    { "id": "praise-and-worship-in-warfare", "topic": "Praise as spiritual warfare: Jehoshaphat and Paul and Silas", "focusKeyword": "praise as spiritual warfare", "angle": "2 Chronicles 20 and Acts 16, how praise breaks chains, and how to use it in prayer.", "category": "Teaching" },
-    { "id": "how-to-pray-in-the-holy-spirit", "topic": "How to pray in the Holy Spirit", "focusKeyword": "praying in the holy spirit", "angle": "Jude 20, Romans 8:26 and Ephesians 6:18 explained, with practical guidance.", "category": "Teaching" },
-    { "id": "anointing-oil-meaning", "topic": "Anointing oil in the Bible: meaning and how it is used", "focusKeyword": "anointing oil meaning", "angle": "Biblical uses (James 5:14, Mark 6:13), what the oil symbolises, and that power is in God, not the oil.", "category": "Teaching" },
-    { "id": "prayer-for-children-protection", "topic": "Prayer for children's protection", "focusKeyword": "prayer for children protection", "angle": "Daily prayers parents can pray over their children at home, at school and when travelling.", "category": "Family" },
-    { "id": "prayer-for-rebellious-child", "topic": "Prayer for a rebellious child", "focusKeyword": "prayer for rebellious child", "angle": "The prodigal son, prayers for a child who has turned away, and wise, loving responses.", "category": "Family" },
-    { "id": "prayer-for-a-godly-spouse", "topic": "Prayer for a godly spouse", "focusKeyword": "prayer for godly spouse", "angle": "What Scripture says to look for, prayers while waiting, and guarding your heart.", "category": "Marriage" },
-    { "id": "prayer-for-marriage-restoration", "topic": "Prayer for marriage restoration after separation", "focusKeyword": "prayer for marriage restoration", "angle": "Scriptures for reconciliation, prayers for both spouses, and the importance of safety and counsel.", "category": "Marriage" },
-    { "id": "prayer-against-untimely-death", "topic": "Prayer against untimely death for your family", "focusKeyword": "prayer against untimely death", "angle": "Psalm 91:16 and Psalm 118:17, prayers of protection over a household.", "category": "Deliverance" },
-    { "id": "prayer-for-healing-of-the-mind", "topic": "Prayer for healing of the mind after trauma", "focusKeyword": "prayer for emotional healing", "angle": "God who heals the brokenhearted (Psalm 147:3), prayers, and the place of counselling and therapy.", "category": "Healing" },
-    { "id": "prayer-for-someone-in-hospital", "topic": "Prayer for someone in hospital", "focusKeyword": "prayer for someone in hospital", "angle": "Prayers for the patient, doctors and family, and how to visit and encourage.", "category": "Healing" },
-    { "id": "what-is-deliverance-ministry", "topic": "What happens in deliverance ministry? A guide for first-timers", "focusKeyword": "what happens in deliverance ministry", "angle": "What to expect, how to prepare, what healthy ministry looks like, and red flags such as being charged money.", "category": "Teaching" },
-    { "id": "how-to-know-gods-will", "topic": "How to know God's will for your life", "focusKeyword": "how to know god's will", "angle": "Scripture, prayer, counsel and peace as guides, with examples from the Bible.", "category": "Teaching" },
-    { "id": "how-to-hear-gods-voice", "topic": "How to hear God's voice", "focusKeyword": "how to hear god's voice", "angle": "The ways God speaks in Scripture, how to test what you hear, and practical habits.", "category": "Teaching" },
-    { "id": "how-to-study-the-bible-daily", "topic": "How to study the Bible daily: a simple plan", "focusKeyword": "how to study the bible", "angle": "A simple daily method, reading plans, and how to pray the passage you read.", "category": "Teaching" }
+    {
+      "id": "psalm-91-prayer-protection",
+      "topic": "Psalm 91 prayer for protection: verse by verse",
+      "focusKeyword": "psalm 91 prayer for protection",
+      "angle": "Walk through Psalm 91 verse by verse with what each promise means and a short prayer after each section.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-for-travelling-mercies",
+      "topic": "Prayer for travelling mercies before a journey",
+      "focusKeyword": "prayer for travelling mercies",
+      "angle": "Short prayers for road, air and long-distance travel, with the scriptures behind each.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-before-sleep-protection",
+      "topic": "Prayer before sleep for protection at night",
+      "focusKeyword": "prayer before sleep for protection",
+      "angle": "A night routine of scripture and prayer for people troubled by bad dreams or fear at night.",
+      "category": "Prayer"
+    },
+    {
+      "id": "how-to-fast-and-pray",
+      "topic": "How to fast and pray: a biblical guide for beginners",
+      "focusKeyword": "fast and pray",
+      "angle": "Types of biblical fasts, how to start safely, what to pray, and who should not fast without medical advice.",
+      "category": "Teaching"
+    },
+    {
+      "id": "armour-of-god-prayer",
+      "topic": "The armour of God: Ephesians 6 explained with a daily prayer",
+      "focusKeyword": "armour of god prayer",
+      "angle": "Each piece of the armour in Ephesians 6:10-18, what it means in daily life, and a prayer to put it on.",
+      "category": "Teaching"
+    },
+    {
+      "id": "breaking-soul-ties",
+      "topic": "How to break ungodly soul ties: signs and prayer",
+      "focusKeyword": "break soul ties",
+      "angle": "What Christians mean by a soul tie, the signs, the biblical basis, and a prayer of renunciation.",
+      "category": "Deliverance"
+    },
+    {
+      "id": "prayer-for-court-case",
+      "topic": "Prayer for a court case: scriptures for justice and favour",
+      "focusKeyword": "prayer for court case",
+      "angle": "Prayers and scriptures for anyone facing a legal matter, with a reminder to also follow legal advice.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-for-job-interview",
+      "topic": "Prayer for a job interview and favour with employers",
+      "focusKeyword": "prayer for job interview",
+      "angle": "Prayers for before, during and after an interview, with practical preparation alongside prayer.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-for-career-promotion",
+      "topic": "Prayer for promotion at work",
+      "focusKeyword": "prayer for promotion at work",
+      "angle": "Biblical promotion (Psalm 75:6-7, Joseph, Daniel) and prayers for favour and excellence at work.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-for-exam-success",
+      "topic": "Prayer for exam success for students",
+      "focusKeyword": "prayer for exam success",
+      "angle": "Prayers for study, memory, calm and the exam day, with scriptures students can hold on to.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-to-conceive",
+      "topic": "Prayer to conceive: scriptures for the fruit of the womb",
+      "focusKeyword": "prayer to conceive",
+      "angle": "Women in the Bible who waited (Hannah, Sarah, Elizabeth), prayers for conception, and gentle encouragement to seek medical care too.",
+      "category": "Healing"
+    },
+    {
+      "id": "prayer-for-safe-delivery",
+      "topic": "Prayer for a safe delivery during pregnancy",
+      "focusKeyword": "prayer for safe delivery",
+      "angle": "Prayers for each trimester, labour and the baby, alongside good antenatal care.",
+      "category": "Healing"
+    },
+    {
+      "id": "prayer-for-unsaved-husband",
+      "topic": "Prayer for an unsaved husband",
+      "focusKeyword": "prayer for unsaved husband",
+      "angle": "How to pray and live (1 Peter 3:1-2) for a husband who does not yet know Christ, without nagging or despair.",
+      "category": "Marriage"
+    },
+    {
+      "id": "prayer-for-salvation-of-family",
+      "topic": "Prayer for the salvation of family members",
+      "focusKeyword": "prayer for salvation of family",
+      "angle": "Acts 16:31 and other promises, with prayers for parents, siblings and children who are far from God.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-for-forgiveness",
+      "topic": "Prayer for forgiveness and a clean heart",
+      "focusKeyword": "prayer for forgiveness",
+      "angle": "Psalm 51 and 1 John 1:9, how to receive forgiveness, and how to forgive others.",
+      "category": "Prayer"
+    },
+    {
+      "id": "how-to-forgive-someone-who-hurt-you",
+      "topic": "How to forgive someone who hurt you: a Christian guide",
+      "focusKeyword": "forgive someone who hurt you",
+      "angle": "What forgiveness is and is not, why unforgiveness binds us, steps to forgive, and when to seek safety or counselling.",
+      "category": "Teaching"
+    },
+    {
+      "id": "prayer-for-grief-and-loss",
+      "topic": "Prayer for comfort in grief and loss",
+      "focusKeyword": "prayer for grief",
+      "angle": "Prayers for the bereaved, scriptures of comfort, and how to support someone who is grieving.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-for-widows",
+      "topic": "Prayer for widows and God's promises to them",
+      "focusKeyword": "prayer for widows",
+      "angle": "God's care for widows in Scripture (Psalm 68:5, James 1:27), prayers, and how the church can help.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-for-orphans",
+      "topic": "Prayer for orphans and vulnerable children",
+      "focusKeyword": "prayer for orphans",
+      "angle": "God as father to the fatherless, prayers for orphans and carers, and practical ways to help.",
+      "category": "Prayer"
+    },
+    {
+      "id": "blood-of-jesus-prayer",
+      "topic": "Pleading the blood of Jesus: meaning and prayer",
+      "focusKeyword": "pleading the blood of jesus",
+      "angle": "What Scripture says about the blood of Jesus (Revelation 12:11, Hebrews 9), what the practice means, and a prayer.",
+      "category": "Deliverance"
+    },
+    {
+      "id": "prayer-for-divine-intervention",
+      "topic": "Prayer for divine intervention in a hopeless situation",
+      "focusKeyword": "prayer for divine intervention",
+      "angle": "Bible stories of God stepping in (Red Sea, Daniel, Peter in prison) and prayers for urgent situations.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-for-favour",
+      "topic": "Prayer for favour with God and people",
+      "focusKeyword": "prayer for favour",
+      "angle": "What biblical favour is (Esther, Nehemiah, Ruth), and prayers for favour in work, family and ministry.",
+      "category": "Prayer"
+    },
+    {
+      "id": "open-heavens-prayer",
+      "topic": "Prayer for an open heaven: meaning and scriptures",
+      "focusKeyword": "open heaven prayer",
+      "angle": "What an open heaven means in Scripture (Deuteronomy 28:12, Malachi 3:10, Luke 3:21) and prayers for it.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-against-debt",
+      "topic": "Prayer for freedom from debt",
+      "focusKeyword": "prayer for debt cancellation",
+      "angle": "Biblical teaching on debt, prayers for provision and release, and sensible practical steps alongside prayer.",
+      "category": "Finance"
+    },
+    {
+      "id": "prayer-for-visa-approval",
+      "topic": "Prayer for visa approval and travel documents",
+      "focusKeyword": "prayer for visa approval",
+      "angle": "Prayers for applications, interviews and waiting periods, with a reminder to use only official channels.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-for-business-growth",
+      "topic": "Prayer for business growth and customers",
+      "focusKeyword": "prayer for business growth",
+      "angle": "Stewardship, integrity and prayers for a business, grounded in Deuteronomy 8:18 and Proverbs.",
+      "category": "Finance"
+    },
+    {
+      "id": "prayer-against-alcohol-addiction",
+      "topic": "Prayer for deliverance from alcohol addiction",
+      "focusKeyword": "prayer for alcohol addiction",
+      "angle": "Prayers for the person and their family, scriptures for strength, and why medical and support-group help matters too.",
+      "category": "Deliverance"
+    },
+    {
+      "id": "prayer-against-gambling-addiction",
+      "topic": "Prayer for freedom from gambling addiction",
+      "focusKeyword": "prayer against gambling addiction",
+      "angle": "Prayers and scriptures for breaking a gambling habit, with practical steps and where to find help.",
+      "category": "Deliverance"
+    },
+    {
+      "id": "sleep-paralysis-christian-view",
+      "topic": "Sleep paralysis: a Christian view and prayer",
+      "focusKeyword": "sleep paralysis christian",
+      "angle": "Explain the medical understanding honestly, what believers experience, and prayers for peaceful sleep.",
+      "category": "Dreams"
+    },
+    {
+      "id": "how-to-keep-a-dream-journal",
+      "topic": "How to keep a dream journal as a Christian",
+      "focusKeyword": "christian dream journal",
+      "angle": "Why and how to record dreams, how to pray over them, and how to test them against Scripture.",
+      "category": "Dreams"
+    },
+    {
+      "id": "dream-of-being-chased",
+      "topic": "Dream of being chased: biblical meaning and prayer",
+      "focusKeyword": "dream of being chased",
+      "angle": "Possible meanings, what to pray, and when a recurring dream calls for prayer support.",
+      "category": "Dreams"
+    },
+    {
+      "id": "dream-of-flying",
+      "topic": "Dream of flying: biblical meaning",
+      "focusKeyword": "dream of flying meaning",
+      "angle": "Common interpretations in a Christian frame, and how to pray over the dream.",
+      "category": "Dreams"
+    },
+    {
+      "id": "dream-of-teeth-falling-out",
+      "topic": "Dream of teeth falling out: biblical meaning",
+      "focusKeyword": "dream of teeth falling out biblical meaning",
+      "angle": "Possible meanings, common anxieties behind the dream, and a prayer.",
+      "category": "Dreams"
+    },
+    {
+      "id": "dream-of-water-flood",
+      "topic": "Dream of flood water: biblical meaning",
+      "focusKeyword": "dream of flood water meaning",
+      "angle": "Water in Scripture, what flood dreams may signify, and a prayer of protection.",
+      "category": "Dreams"
+    },
+    {
+      "id": "dream-of-dead-relative",
+      "topic": "Dreaming of a dead relative: what does it mean?",
+      "focusKeyword": "dreaming of dead relative",
+      "angle": "A careful, pastoral answer covering grief, what Scripture says about the dead, and when to pray.",
+      "category": "Dreams"
+    },
+    {
+      "id": "dream-of-wedding",
+      "topic": "Dream of a wedding: biblical meaning",
+      "focusKeyword": "dream of wedding meaning",
+      "angle": "Positive and warning meanings, including the deliverance view of dream marriages, and a prayer.",
+      "category": "Dreams"
+    },
+    {
+      "id": "dream-of-church",
+      "topic": "Dream of being in church: spiritual meaning",
+      "focusKeyword": "dream of being in church",
+      "angle": "What a church dream may mean for your walk with God, and how to respond.",
+      "category": "Dreams"
+    },
+    {
+      "id": "dream-of-eating-food",
+      "topic": "Dream of eating food: biblical meaning",
+      "focusKeyword": "eating in the dream meaning",
+      "angle": "Why deliverance ministers treat dream eating seriously, other possible meanings, and a prayer.",
+      "category": "Dreams"
+    },
+    {
+      "id": "jezebel-spirit-signs",
+      "topic": "The Jezebel spirit: signs and how to overcome it",
+      "focusKeyword": "jezebel spirit signs",
+      "angle": "Who Jezebel was (1 Kings, Revelation 2:20), the traits teachers describe, and a balanced, non-accusatory response.",
+      "category": "Deliverance"
+    },
+    {
+      "id": "spirit-of-leviathan",
+      "topic": "The spirit of Leviathan: meaning and prayer",
+      "focusKeyword": "spirit of leviathan",
+      "angle": "Leviathan in Job 41, Psalm 74 and Isaiah 27:1, how teachers apply it to pride and confusion, and a prayer.",
+      "category": "Deliverance"
+    },
+    {
+      "id": "spirit-of-heaviness",
+      "topic": "The spirit of heaviness: Isaiah 61:3 and prayer",
+      "focusKeyword": "spirit of heaviness",
+      "angle": "The garment of praise for the spirit of heaviness, with care to point people to mental-health help as well.",
+      "category": "Deliverance"
+    },
+    {
+      "id": "prayer-for-anxiety-and-worry",
+      "topic": "Prayer for anxiety and worry",
+      "focusKeyword": "prayer for anxiety",
+      "angle": "Philippians 4:6-7 and Matthew 6, short prayers for anxious moments, and encouragement to seek professional support.",
+      "category": "Healing"
+    },
+    {
+      "id": "prayer-for-peace-of-mind",
+      "topic": "Prayer for peace of mind",
+      "focusKeyword": "prayer for peace of mind",
+      "angle": "Isaiah 26:3 and John 14:27 with prayers for a troubled mind.",
+      "category": "Prayer"
+    },
+    {
+      "id": "evening-prayer",
+      "topic": "Evening prayer to end the day with God",
+      "focusKeyword": "evening prayer",
+      "angle": "A simple evening pattern of thanksgiving, confession, protection and rest.",
+      "category": "Prayer"
+    },
+    {
+      "id": "prayer-of-thanksgiving",
+      "topic": "Prayer of thanksgiving to God",
+      "focusKeyword": "prayer of thanksgiving",
+      "angle": "Why thanksgiving matters (1 Thessalonians 5:18), examples from the Psalms, and prayers of thanks.",
+      "category": "Prayer"
+    },
+    {
+      "id": "praise-and-worship-in-warfare",
+      "topic": "Praise as spiritual warfare: Jehoshaphat and Paul and Silas",
+      "focusKeyword": "praise as spiritual warfare",
+      "angle": "2 Chronicles 20 and Acts 16, how praise breaks chains, and how to use it in prayer.",
+      "category": "Teaching"
+    },
+    {
+      "id": "how-to-pray-in-the-holy-spirit",
+      "topic": "How to pray in the Holy Spirit",
+      "focusKeyword": "praying in the holy spirit",
+      "angle": "Jude 20, Romans 8:26 and Ephesians 6:18 explained, with practical guidance.",
+      "category": "Teaching"
+    },
+    {
+      "id": "anointing-oil-meaning",
+      "topic": "Anointing oil in the Bible: meaning and how it is used",
+      "focusKeyword": "anointing oil meaning",
+      "angle": "Biblical uses (James 5:14, Mark 6:13), what the oil symbolises, and that power is in God, not the oil.",
+      "category": "Teaching"
+    },
+    {
+      "id": "prayer-for-children-protection",
+      "topic": "Prayer for children's protection",
+      "focusKeyword": "prayer for children protection",
+      "angle": "Daily prayers parents can pray over their children at home, at school and when travelling.",
+      "category": "Family"
+    },
+    {
+      "id": "prayer-for-rebellious-child",
+      "topic": "Prayer for a rebellious child",
+      "focusKeyword": "prayer for rebellious child",
+      "angle": "The prodigal son, prayers for a child who has turned away, and wise, loving responses.",
+      "category": "Family"
+    },
+    {
+      "id": "prayer-for-a-godly-spouse",
+      "topic": "Prayer for a godly spouse",
+      "focusKeyword": "prayer for godly spouse",
+      "angle": "What Scripture says to look for, prayers while waiting, and guarding your heart.",
+      "category": "Marriage"
+    },
+    {
+      "id": "prayer-for-marriage-restoration",
+      "topic": "Prayer for marriage restoration after separation",
+      "focusKeyword": "prayer for marriage restoration",
+      "angle": "Scriptures for reconciliation, prayers for both spouses, and the importance of safety and counsel.",
+      "category": "Marriage"
+    },
+    {
+      "id": "prayer-against-untimely-death",
+      "topic": "Prayer against untimely death for your family",
+      "focusKeyword": "prayer against untimely death",
+      "angle": "Psalm 91:16 and Psalm 118:17, prayers of protection over a household.",
+      "category": "Deliverance"
+    },
+    {
+      "id": "prayer-for-healing-of-the-mind",
+      "topic": "Prayer for healing of the mind after trauma",
+      "focusKeyword": "prayer for emotional healing",
+      "angle": "God who heals the brokenhearted (Psalm 147:3), prayers, and the place of counselling and therapy.",
+      "category": "Healing"
+    },
+    {
+      "id": "prayer-for-someone-in-hospital",
+      "topic": "Prayer for someone in hospital",
+      "focusKeyword": "prayer for someone in hospital",
+      "angle": "Prayers for the patient, doctors and family, and how to visit and encourage.",
+      "category": "Healing"
+    },
+    {
+      "id": "what-is-deliverance-ministry",
+      "topic": "What happens in deliverance ministry? A guide for first-timers",
+      "focusKeyword": "what happens in deliverance ministry",
+      "angle": "What to expect, how to prepare, what healthy ministry looks like, and red flags such as being charged money.",
+      "category": "Teaching"
+    },
+    {
+      "id": "how-to-know-gods-will",
+      "topic": "How to know God's will for your life",
+      "focusKeyword": "know god's will",
+      "angle": "Scripture, prayer, counsel and peace as guides, with examples from the Bible.",
+      "category": "Teaching"
+    },
+    {
+      "id": "how-to-hear-gods-voice",
+      "topic": "How to hear God's voice",
+      "focusKeyword": "hear god's voice",
+      "angle": "The ways God speaks in Scripture, how to test what you hear, and practical habits.",
+      "category": "Teaching"
+    },
+    {
+      "id": "how-to-study-the-bible-daily",
+      "topic": "How to study the Bible daily: a simple plan",
+      "focusKeyword": "study the bible",
+      "angle": "A simple daily method, reading plans, and how to pray the passage you read.",
+      "category": "Teaching"
+    }
   ]
 }

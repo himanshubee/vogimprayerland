@@ -55,3 +55,34 @@ test("FAQ pairs are read from the faq section only", () => {
     { q: "Is it free?", a: "Yes & always." },
   ]);
 });
+
+const fixes = await import("../src/lib/autoblog/seo-fixes.ts");
+
+test("first scripture reference in body text links to the KJV on Bible Gateway", () => {
+  const html = '<h2>Psalm 91:1 in a heading</h2><p>See <a href="/x/">John 3:16</a> and Psalm 121:8 and 1 John 1:9.</p>';
+  assert.equal(
+    fixes.linkFirstScripture(html),
+    '<h2>Psalm 91:1 in a heading</h2><p>See <a href="/x/">John 3:16</a> and <a href="https://www.biblegateway.com/passage/?search=Psalm%20121%3A8&version=KJV" rel="noopener" target="_blank">Psalm 121:8</a> and 1 John 1:9.</p>'
+  );
+  const already = '<p><a href="https://example.org/">x</a> Psalm 1:1</p>';
+  assert.equal(fixes.linkFirstScripture(already), already);
+});
+
+test("featured figure goes after the first paragraph and is replaced, not duplicated", () => {
+  const img = { src: "https://img.example/a.webp", alt: 'Soul ties: "open" Bible', width: 1600, height: 819 };
+  const once = fixes.insertFigure("<p>Answer.</p><h2>Next</h2>", img);
+  assert.equal(
+    once,
+    '<p>Answer.</p>\n<figure data-featured><img src="https://img.example/a.webp" alt="Soul ties: &quot;open&quot; Bible" width="1600" height="819" loading="lazy" decoding="async" /></figure>\n<h2>Next</h2>'
+  );
+  assert.equal(fixes.insertFigure(once, img).match(/<figure/g).length, 1);
+});
+
+test("alt text names the keyword without repeating it", () => {
+  assert.equal(fixes.altWithKeyword("Open Bible at dawn.", "how to break soul ties"), "How to break soul ties: open Bible at dawn");
+  assert.equal(fixes.altWithKeyword("A prayer for travelling mercies scene", "prayer for travelling mercies"), "A prayer for travelling mercies scene");
+});
+
+test("keyword uses are counted case-insensitively across tags", () => {
+  assert.deepEqual(fixes.keywordUses("<p>Soul <strong>ties</strong> matter. SOUL TIES break.</p>", "soul ties"), { uses: 2, words: 6 });
+});

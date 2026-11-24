@@ -2,7 +2,7 @@ import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
 import { runAutoblog } from "@/lib/autoblog/run";
-import { dryRun, BUILT_IN_TOPICS, topicFromText } from "@/lib/autoblog/generate";
+import { dryRun, improvePost, BUILT_IN_TOPICS, topicFromText } from "@/lib/autoblog/generate";
 import { getAutoblogSettings, listRuns, saveAutoblogSettings } from "@/lib/autoblog/settings";
 import { openrouterConfigured } from "@/lib/autoblog/openrouter";
 
@@ -43,14 +43,19 @@ export async function PUT(req: NextRequest) {
  *   {}                    scheduled tick: writes only if enabled and due
  *   { force: true }       write now (admin button)
  *   { dryRun: "topic" }   write one article and return it, saving nothing
+ *   { improvePostId }     add an image and fix the SEO checks on an existing post (admin only)
  */
 export async function POST(req: NextRequest) {
   const admin = await requireRole("admin");
   if (!admin && !schedulerAllowed(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!openrouterConfigured()) return NextResponse.json({ error: "OPENROUTER_API_KEY is not set on the server" }, { status: 500 });
 
-  const body = (await req.json().catch(() => ({}))) as { force?: boolean; dryRun?: string };
+  const body = (await req.json().catch(() => ({}))) as { force?: boolean; dryRun?: string; improvePostId?: string };
   try {
+    if (body.improvePostId) {
+      if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ ok: true, improved: await improvePost(body.improvePostId) });
+    }
     if (body.dryRun) {
       const topic = BUILT_IN_TOPICS.find((t) => t.id === body.dryRun) ?? topicFromText(body.dryRun);
       return NextResponse.json({ ok: true, preview: await dryRun(topic) });

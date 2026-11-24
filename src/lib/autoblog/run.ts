@@ -53,7 +53,12 @@ export async function runAutoblog({ force = false } = {}): Promise<RunOutcome> {
           postId: result.status === "skipped" ? null : result.postId,
           slug: result.status === "skipped" ? result.similar ?? null : result.slug,
           title: result.status === "skipped" ? topic.topic : result.title,
-          detail: result.status === "skipped" ? result.reason : `SEO score ${result.seoScore} · ${result.model}${result.image ? "" : " · no image"}`,
+          detail:
+            result.status === "skipped"
+              ? result.reason
+              : [`SEO ${result.seoScore}%`, result.model, result.imageNote, result.failing.length ? `still failing: ${result.failing.join("; ")}` : ""]
+                  .filter(Boolean)
+                  .join(" · "),
         });
         if (result.status !== "skipped") produced++;
       } catch (err) {

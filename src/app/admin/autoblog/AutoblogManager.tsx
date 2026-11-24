@@ -18,7 +18,8 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
   const [data, setData] = useState<Loaded>(initial);
   const [form, setForm] = useState<AutoblogSettings>(initial.settings);
   const [queueText, setQueueText] = useState(initial.settings.topicQueue.join("\n"));
-  const [busy, setBusy] = useState<"save" | "run" | null>(null);
+  const [busy, setBusy] = useState<"save" | "run" | "improve" | null>(null);
+  const [improveInput, setImproveInput] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
   async function load() {
@@ -62,6 +63,30 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
     }
     setBusy(null);
     await load();
+  }
+
+  async function improve(idOrUrl: string) {
+    const id = idOrUrl.match(/[a-f0-9]{24}/i)?.[0];
+    if (!id) {
+      setMessage("Paste the post's admin link (…/admin/posts/<id>/) or its 24-character id.");
+      return;
+    }
+    setBusy("improve");
+    setMessage("Optimising: creating the image if missing, then checking and revising the SEO. This takes one to three minutes...");
+    const res = await fetch("/api/admin/autoblog/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ improvePostId: id }),
+    }).catch(() => null);
+    const json = await res?.json().catch(() => null);
+    if (!res?.ok) setMessage(json?.error || "Optimising failed.");
+    else {
+      const r = json.improved;
+      setMessage(
+        `SEO ${r.before}% → ${r.after}%. ${r.imageNote}.${r.failing.length ? ` Still to fix by hand: ${r.failing.join("; ")}.` : ""} Open the post to review it.`
+      );
+    }
+    setBusy(null);
   }
 
   return (
@@ -155,6 +180,26 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
         </p>
       </section>
 
+      <section className="bg-white border border-midnight/10 p-6">
+        <h2 className="font-display text-2xl">Optimise an existing post</h2>
+        <p className="mt-2 text-sm text-slate">
+          Adds a featured image if the post has none, places it in the article with descriptive alt text, links the main Bible verse, and
+          revises the wording until the SEO checks pass. Imported posts with their own images or videos get the image and link fixes only, so
+          nothing of theirs is removed.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <input
+            value={improveInput}
+            onChange={(e) => setImproveInput(e.target.value)}
+            placeholder="https://www.vogimprayerland.org/admin/posts/…"
+            className="min-h-11 flex-1 min-w-[16rem] border border-input px-3 text-sm"
+          />
+          <button onClick={() => improve(improveInput)} disabled={busy !== null || !improveInput.trim()} className="btn-ghost disabled:opacity-40">
+            {busy === "improve" ? "Optimising..." : "Optimise SEO + image"}
+          </button>
+        </div>
+      </section>
+
       <p role="status" aria-live="polite" className="text-sm">{message}</p>
 
       <section>
@@ -181,7 +226,18 @@ export function AutoblogManager({ initial }: { initial: Loaded }) {
                         r.title
                       )}
                     </td>
-                    <td className="p-3 text-xs">{r.detail}</td>
+                    <td className="p-3 text-xs">
+                      {r.detail}
+                      {r.postId && (
+                        <button
+                          onClick={() => improve(r.postId!)}
+                          disabled={busy !== null}
+                          className="mt-2 block text-maroon underline disabled:opacity-40"
+                        >
+                          Optimise SEO + image
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
